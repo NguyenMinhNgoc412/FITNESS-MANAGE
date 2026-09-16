@@ -1,0 +1,13 @@
+{
+  "name": "fitness-manage",
+  "private": true,
+  "packageManager": "pnpm@10.34.4",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "pnpm --filter @fitness/api start:dev",
+    "dev:ai": "services\\ai\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --app-dir services/ai --host 0.0.0.0 --port 8000",
+    "dev:app": "pnpm --filter @fitness/app start",
+    "build": "pnpm --filter @fitness/api build && pnpm --filter @fitness/app typecheck",
+    "test": "pnpm --filter @fitness/api test && pnpm --filter @fitness/app test"
+  }
+}

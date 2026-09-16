@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER_ADMIN
+  PT
+  MEMBER
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  LOCKED
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  ENDED
+}
+
+enum WindowType {
+  FIXED
+  FLEXIBLE
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  MATCHED
+  MEMBER_ONLY
+  PT_ONLY
+  MISSING
+  NEEDS_REVIEW
+}
+
+enum AiRunStatus {
+  UPLOAD_PENDING
+  UPLOADED
+  VALIDATING
+  ANALYZING
+  NEEDS_RETAKE
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id String @id @default(cuid())
+  email String @unique
+  passwordHash String
+  role Role
+  status AccountStatus @default(ACTIVE)
+  fullName String
+  phone String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ptProfile PTProfile?
+  memberProfile MemberProfile?
+  createdAssignments Assignment[] @relation("assignmentCreator")
+  auditEvents AuditEvent[] @relation("auditActor")
+  sessions Session[]
+  checkins Checkin[]
+  createdSchedules TrainingSchedule[]
+  createdGuestTrials GuestTrial[]
+}
+model PTProfile {
+  userId String @id
+  specialization String?
+  note String?
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  assignments Assignment[]
+  schedules TrainingSchedule[]
+}
+model MemberProfile {
+  userId String @id
+  goal String
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  assignments Assignment[] @relation("memberAssignments")
+  schedules TrainingSchedule[] @relation("memberSchedules")
+  sourceGuestTrial GuestTrial? @relation("guestConversion")
+  aiAnalysisRuns AiAnalysisRun[]
+}
+model Assignment {
+  id String @id @default(cuid())
+  memberId String
+  ptId String
+  status AssignmentStatus @default(ACTIVE)
+  startedAt DateTime @default(now())
+  endedAt DateTime?
+  changeReason String?
+  idempotencyKey String? @unique
+  scheduleReviewRequired Boolean @default(false)
+  createdById String
+  createdAt DateTime @default(now())
+  member MemberProfile @relation("memberAssignments", fields: [memberId], references: [userId], onDelete: Restrict)
+  pt PTProfile @relation(fields: [ptId], references: [userId], onDelete: Restrict)
+  createdBy User @relation("assignmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  @@index([ptId, status])
+  @@index([memberId, startedAt])
+}
+model TrainingSchedule {
+  id String @id @default(cuid())
+  memberId String
+  ptId String
+  windowType WindowType
+  windowStart DateTime
+  windowEnd DateTime
+  status ScheduleStatus @default(SCHEDULED)
+  createdById String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  member MemberProfile @relation("memberSchedules", fields: [memberId], references: [userId], onDelete: Restrict)
+  pt PTProfile @relation(fields: [ptId], references: [userId], onDelete: Restrict)
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  checkins Checkin[]
+  attendance AttendanceReconciliation?
+  @@index([memberId, windowStart])
+  @@index([ptId, windowStart])
+}
+model Checkin {
+  id String @id @default(cuid())
+  actorUserId String
+  actorRole Role
+  checkedInAt DateTime @default(now())
+  scheduleId String?
+  idempotencyKey String @unique
+  createdAt DateTime @default(now())
+  actor User @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+  schedule TrainingSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  memberAttendance AttendanceReconciliation[] @relation("memberCheckin")
+  ptAttendance AttendanceReconciliation[] @relation("ptCheckin")
+  @@index([actorUserId, checkedInAt])
+  @@index([scheduleId])
+}
+model AttendanceReconciliation {
+  id String @id @default(cuid())
+  scheduleId String @unique
+  memberId String
+  ptId String
+  memberCheckinId String?
+  ptCheckinId String?
+  status AttendanceStatus
+  evaluatedAt DateTime @default(now())
+  schedule TrainingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  memberCheckin Checkin? @relation("memberCheckin", fields: [memberCheckinId], references: [id], onDelete: SetNull)
+  ptCheckin Checkin? @relation("ptCheckin", fields: [ptCheckinId], references: [id], onDelete: SetNull)
+  @@index([status, evaluatedAt])
+}
+model GuestTrial {
+  id String @id @default(cuid())
+  displayName String
+  phone String?
+  email String?
+  note String?
+  trialAt DateTime
+  createdById String
+  createdAt DateTime @default(now())
+  convertedAt DateTime?
+  convertedMemberId String? @unique
+  conversionIdempotencyKey String? @unique
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  convertedMember MemberProfile? @relation("guestConversion", fields: [convertedMemberId], references: [userId], onDelete: Restrict)
+  @@index([phone])
+  @@index([email])
+  @@index([trialAt])
+}
+model AiAnalysisRun {
+  id String @id @default(cuid())
+  memberId String
+  mediaPath String
+  mimeType String
+  sizeBytes Int
+  status AiRunStatus @default(UPLOAD_PENDING)
+  idempotencyKey String @unique
+  correlationId String @unique
+  pipelineVersion String
+  errorCode String?
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  member MemberProfile @relation(fields: [memberId], references: [userId], onDelete: Restrict)
+  result AiAnalysisResult?
+  plan TrainingPlanOutput?
+  @@index([memberId, createdAt])
+  @@index([status, createdAt])
+}
+model AiAnalysisResult {
+  id String @id @default(cuid())
+  analysisRunId String @unique
+  inputQuality Json
+  extractedFeatures Json
+  confidence Json
+  warnings Json
+  schemaVersion String
+  analyzerVersion String
+  createdAt DateTime @default(now())
+  run AiAnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
+}
+model TrainingPlanOutput {
+  id String @id @default(cuid())
+  analysisRunId String @unique
+  summary String
+  focusAreas Json
+  recommendations Json
+  trainingPlan Json
+  limitations Json
+  safetyFlags Json
+  promptVersion String
+  modelVersion String
+  createdAt DateTime @default(now())
+  run AiAnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
+}
+model Session {
+  id String @id
+  userId String
+  refreshTokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model AuditEvent {
+  id String @id @default(cuid())
+  actorId String
+  action String
+  entityType String
+  entityId String
+  requestId String?
+  summary Json?
+  createdAt DateTime @default(now())
+  actor User @relation("auditActor", fields: [actorId], references: [id], onDelete: Restrict)
+  @@index([entityType, entityId])
+}
