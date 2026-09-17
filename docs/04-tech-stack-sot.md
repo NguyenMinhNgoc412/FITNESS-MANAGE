@@ -1,21 +1,21 @@
-﻿# FITNESS-MANAGE SOT 04 â€” Technology Stack
+# FITNESS-MANAGE SOT 04 — Technology Stack
 
-**Tráº¡ng thÃ¡i:** Source of Truth chÃ­nh cho lá»±a chá»n cÃ´ng nghá»‡  
-**Dá»± Ã¡n:** FITNESS-MANAGE  
-**NgÃ y cáº­p nháº­t:** 2026-09-16  
-**Pháº¡m vi:** Stack triá»ƒn khai MVP cho mobile, web, backend, data, storage, AI, notification vÃ  source control  
-**NguyÃªn táº¯c:** File nÃ y chá»‰ sá»Ÿ há»¯u quyáº¿t Ä‘á»‹nh cÃ´ng nghá»‡. KhÃ´ng tá»± thÃªm feature hoáº·c thay Ä‘á»•i nghiá»‡p vá»¥ trong `02-product-requirements-sot.md`.
+**Trạng thái:** Source of Truth chính cho lựa chọn công nghệ  
+**Dự án:** FITNESS-MANAGE  
+**Ngày cập nhật:** 2026-09-16  
+**Phạm vi:** Stack triển khai MVP cho mobile, web, backend, data, storage, AI, notification và source control  
+**Nguyên tắc:** File này chỉ sở hữu quyết định công nghệ. Không tự thêm feature hoặc thay đổi nghiệp vụ trong `02-product-requirements-sot.md`.
 
 ---
 
-## 1. Káº¿t luáº­n stack Ä‘Ã£ chá»‘t
+## 1. Kết luận stack đã chốt
 
-FITNESS-MANAGE dÃ¹ng stack sau cho MVP:
+FITNESS-MANAGE dùng stack sau cho MVP:
 
 ```text
 Client
   React Native + Expo + TypeScript
-  React Native Web tá»« cÃ¹ng Expo codebase
+  React Native Web từ cùng Expo codebase
   Expo Router
   Zustand
   React Hook Form + Zod
@@ -26,7 +26,7 @@ Core Backend
   REST API
   JWT + Refresh Token
   Prisma ORM
-  PostgreSQL trÃªn Supabase Free
+  PostgreSQL trên Supabase Free
   Supabase Storage
 
 AI Service
@@ -37,8 +37,8 @@ AI Service
 
 Platform
   Expo Push Notifications
-  KhÃ´ng dÃ¹ng WebSocket/Realtime trong MVP
-  Æ¯u tiÃªn local/free tier khi deploy
+  Không dùng WebSocket/Realtime trong MVP
+  Ưu tiên local/free tier khi deploy
   Git + GitHub
 ```
 
@@ -46,97 +46,97 @@ Platform
 
 ## 2. Client stack
 
-| Nhu cáº§u | CÃ´ng nghá»‡ Ä‘Ã£ chá»‘t | Quy táº¯c |
+| Nhu cầu | Công nghệ đã chốt | Quy tắc |
 |---|---|---|
-| Mobile application | React Native + Expo | Má»™t product codebase chÃ­nh cho mobile |
-| Language | TypeScript | DÃ¹ng xuyÃªn suá»‘t Expo client vÃ  NestJS backend |
-| Web application | React Native Web qua Expo | Web dÃ¹ng cÃ¹ng codebase Expo; khÃ´ng táº¡o web app framework riÃªng trong MVP |
-| Routing | Expo Router | Route theo role/feature nhÆ°ng authorization cuá»‘i cÃ¹ng váº«n á»Ÿ backend |
-| Client/UI state | Zustand | Chá»‰ giá»¯ UI/session state phÃ¹ há»£p; khÃ´ng thay database/server state |
-| Form | React Hook Form | Quáº£n lÃ½ form state |
-| Validation | Zod | Validate input/form vÃ  cÃ³ thá»ƒ tÃ¡i sá»­ dá»¥ng schema á»Ÿ boundary phÃ¹ há»£p |
-| HTTP client | Axios | Gá»i REST API tá»« client |
-| Native session storage | Expo SecureStore | LÆ°u access/refresh token trÃªn iOS/Android; khÃ´ng lÆ°u token vÃ o AsyncStorage |
-| Private media upload | Expo FileSystem | Upload file trá»±c tiáº¿p tá»›i signed URL do NestJS cáº¥p, trÃ¡nh náº¡p toÃ n bá»™ video vÃ o JS memory |
+| Mobile application | React Native + Expo | Một product codebase chính cho mobile |
+| Language | TypeScript | Dùng xuyên suốt Expo client và NestJS backend |
+| Web application | React Native Web qua Expo | Web dùng cùng codebase Expo; không tạo web app framework riêng trong MVP |
+| Routing | Expo Router | Route theo role/feature nhưng authorization cuối cùng vẫn ở backend |
+| Client/UI state | Zustand | Chỉ giữ UI/session state phù hợp; không thay database/server state |
+| Form | React Hook Form | Quản lý form state |
+| Validation | Zod | Validate input/form và có thể tái sử dụng schema ở boundary phù hợp |
+| HTTP client | Axios | Gọi REST API từ client |
+| Native session storage | Expo SecureStore | Lưu access/refresh token trên iOS/Android; không lưu token vào AsyncStorage |
+| Private media upload | Expo FileSystem | Upload file trực tiếp tới signed URL do NestJS cấp, tránh nạp toàn bộ video vào JS memory |
 
-### 2.1. Quy táº¯c dÃ¹ng chung mobile vÃ  web
+### 2.1. Quy tắc dùng chung mobile và web
 
-1. Æ¯u tiÃªn component, hook, domain adapter vÃ  validation dÃ¹ng chung.
-2. Chá»‰ tÃ¡ch implementation theo platform khi capability mobile/web thá»±c sá»± khÃ¡c nhau.
-3. KhÃ´ng táº¡o má»™t frontend web riÃªng báº±ng framework khÃ¡c chá»‰ Ä‘á»ƒ "dá»… lÃ m web" trong MVP.
-4. UI cÃ³ thá»ƒ khÃ¡c layout theo breakpoint nhÆ°ng business flow vÃ  API contract pháº£i thá»‘ng nháº¥t.
-5. Role visibility trÃªn client chá»‰ phá»¥c vá»¥ UX; quyá»n tháº­t pháº£i Ä‘Æ°á»£c NestJS kiá»ƒm tra á»Ÿ API/service boundary.
+1. Ưu tiên component, hook, domain adapter và validation dùng chung.
+2. Chỉ tách implementation theo platform khi capability mobile/web thực sự khác nhau.
+3. Không tạo một frontend web riêng bằng framework khác chỉ để "dễ làm web" trong MVP.
+4. UI có thể khác layout theo breakpoint nhưng business flow và API contract phải thống nhất.
+5. Role visibility trên client chỉ phục vụ UX; quyền thật phải được NestJS kiểm tra ở API/service boundary.
 
 ---
 
 ## 3. Backend & API stack
 
-| Nhu cáº§u | CÃ´ng nghá»‡ Ä‘Ã£ chá»‘t | Quy táº¯c |
+| Nhu cầu | Công nghệ đã chốt | Quy tắc |
 |---|---|---|
-| Backend framework | NestJS | Backend nghiá»‡p vá»¥ chÃ­nh |
-| Language | TypeScript | Äá»“ng bá»™ type discipline vá»›i client |
-| API style | REST API | KhÃ´ng dÃ¹ng GraphQL trong baseline MVP |
-| Authentication | JWT + Refresh Token | NestJS quáº£n lÃ½ auth/session lifecycle |
-| ORM | Prisma | Truy cáº­p relational data vÃ  migration |
-| Database | PostgreSQL trÃªn Supabase Free | Supabase Ä‘Ã³ng vai trÃ² managed PostgreSQL |
+| Backend framework | NestJS | Backend nghiệp vụ chính |
+| Language | TypeScript | Đồng bộ type discipline với client |
+| API style | REST API | Không dùng GraphQL trong baseline MVP |
+| Authentication | JWT + Refresh Token | NestJS quản lý auth/session lifecycle |
+| ORM | Prisma | Truy cập relational data và migration |
+| Database | PostgreSQL trên Supabase Free | Supabase đóng vai trò managed PostgreSQL |
 
-### 3.1. Backend lÃ  authority
+### 3.1. Backend là authority
 
-NestJS lÃ  application/backend authority cho:
+NestJS là application/backend authority cho:
 
-- authentication vÃ  refresh-token flow;
+- authentication và refresh-token flow;
 - RBAC cho `Owner/Admin`, `PT`, `Member`;
-- Memberâ€“PT assignment;
+- Member–PT assignment;
 - schedule/check-in/attendance reconciliation;
 - Guest conversion;
 - audit/history;
-- cáº¥p quyá»n truy cáº­p media;
+- cấp quyền truy cập media;
 - orchestration sang AI service.
 
-Client khÃ´ng Ä‘Æ°á»£c truy cáº­p trá»±c tiáº¿p PostgreSQL Ä‘á»ƒ bypass backend rule.
+Client không được truy cập trực tiếp PostgreSQL để bypass backend rule.
 
 ### 3.2. Supabase boundary
 
-Trong MVP, Supabase Ä‘Æ°á»£c chá»‘t cho:
+Trong MVP, Supabase được chốt cho:
 
 1. **PostgreSQL managed database**;
 2. **Supabase Storage**.
 
-KhÃ´ng máº·c Ä‘á»‹nh dÃ¹ng thÃªm:
+Không mặc định dùng thêm:
 
 - Supabase Auth;
 - Supabase Realtime;
 - Edge Functions;
-- database access trá»±c tiáº¿p tá»« client;
-- feature Supabase khÃ¡c chá»‰ vÃ¬ cÃ³ sáºµn.
+- database access trực tiếp từ client;
+- feature Supabase khác chỉ vì có sẵn.
 
-Muá»‘n bá»• sung pháº£i update SOT vÃ  `CHANGELOG.md`.
+Muốn bổ sung phải update SOT và `CHANGELOG.md`.
 
 ---
 
 ## 4. Authentication
 
-CÆ¡ cháº¿ Ä‘Ã£ chá»‘t:
+Cơ chế đã chốt:
 
 ```text
 Login
-  -> NestJS xÃ¡c thá»±c account
+  -> NestJS xác thực account
   -> issue access JWT + refresh token
-  -> client lÆ°u session theo cÆ¡ cháº¿ an toÃ n phÃ¹ há»£p platform
-  -> access JWT dÃ¹ng gá»i REST API
-  -> refresh token dÃ¹ng láº¥y access JWT má»›i
+  -> client lưu session theo cơ chế an toàn phù hợp platform
+  -> access JWT dùng gọi REST API
+  -> refresh token dùng lấy access JWT mới
 ```
 
-Quy táº¯c:
+Quy tắc:
 
-1. KhÃ´ng dÃ¹ng Supabase Auth trong baseline nÃ y.
-2. Backend pháº£i kiá»ƒm tra role/scope trÃªn má»—i endpoint nháº¡y cáº£m.
-3. Refresh token pháº£i cÃ³ lifecycle rÃµ: issue, rotate/revoke theo implementation Ä‘Æ°á»£c duyá»‡t.
-4. KhÃ´ng coi route guard phÃ­a client lÃ  security boundary.
-5. Test pháº£i cÃ³ session Ä‘á»™c láº­p cho ba role.
-6. iOS/Android lÆ°u session báº±ng Expo SecureStore vá»›i pháº¡m vi thiáº¿t bá»‹; web chá»‰ giá»¯ token trong memory á»Ÿ baseline vÃ  yÃªu cáº§u Ä‘Äƒng nháº­p láº¡i sau khi reload, khÃ´ng persist refresh token trong localStorage/AsyncStorage.
+1. Không dùng Supabase Auth trong baseline này.
+2. Backend phải kiểm tra role/scope trên mỗi endpoint nhạy cảm.
+3. Refresh token phải có lifecycle rõ: issue, rotate/revoke theo implementation được duyệt.
+4. Không coi route guard phía client là security boundary.
+5. Test phải có session độc lập cho ba role.
+6. iOS/Android lưu session bằng Expo SecureStore với phạm vi thiết bị; web chỉ giữ token trong memory ở baseline và yêu cầu đăng nhập lại sau khi reload, không persist refresh token trong localStorage/AsyncStorage.
 
-Chi tiáº¿t behavior role náº±m á»Ÿ `05-business-auth-role-access-sot.md` vÃ  security contract náº±m á»Ÿ `10-tech-data-security-audit-sot.md`.
+Chi tiết behavior role nằm ở `05-business-auth-role-access-sot.md` và security contract nằm ở `10-tech-data-security-audit-sot.md`.
 
 ---
 
@@ -144,12 +144,12 @@ Chi tiáº¿t behavior role náº±m á»Ÿ `05-business-auth-role-access-sot.md
 
 ### 5.1. PostgreSQL + Prisma
 
-PostgreSQL lÃ  relational source of truth cho dá»¯ liá»‡u nghiá»‡p vá»¥ nhÆ°:
+PostgreSQL là relational source of truth cho dữ liệu nghiệp vụ như:
 
 - users/account;
 - PT profile;
 - Member profile;
-- Memberâ€“PT assignment history;
+- Member–PT assignment history;
 - schedule;
 - raw check-in;
 - attendance reconciliation;
@@ -157,51 +157,51 @@ PostgreSQL lÃ  relational source of truth cho dá»¯ liá»‡u nghiá»‡p 
 - AI analysis metadata/result;
 - audit.
 
-Prisma chá»‹u trÃ¡ch nhiá»‡m:
+Prisma chịu trách nhiệm:
 
 - schema mapping;
 - migration;
 - typed database access trong NestJS;
-- transaction cho cÃ¡c flow cáº§n atomicity.
+- transaction cho các flow cần atomicity.
 
-KhÃ´ng dÃ¹ng client-side ORM Ä‘á»ƒ truy cáº­p database trá»±c tiáº¿p.
+Không dùng client-side ORM để truy cập database trực tiếp.
 
 ### 5.2. Transaction-critical flows
 
-Báº¯t buá»™c dÃ¹ng transaction phÃ¹ há»£p cho tá»‘i thiá»ƒu:
+Bắt buộc dùng transaction phù hợp cho tối thiểu:
 
-- táº¡o Member + initial PT assignment;
-- Ä‘á»•i PT;
+- tạo Member + initial PT assignment;
+- đổi PT;
 - Guest -> Member conversion;
-- mutation attendance/audit cÃ³ nhiá»u record liÃªn quan;
-- cÃ¡c flow khÃ¡c Ä‘Æ°á»£c `10-tech-data-security-audit-sot.md` Ä‘Ã¡nh dáº¥u atomic.
+- mutation attendance/audit có nhiều record liên quan;
+- các flow khác được `10-tech-data-security-audit-sot.md` đánh dấu atomic.
 
 ---
 
 ## 6. Storage stack
 
-Storage Ä‘Ã£ chá»‘t: **Supabase Storage**.
+Storage đã chốt: **Supabase Storage**.
 
-DÃ¹ng cho binary/media nhÆ°:
+Dùng cho binary/media như:
 
-- video cÆ¡ thá»ƒ phá»¥c vá»¥ AI analysis;
-- media/result artifact náº¿u requirement thá»±c táº¿ cáº§n;
-- file khÃ´ng phÃ¹ há»£p lÆ°u trá»±c tiáº¿p trong PostgreSQL.
+- video cơ thể phục vụ AI analysis;
+- media/result artifact nếu requirement thực tế cần;
+- file không phù hợp lưu trực tiếp trong PostgreSQL.
 
-Quy táº¯c:
+Quy tắc:
 
-1. Raw body video pháº£i private máº·c Ä‘á»‹nh.
-2. Metadata thuá»™c database; binary náº±m trong Storage.
-3. Backend kiá»ƒm soÃ¡t quyá»n truy cáº­p media.
-4. KhÃ´ng dÃ¹ng public bucket cho raw body video.
-5. Client khÃ´ng Ä‘Æ°á»£c dá»±a vÃ o path Ä‘oÃ¡n Ä‘Æ°á»£c Ä‘á»ƒ coi lÃ  authorization.
-6. Upload/download nÃªn dÃ¹ng access mechanism cÃ³ thá»i háº¡n hoáº·c flow do backend cáº¥p quyá»n náº¿u implementation cáº§n client truyá»n file trá»±c tiáº¿p tá»›i Storage.
+1. Raw body video phải private mặc định.
+2. Metadata thuộc database; binary nằm trong Storage.
+3. Backend kiểm soát quyền truy cập media.
+4. Không dùng public bucket cho raw body video.
+5. Client không được dựa vào path đoán được để coi là authorization.
+6. Upload/download nên dùng access mechanism có thời hạn hoặc flow do backend cấp quyền nếu implementation cần client truyền file trực tiếp tới Storage.
 
 ---
 
 ## 7. AI service stack
 
-| Nhu cáº§u | CÃ´ng nghá»‡ Ä‘Ã£ chá»‘t |
+| Nhu cầu | Công nghệ đã chốt |
 |---|---|
 | AI microservice/API | Python + FastAPI |
 | Computer Vision | OpenCV |
@@ -210,11 +210,11 @@ Quy táº¯c:
 
 ### 7.1. Service boundary
 
-Kiáº¿n trÃºc AI báº¯t buá»™c:
+Kiến trúc AI bắt buộc:
 
 ```text
 NestJS/Core Backend
-  -> yÃªu cáº§u AI analysis
+  -> yêu cầu AI analysis
   -> FastAPI AI Service
       -> OpenCV preprocessing
       -> MediaPipe Pose extraction
@@ -224,138 +224,138 @@ NestJS/Core Backend
   -> NestJS persist/result authorization
 ```
 
-### 7.2. Rule báº¯t buá»™c
+### 7.2. Rule bắt buộc
 
-1. OpenAI API **khÃ´ng nháº­n raw body video lÃ m nguá»“n phÃ¢n tÃ­ch chÃ­nh trong baseline**.
-2. Video pháº£i qua OpenCV + MediaPipe Pose trÆ°á»›c.
-3. Táº§ng CV/Pose táº¡o structured JSON cÃ³ quality/confidence/context cáº§n thiáº¿t.
-4. OpenAI API nháº­n structured JSON vÃ  context nghiá»‡p vá»¥ Ä‘Æ°á»£c phÃ©p Ä‘á»ƒ sinh lá»i khuyÃªn/lá»™ trÃ¬nh.
-5. AI output pháº£i validate theo schema trÆ°á»›c khi persist/hiá»ƒn thá»‹.
-6. KhÃ´ng biáº¿n AI thÃ nh medical diagnosis.
-7. Version cá»§a structured schema/pipeline/model pháº£i Ä‘Æ°á»£c lÆ°u Ä‘á»§ Ä‘á»ƒ debug/audit theo `11-tech-ai-analysis-pipeline-sot.md`.
+1. OpenAI API **không nhận raw body video làm nguồn phân tích chính trong baseline**.
+2. Video phải qua OpenCV + MediaPipe Pose trước.
+3. Tầng CV/Pose tạo structured JSON có quality/confidence/context cần thiết.
+4. OpenAI API nhận structured JSON và context nghiệp vụ được phép để sinh lời khuyên/lộ trình.
+5. AI output phải validate theo schema trước khi persist/hiển thị.
+6. Không biến AI thành medical diagnosis.
+7. Version của structured schema/pipeline/model phải được lưu đủ để debug/audit theo `11-tech-ai-analysis-pipeline-sot.md`.
 
 ---
 
 ## 8. Notification
 
-Notification Ä‘Ã£ chá»‘t: **Expo Push Notifications**.
+Notification đã chốt: **Expo Push Notifications**.
 
 Baseline:
 
-- dÃ¹ng cho push notification khi requirement tÆ°Æ¡ng á»©ng Ä‘Æ°á»£c implement;
-- backend quáº£n lÃ½ logic phÃ¡t notification;
-- Expo client Ä‘Äƒng kÃ½ push token theo flow phÃ¹ há»£p;
-- notification khÃ´ng Ä‘Æ°á»£c tá»± trá»Ÿ thÃ nh source of truth cho lá»‹ch/check-in/attendance.
+- dùng cho push notification khi requirement tương ứng được implement;
+- backend quản lý logic phát notification;
+- Expo client đăng ký push token theo flow phù hợp;
+- notification không được tự trở thành source of truth cho lịch/check-in/attendance.
 
-File stack nÃ y khÃ´ng tá»± thÃªm loáº¡i notification má»›i náº¿u Product Requirements chÆ°a yÃªu cáº§u.
+File stack này không tự thêm loại notification mới nếu Product Requirements chưa yêu cầu.
 
 ---
 
 ## 9. Realtime
 
-MVP **khÃ´ng cáº§n WebSocket**.
+MVP **không cần WebSocket**.
 
-Quy táº¯c:
+Quy tắc:
 
-1. REST API lÃ  transport chÃ­nh.
-2. KhÃ´ng báº­t Supabase Realtime chá»‰ vÃ¬ database Ä‘ang Ä‘áº·t trÃªn Supabase.
-3. Dá»¯ liá»‡u cáº§n refresh cÃ³ thá»ƒ dÃ¹ng request láº¡i, refetch hoáº·c polling cÃ³ kiá»ƒm soÃ¡t náº¿u requirement thá»±c táº¿ cáº§n.
-4. WebSocket/Realtime chá»‰ Ä‘Æ°á»£c bá»• sung sau khi cÃ³ use case rÃµ vÃ  owner duyá»‡t.
+1. REST API là transport chính.
+2. Không bật Supabase Realtime chỉ vì database đang đặt trên Supabase.
+3. Dữ liệu cần refresh có thể dùng request lại, refetch hoặc polling có kiểm soát nếu requirement thực tế cần.
+4. WebSocket/Realtime chỉ được bổ sung sau khi có use case rõ và owner duyệt.
 
 ---
 
 ## 10. Deployment & cost rule
 
-Má»¥c tiÃªu triá»ƒn khai MVP:
+Mục tiêu triển khai MVP:
 
-- Æ°u tiÃªn cháº¡y local trong quÃ¡ trÃ¬nh phÃ¡t triá»ƒn;
-- Æ°u tiÃªn free tier hoáº·c chi phÃ­ tháº¥p;
-- PostgreSQL dÃ¹ng Supabase Free theo quyáº¿t Ä‘á»‹nh hiá»‡n táº¡i;
-- Storage dÃ¹ng Supabase Storage;
-- khÃ´ng tá»± chá»n thÃªm paid infrastructure khi chÆ°a cÃ³ nhu cáº§u;
-- provider deploy cá»¥ thá»ƒ cho NestJS/FastAPI/web **chÆ°a Ä‘Æ°á»£c khÃ³a bá»Ÿi danh sÃ¡ch stack nÃ y**, vÃ¬ váº­y Agent khÃ´ng Ä‘Æ°á»£c tá»± biáº¿n má»™t lá»±a chá»n deploy táº¡m thÃ nh SOT canonical.
+- ưu tiên chạy local trong quá trình phát triển;
+- ưu tiên free tier hoặc chi phí thấp;
+- PostgreSQL dùng Supabase Free theo quyết định hiện tại;
+- Storage dùng Supabase Storage;
+- không tự chọn thêm paid infrastructure khi chưa có nhu cầu;
+- provider deploy cụ thể cho NestJS/FastAPI/web **chưa được khóa bởi danh sách stack này**, vì vậy Agent không được tự biến một lựa chọn deploy tạm thành SOT canonical.
 
-Khi owner chá»‘t host cá»¥ thá»ƒ, cáº­p nháº­t file nÃ y + `CHANGELOG.md`.
+Khi owner chốt host cụ thể, cập nhật file này + `CHANGELOG.md`.
 
 ---
 
 ## 11. Source control
 
-Source control Ä‘Ã£ chá»‘t:
+Source control đã chốt:
 
 ```text
 Git + GitHub
 ```
 
-Quy táº¯c:
+Quy tắc:
 
-- code vÃ  migration pháº£i version-controlled;
-- khÃ´ng commit secret/API key;
-- `.env` tháº­t khÃ´ng Ä‘Æ°a lÃªn repository;
-- tÃ i liá»‡u SOT náº±m cÃ¹ng repository/project docs Ä‘á»ƒ Codex Ä‘á»c trÆ°á»›c khi implement;
-- thay Ä‘á»•i decision-level pháº£i Ä‘i cÃ¹ng update SOT/CHANGELOG phÃ¹ há»£p.
+- code và migration phải version-controlled;
+- không commit secret/API key;
+- `.env` thật không đưa lên repository;
+- tài liệu SOT nằm cùng repository/project docs để Codex đọc trước khi implement;
+- thay đổi decision-level phải đi cùng update SOT/CHANGELOG phù hợp.
 
 ---
 
 ## 12. Testing tooling status
 
-Requirement báº¯t buá»™c cÃ³ test Ä‘Ã£ náº±m trong Product Requirements/Technical Architecture, nhÆ°ng **tÃªn testing library cá»¥ thá»ƒ chÆ°a Ä‘Æ°á»£c owner khÃ³a trong danh sÃ¡ch tech stack nÃ y**.
+Requirement bắt buộc có test đã nằm trong Product Requirements/Technical Architecture, nhưng **tên testing library cụ thể chưa được owner khóa trong danh sách tech stack này**.
 
-Do Ä‘Ã³:
+Do đó:
 
-- khÃ´ng ghi Jest/Vitest/Playwright/Maestro/Detox thÃ nh canonical chá»‰ báº±ng suy Ä‘oÃ¡n;
-- cÃ³ thá»ƒ dÃ¹ng tooling Ä‘Ã£ tá»“n táº¡i trong codebase sau khi project setup náº¿u phÃ¹ há»£p, nhÆ°ng náº¿u muá»‘n khÃ³a thÃ nh SOT pháº£i cáº­p nháº­t file nÃ y;
-- invariant quan trá»ng váº«n báº¯t buá»™c cÃ³ test báº¥t ká»ƒ thÆ° viá»‡n test cuá»‘i cÃ¹ng lÃ  gÃ¬.
+- không ghi Jest/Vitest/Playwright/Maestro/Detox thành canonical chỉ bằng suy đoán;
+- có thể dùng tooling đã tồn tại trong codebase sau khi project setup nếu phù hợp, nhưng nếu muốn khóa thành SOT phải cập nhật file này;
+- invariant quan trọng vẫn bắt buộc có test bất kể thư viện test cuối cùng là gì.
 
 ---
 
-## 13. Stack khÃ´ng dÃ¹ng trong baseline MVP
+## 13. Stack không dùng trong baseline MVP
 
-KhÃ´ng tá»± thay baseline báº±ng:
+Không tự thay baseline bằng:
 
-| KhÃ´ng dÃ¹ng/thÃªm máº·c Ä‘á»‹nh | LÃ½ do |
+| Không dùng/thêm mặc định | Lý do |
 |---|---|
-| Flutter | Client Ä‘Ã£ chá»‘t React Native + Expo |
-| Web frontend riÃªng báº±ng framework khÃ¡c | Web Ä‘Ã£ chá»‘t React Native Web cÃ¹ng Expo codebase |
-| Redux lÃ m state chÃ­nh | Zustand Ä‘Ã£ chá»‘t |
-| GraphQL | REST API Ä‘Ã£ chá»‘t |
-| Supabase Auth | Auth Ä‘Ã£ chá»‘t JWT + Refresh Token do NestJS quáº£n lÃ½ |
-| Firebase lÃ m backend/database chÃ­nh | Backend/data stack Ä‘Ã£ chá»‘t NestJS + PostgreSQL/Supabase |
-| WebSocket/Supabase Realtime á»Ÿ MVP | ChÆ°a cáº§n realtime |
-| Raw video -> LLM trá»±c tiáº¿p | TrÃ¡i pipeline AI Ä‘Ã£ chá»‘t |
-| ORM khÃ¡c thay Prisma | Prisma Ä‘Ã£ chá»‘t |
+| Flutter | Client đã chốt React Native + Expo |
+| Web frontend riêng bằng framework khác | Web đã chốt React Native Web cùng Expo codebase |
+| Redux làm state chính | Zustand đã chốt |
+| GraphQL | REST API đã chốt |
+| Supabase Auth | Auth đã chốt JWT + Refresh Token do NestJS quản lý |
+| Firebase làm backend/database chính | Backend/data stack đã chốt NestJS + PostgreSQL/Supabase |
+| WebSocket/Supabase Realtime ở MVP | Chưa cần realtime |
+| Raw video -> LLM trực tiếp | Trái pipeline AI đã chốt |
+| ORM khác thay Prisma | Prisma đã chốt |
 
-Danh sÃ¡ch nÃ y lÃ  baseline hiá»‡n táº¡i, khÃ´ng pháº£i cáº¥m vÄ©nh viá»…n. Má»i thay Ä‘á»•i cáº§n owner duyá»‡t vÃ  update SOT.
+Danh sách này là baseline hiện tại, không phải cấm vĩnh viễn. Mọi thay đổi cần owner duyệt và update SOT.
 
 ---
 
 ## 14. Dependency/implementation rule
 
-1. Æ¯u tiÃªn package tÆ°Æ¡ng thÃ­ch chÃ­nh thá»©c vá»›i phiÃªn báº£n Expo/NestJS/FastAPI Ä‘ang dÃ¹ng khi báº¯t Ä‘áº§u implementation.
-2. KhÃ´ng hard-code version package vÃ o SOT náº¿u owner chÆ°a chá»‘t version cá»¥ thá»ƒ.
-3. Khi package native thuá»™c Expo ecosystem, dÃ¹ng cÃ¡ch cÃ i Ä‘áº·t tÆ°Æ¡ng thÃ­ch Expo thay vÃ¬ Ã©p version khÃ´ng phÃ¹ há»£p.
-4. KhÃ´ng thÃªm má»™t library thá»© hai giáº£i cÃ¹ng bÃ i toÃ¡n náº¿u stack hiá»‡n táº¡i Ä‘Ã£ Ä‘Ã¡p á»©ng Ä‘á»§.
-5. KhÃ´ng thay Axios báº±ng client khÃ¡c, Prisma báº±ng ORM khÃ¡c hoáº·c Zustand báº±ng state library khÃ¡c náº¿u chÆ°a cÃ³ decision change.
+1. Ưu tiên package tương thích chính thức với phiên bản Expo/NestJS/FastAPI đang dùng khi bắt đầu implementation.
+2. Không hard-code version package vào SOT nếu owner chưa chốt version cụ thể.
+3. Khi package native thuộc Expo ecosystem, dùng cách cài đặt tương thích Expo thay vì ép version không phù hợp.
+4. Không thêm một library thứ hai giải cùng bài toán nếu stack hiện tại đã đáp ứng đủ.
+5. Không thay Axios bằng client khác, Prisma bằng ORM khác hoặc Zustand bằng state library khác nếu chưa có decision change.
 
 ---
 
-## 15. Quy táº¯c thay Ä‘á»•i tech stack
+## 15. Quy tắc thay đổi tech stack
 
-Muá»‘n thay báº¥t ká»³ lá»±a chá»n nÃ o trong file nÃ y pháº£i ghi rÃµ:
+Muốn thay bất kỳ lựa chọn nào trong file này phải ghi rõ:
 
-1. cÃ´ng nghá»‡ hiá»‡n táº¡i;
-2. cÃ´ng nghá»‡ Ä‘á» xuáº¥t;
-3. lÃ½ do;
-4. requirement/non-functional need nÃ o yÃªu cáº§u thay Ä‘á»•i;
-5. áº£nh hÆ°á»Ÿng client/backend/database/AI;
+1. công nghệ hiện tại;
+2. công nghệ đề xuất;
+3. lý do;
+4. requirement/non-functional need nào yêu cầu thay đổi;
+5. ảnh hưởng client/backend/database/AI;
 6. migration plan;
-7. áº£nh hÆ°á»Ÿng deploy/cost;
-8. áº£nh hÆ°á»Ÿng testing;
-9. rollback plan náº¿u phÃ¹ há»£p.
+7. ảnh hưởng deploy/cost;
+8. ảnh hưởng testing;
+9. rollback plan nếu phù hợp.
 
-Sau khi owner duyá»‡t:
+Sau khi owner duyệt:
 
-- cáº­p nháº­t `04-tech-stack-sot.md`;
-- cáº­p nháº­t `03-technical-architecture-sot.md` náº¿u architecture bá»‹ áº£nh hÆ°á»Ÿng;
-- cáº­p nháº­t technical detail liÃªn quan;
+- cập nhật `04-tech-stack-sot.md`;
+- cập nhật `03-technical-architecture-sot.md` nếu architecture bị ảnh hưởng;
+- cập nhật technical detail liên quan;
 - ghi `CHANGELOG.md`.

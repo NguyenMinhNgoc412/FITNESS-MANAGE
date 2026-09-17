@@ -23,6 +23,9 @@ export class AuthService {
     } catch { throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn.'); }
   }
   async logout(sessionId: string) { await this.prisma.session.updateMany({ where: { id: sessionId, revokedAt: null }, data: { revokedAt: new Date() } }); }
+  async profile(userId: string) {
+    return this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true, fullName: true, email: true, phone: true, role: true, status: true } });
+  }
   private async issue(userId: string, role: string) {
     const sessionId = randomUUID(); const payload: TokenPayload = { sub: userId, role, sessionId };
     const accessTtl = process.env.JWT_ACCESS_TTL ?? '15m';

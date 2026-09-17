@@ -1,69 +1,69 @@
-﻿# FITNESS-MANAGE SOT 12 â€” AI Agent / Codex Task Splitting Guide
+# FITNESS-MANAGE SOT 12 — AI Agent / Codex Task Splitting Guide
 
-**Tráº¡ng thÃ¡i:** HÆ°á»›ng dáº«n triá»ƒn khai  
-**Dá»± Ã¡n:** FITNESS-MANAGE  
-**NgÃ y cáº­p nháº­t:** 2026-09-16  
-**Má»¥c tiÃªu:** Chia task nhá», bÃ¡m requirement, khÃ´ng Ä‘á»ƒ Agent tá»± thÃªm nghiá»‡p vá»¥.
+**Trạng thái:** Hướng dẫn triển khai  
+**Dự án:** FITNESS-MANAGE  
+**Ngày cập nhật:** 2026-09-16  
+**Mục tiêu:** Chia task nhỏ, bám requirement, không để Agent tự thêm nghiệp vụ.
 
 ---
 
-## 1. Quy táº¯c Ä‘á»c trÆ°á»›c má»—i task
+## 1. Quy tắc đọc trước mỗi task
 
-Báº¯t buá»™c:
+Bắt buộc:
 
 1. `README.md`
 2. `01-product-brief-sot.md`
 3. `02-product-requirements-sot.md`
 4. `03-technical-architecture-sot.md`
 5. `04-tech-stack-sot.md`
-6. file chi tiáº¿t liÃªn quan task
+6. file chi tiết liên quan task
 
-Náº¿u task cháº¡m data/security/history: Ä‘á»c thÃªm `10-tech-data-security-audit-sot.md`.
+Nếu task chạm data/security/history: đọc thêm `10-tech-data-security-audit-sot.md`.
 
-Náº¿u task AI: Ä‘á»c `09-business-ai-body-analysis-sot.md` vÃ  `11-tech-ai-analysis-pipeline-sot.md`.
+Nếu task AI: đọc `09-business-ai-body-analysis-sot.md` và `11-tech-ai-analysis-pipeline-sot.md`.
 
 ---
 
 ## 2. Rule chia task
 
-Má»™t task tá»‘t:
+Một task tốt:
 
-- cover má»™t nhÃ³m requirement nhá»;
-- cÃ³ output test Ä‘Æ°á»£c;
-- khÃ´ng gom Auth + Assignment + Check-in + AI trong cÃ¹ng má»™t PR;
-- ghi rÃµ requirement IDs;
-- cÃ³ migration náº¿u data contract Ä‘á»•i;
-- cÃ³ test cho invariant quan trá»ng.
+- cover một nhóm requirement nhỏ;
+- có output test được;
+- không gom Auth + Assignment + Check-in + AI trong cùng một PR;
+- ghi rõ requirement IDs;
+- có migration nếu data contract đổi;
+- có test cho invariant quan trọng.
 
-Agent khÃ´ng Ä‘Æ°á»£c tá»± thÃªm Staff/Dev role, booking PT theo buá»•i hoáº·c thay stack Ä‘Ã£ khÃ³a trong `04-tech-stack-sot.md`.
+Agent không được tự thêm Staff/Dev role, booking PT theo buổi hoặc thay stack đã khóa trong `04-tech-stack-sot.md`.
 
 ---
 
-## 3. Thá»© tá»± implement Ä‘á» xuáº¥t
+## 3. Thứ tự implement đề xuất
 
-### T-000 â€” Project foundation
+### T-000 — Project foundation
 
-Äá»c: `03`, `04`, `10`.
+Đọc: `03`, `04`, `10`.
 
 Output:
 
-- project structure theo stack Ä‘Ã£ duyá»‡t;
+- project structure theo stack đã duyệt;
 - env/config separation;
 - lint/test baseline;
 - migration framework;
-- auth shell chÆ°a cÃ³ business feature sÃ¢u.
+- auth shell chưa có business feature sâu.
 
 Acceptance:
 
-- build/run Ä‘Æ°á»£c;
-- test command cháº¡y Ä‘Æ°á»£c;
-- dÃ¹ng Ä‘Ãºng stack trong `04-tech-stack-sot.md`; khÃ´ng tá»± thay framework/provider.
+- build/run được;
+- test command chạy được;
+- dùng đúng stack trong `04-tech-stack-sot.md`; không tự thay framework/provider.
 
 ---
 
-### T-001 â€” Auth & role access
+### T-001 — Auth & role access
 
-Äá»c: `05`, `10`.
+Đọc: `05`, `10`.
 
 Requirement: `PR-AUTH-001`, `PR-AUTH-002`, `PR-TEST-001`.
 
@@ -72,38 +72,38 @@ Output:
 - login/session;
 - route/screen guard;
 - backend/service authorization;
-- seed/test accounts cho 3 role á»Ÿ mÃ´i trÆ°á»ng test.
+- seed/test accounts cho 3 role ở môi trường test.
 
 Acceptance:
 
-- ba session role Ä‘á»™c láº­p;
-- Member/PT khÃ´ng vÆ°á»£t quyá»n;
-- inactive/locked bá»‹ cháº·n.
+- ba session role độc lập;
+- Member/PT không vượt quyền;
+- inactive/locked bị chặn.
 
 ---
 
-### T-002 â€” PT management
+### T-002 — PT management
 
-Äá»c: `05`, `10`.
+Đọc: `05`, `10`.
 
 Requirement: `PR-PT-001`, `PR-PT-002`.
 
 Output:
 
-- PT CRUD cáº§n thiáº¿t;
+- PT CRUD cần thiết;
 - active/inactive;
 - PT member list scope.
 
 Acceptance:
 
-- inactive PT khÃ´ng assignment má»›i;
-- history khÃ´ng máº¥t.
+- inactive PT không assignment mới;
+- history không mất.
 
 ---
 
-### T-003 â€” Member registration + initial assignment
+### T-003 — Member registration + initial assignment
 
-Äá»c: `06`, `10`.
+Đọc: `06`, `10`.
 
 Requirement: `PR-MEMBER-001..003`.
 
@@ -112,18 +112,18 @@ Output:
 - create Member;
 - select PT;
 - transaction initial assignment;
-- Member/PT views cáº­p nháº­t.
+- Member/PT views cập nhật.
 
 Acceptance:
 
-- Member active cÃ³ Ä‘Ãºng má»™t primary PT;
-- fail assignment khÃ´ng Ä‘á»ƒ registration á»Ÿ tráº¡ng thÃ¡i sai.
+- Member active có đúng một primary PT;
+- fail assignment không để registration ở trạng thái sai.
 
 ---
 
-### T-004 â€” Change PT
+### T-004 — Change PT
 
-Äá»c: `06`, `10`.
+Đọc: `06`, `10`.
 
 Requirement: `PR-ASSIGN-001..002`.
 
@@ -136,35 +136,35 @@ Output:
 
 Acceptance:
 
-- khÃ´ng hai active assignment;
-- old history giá»¯ nguyÃªn;
-- khÃ´ng booking PT theo buá»•i.
+- không hai active assignment;
+- old history giữ nguyên;
+- không booking PT theo buổi.
 
 ---
 
-### T-005 â€” Schedule & flexible window
+### T-005 — Schedule & flexible window
 
-Äá»c: `07`, `10`.
+Đọc: `07`, `10`.
 
 Requirement: `PR-SCHEDULE-001..002`.
 
 Output:
 
-- schedule CRUD cáº§n thiáº¿t;
+- schedule CRUD cần thiết;
 - fixed/flexible type;
 - max 2h validation cho flexible baseline;
 - role-scoped schedule queries.
 
 Acceptance:
 
-- lá»‹ch gáº¯n Ä‘Ãºng Member/PT context;
-- lá»‹ch cÅ© khÃ´ng rewrite theo current PT.
+- lịch gắn đúng Member/PT context;
+- lịch cũ không rewrite theo current PT.
 
 ---
 
-### T-006 â€” Check-in raw events
+### T-006 — Check-in raw events
 
-Äá»c: `07`, `10`.
+Đọc: `07`, `10`.
 
 Requirement: `PR-CHECKIN-001`, `PR-CHECKIN-002`.
 
@@ -177,15 +177,15 @@ Output:
 
 Acceptance:
 
-- actor chá»‰ check-in chÃ­nh mÃ¬nh;
-- timestamp/context Ä‘Ãºng;
-- retry khÃ´ng duplicate báº¥t há»£p lÃ½.
+- actor chỉ check-in chính mình;
+- timestamp/context đúng;
+- retry không duplicate bất hợp lý.
 
 ---
 
-### T-007 â€” Attendance reconciliation
+### T-007 — Attendance reconciliation
 
-Äá»c: `07`, `10`.
+Đọc: `07`, `10`.
 
 Requirement: `PR-CHECKIN-003`, `PR-CHECKIN-004`.
 
@@ -198,15 +198,15 @@ Output:
 
 Acceptance:
 
-- Member present/PT missing táº¡o exception sau window há»£p lá»‡;
-- khÃ´ng tá»± káº¿t luáº­n ká»· luáº­t;
-- Ä‘á»•i PT khÃ´ng rewrite history.
+- Member present/PT missing tạo exception sau window hợp lệ;
+- không tự kết luận kỷ luật;
+- đổi PT không rewrite history.
 
 ---
 
-### T-008 â€” Guest trial + conversion
+### T-008 — Guest trial + conversion
 
-Äá»c: `08`, `10`.
+Đọc: `08`, `10`.
 
 Requirement: `PR-GUEST-001..003`.
 
@@ -219,15 +219,15 @@ Output:
 
 Acceptance:
 
-- Guest khÃ´ng cáº§n account;
+- Guest không cần account;
 - conversion atomic;
-- khÃ´ng máº¥t trial source.
+- không mất trial source.
 
 ---
 
-### T-009 â€” AI upload & analysis orchestration
+### T-009 — AI upload & analysis orchestration
 
-Äá»c: `09`, `11`, `10`.
+Đọc: `09`, `11`, `10`.
 
 Requirement: `PR-AI-001`, `PR-AI-002`, `PR-AI-004`.
 
@@ -240,15 +240,15 @@ Output:
 
 Acceptance:
 
-- invalid video khÃ´ng táº¡o fake result;
-- structured result tá»“n táº¡i trÆ°á»›c generation;
-- run history khÃ´ng overwrite.
+- invalid video không tạo fake result;
+- structured result tồn tại trước generation;
+- run history không overwrite.
 
 ---
 
-### T-010 â€” AI recommendation & training plan
+### T-010 — AI recommendation & training plan
 
-Äá»c: `09`, `11`.
+Đọc: `09`, `11`.
 
 Requirement: `PR-AI-003`, `PR-AI-004`.
 
@@ -261,15 +261,15 @@ Output:
 
 Acceptance:
 
-- LLM khÃ´ng dÃ¹ng raw video lÃ m nguá»“n duy nháº¥t;
-- uncertainty Ä‘Æ°á»£c giá»¯;
-- khÃ´ng cháº©n Ä‘oÃ¡n y khoa.
+- LLM không dùng raw video làm nguồn duy nhất;
+- uncertainty được giữ;
+- không chẩn đoán y khoa.
 
 ---
 
-### T-011 â€” Audit, concurrency & E2E hardening
+### T-011 — Audit, concurrency & E2E hardening
 
-Äá»c: toÃ n bá»™, trá»ng tÃ¢m `10`.
+Đọc: toàn bộ, trọng tâm `10`.
 
 Requirement: `PR-AUDIT-001..002`, `PR-TEST-001`.
 
@@ -282,26 +282,26 @@ Output:
 
 Acceptance:
 
-- race change PT khÃ´ng táº¡o double assignment;
-- check-in double tap an toÃ n;
-- Guest khÃ´ng double convert;
-- Owner/PT/Member flow cháº¡y Ä‘á»“ng thá»i Ä‘Ãºng scope.
+- race change PT không tạo double assignment;
+- check-in double tap an toàn;
+- Guest không double convert;
+- Owner/PT/Member flow chạy đồng thời đúng scope.
 
 ---
 
 ## 4. Prompt template cho Codex
 
 ```text
-Báº¡n Ä‘ang implement FITNESS-MANAGE.
-Tráº£ lá»i báº±ng tiáº¿ng Viá»‡t.
+Bạn đang implement FITNESS-MANAGE.
+Trả lời bằng tiếng Việt.
 
-Äá»c:
+Đọc:
 - README.md
 - 01-product-brief-sot.md
 - 02-product-requirements-sot.md
 - 03-technical-architecture-sot.md
 - 04-tech-stack-sot.md
-- <file SOT chi tiáº¿t liÃªn quan>
+- <file SOT chi tiết liên quan>
 
 Task:
 <task>
@@ -309,27 +309,27 @@ Task:
 Requirement IDs:
 <IDs>
 
-YÃªu cáº§u:
-- KhÃ´ng thÃªm feature ngoÃ i requirement.
-- KhÃ´ng tá»± thÃªm Staff/Dev role.
-- KhÃ´ng biáº¿n PT assignment thÃ nh booking PT theo buá»•i.
+Yêu cầu:
+- Không thêm feature ngoài requirement.
+- Không tự thêm Staff/Dev role.
+- Không biến PT assignment thành booking PT theo buổi.
 - Preserve assignment/check-in/AI history.
-- Náº¿u task AI: báº¯t buá»™c OpenCV + MediaPipe Pose táº¡o structured JSON trÆ°á»›c OpenAI API.
-- KhÃ´ng tá»± báº­t Supabase Auth/Realtime/Edge Functions hoáº·c thay REST/Prisma/Zustand/Axios.
-- DÃ¹ng Ä‘Ãºng framework/provider Ä‘Ã£ khÃ³a trong `04-tech-stack-sot.md`; náº¿u cáº§n Ä‘á»•i thÃ¬ dá»«ng vÃ  Ä‘á» xuáº¥t decision change.
-- Implement nhá», test Ä‘Æ°á»£c.
-- Sau khi xong: liá»‡t kÃª file sá»­a, migration, test Ä‘Ã£ cháº¡y, requirement Ä‘Ã£ cover, rá»§i ro cÃ²n láº¡i.
+- Nếu task AI: bắt buộc OpenCV + MediaPipe Pose tạo structured JSON trước OpenAI API.
+- Không tự bật Supabase Auth/Realtime/Edge Functions hoặc thay REST/Prisma/Zustand/Axios.
+- Dùng đúng framework/provider đã khóa trong `04-tech-stack-sot.md`; nếu cần đổi thì dừng và đề xuất decision change.
+- Implement nhỏ, test được.
+- Sau khi xong: liệt kê file sửa, migration, test đã chạy, requirement đã cover, rủi ro còn lại.
 ```
 
 ---
 
 ## 5. Update SOT sau task
 
-| Thay Ä‘á»•i | File cáº­p nháº­t |
+| Thay đổi | File cập nhật |
 |---|---|
 | why/audience/business boundary | `01` |
-| requirement/acceptance/scope | `02` + file business chi tiáº¿t tÆ°Æ¡ng á»©ng |
-| system architecture/module/domain contract | `03` + file tech chi tiáº¿t náº¿u cÃ³ |
+| requirement/acceptance/scope | `02` + file business chi tiết tương ứng |
+| system architecture/module/domain contract | `03` + file tech chi tiết nếu có |
 | technology stack | `04` |
 | auth/role behavior | `05` |
 | assignment behavior | `06` |
@@ -341,4 +341,4 @@ YÃªu cáº§u:
 | task splitting | `12` |
 | decision-level change | `CHANGELOG.md` |
 
-KhÃ´ng sá»­a SOT chá»‰ Ä‘á»ƒ mÃ´ táº£ implementation detail táº¡m thá»i náº¿u quyáº¿t Ä‘á»‹nh sáº£n pháº©m/kiáº¿n trÃºc khÃ´ng Ä‘á»•i.
+Không sửa SOT chỉ để mô tả implementation detail tạm thời nếu quyết định sản phẩm/kiến trúc không đổi.

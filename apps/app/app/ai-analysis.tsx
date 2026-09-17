@@ -1,7 +1,7 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppButton, Card, Feedback, Screen, colors, spacing, typography } from '../src/design-system';
 import { analyzeRun, confirmUpload, createUploadIntent, getRun } from '../src/features/ai-analysis/api';
 import { AnalysisResultCard } from '../src/features/ai-analysis/result-card';
@@ -9,7 +9,7 @@ import { AiRun } from '../src/features/ai-analysis/types';
 import { uploadPrivateVideo } from '../src/features/ai-analysis/upload';
 import { createUploadKey, inferVideoMimeType } from '../src/features/ai-analysis/video';
 import { useAuthStore } from '../src/store/auth';
-import { useRoleGuard } from '../src/use-role-guard';
+import { GuardFallback, useRoleGuard } from '../src/use-role-guard';
 
 type Stage = 'idle' | 'authorizing' | 'uploading' | 'analyzing';
 function stageMessage(stage: Stage): string {
@@ -85,16 +85,20 @@ export default function AiAnalysis() {
     }
   };
 
-  if (!allowed) return null;
+  if (!allowed) return <GuardFallback />;
   return (
     <Screen title="Phân tích cơ thể" subtitle="Video chỉ được dùng cho phân tích fitness, không dùng để chẩn đoán bệnh hoặc chấn thương." headerAction={<AppButton label="Quay lại" variant="secondary" onPress={() => router.back()} />}>
+      <Card style={styles.aiHero}>
+        <Text style={styles.eyebrow}>AI BODY ANALYSIS</Text><Text style={styles.heroTitle}>Hiểu rõ dáng tập của bạn</Text><Text style={styles.heroText}>Kết quả dựa trên chất lượng video và dữ liệu pose có cấu trúc.</Text>
+      </Card>
       <Card>
-        <Text style={styles.heading}>Hướng dẫn quay</Text>
+        <Text style={styles.heading}>Chuẩn bị video</Text>
         <Text style={styles.body}>• Quay đủ toàn thân và giữ cơ thể trong khung hình.</Text>
         <Text style={styles.body}>• Chọn nơi đủ sáng, giữ máy ổn định và tránh che khuất tư thế.</Text>
         <Text style={styles.body}>• Kiểm tra đúng video trước khi xác nhận gửi phân tích.</Text>
       </Card>
-      <Card>
+      <Card style={styles.uploadCard}>
+        <View style={styles.uploadIcon}><Text style={styles.uploadIconText}>⌁</Text></View>
         <AppButton label={asset ? 'Chọn video khác' : 'Chọn video'} variant="secondary" disabled={busy} onPress={() => void chooseVideo()} />
         {asset ? (
           <>
@@ -118,4 +122,11 @@ const styles = StyleSheet.create({
   body: { ...typography.body, color: colors.textMuted },
   fileName: { ...typography.bodyStrong, color: colors.text, marginTop: spacing.xs },
   caption: { ...typography.caption, color: colors.textMuted },
+  aiHero: { backgroundColor: '#EAFDFA', borderColor: '#B8F2E8', gap: spacing.sm },
+  eyebrow: { ...typography.label, color: colors.primary, letterSpacing: 1 },
+  heroTitle: { ...typography.title, color: colors.text },
+  heroText: { ...typography.body, color: colors.textMuted },
+  uploadCard: { alignItems: 'stretch' },
+  uploadIcon: { alignSelf: 'center', height: 54, width: 54, borderRadius: 27, backgroundColor: colors.violetSurface, alignItems: 'center', justifyContent: 'center' },
+  uploadIconText: { color: colors.violet, fontSize: 28 },
 });

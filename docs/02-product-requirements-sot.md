@@ -394,6 +394,19 @@ Mỗi lần phân tích phải có record riêng để có thể so sánh về s
 - mỗi lần có thời điểm, trạng thái xử lý và kết quả tương ứng;
 - output phải truy được về input analysis version đã tạo ra nó.
 
+### PR-AI-005 — Owner dùng chatbot trợ lý vận hành
+
+Owner/Admin có thể dùng chatbot để hỏi và tóm tắt dữ liệu vận hành đã được phân quyền, nhằm giảm thời gian tổng hợp thông tin từ Member, PT, lịch và check-in.
+
+**Acceptance:**
+
+- chỉ Owner/Admin được dùng chatbot vận hành trong phạm vi hiện tại;
+- câu trả lời chỉ sử dụng dữ liệu mà Owner có quyền xem và phải nêu rõ phạm vi thời gian hoặc nguồn dữ liệu khi phù hợp;
+- chatbot có thể điều hướng Owner tới màn hình/bản ghi chi tiết, nhưng không tự thay đổi assignment, lịch, check-in, tài khoản hoặc audit;
+- nếu dữ liệu thiếu, mâu thuẫn hoặc không đủ quyền, chatbot phải nói rõ giới hạn thay vì tự suy đoán;
+- chatbot không nhận raw body video để tự phân tích và không tạo chẩn đoán y khoa;
+- lịch sử phân tích body của Member vẫn tuân theo `PR-AI-001..004` và policy truy cập riêng.
+
 ---
 
 ## 12. Requirement group I — Audit & Data Integrity

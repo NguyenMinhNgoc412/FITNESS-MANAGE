@@ -1,7 +1,7 @@
 import { RoleHome } from '../src/components/role-home';
-import { useRoleGuard } from '../src/use-role-guard';
+import { GuardFallback, useRoleGuard } from '../src/use-role-guard';
 
 export default function Pt() {
   const allowed = useRoleGuard('PT');
-  return allowed ? <RoleHome title="Khu vực PT" description="Xem dữ liệu Member trong phạm vi assignment đang hoạt động." canViewAnalysis menu={[{ label: 'Member đang phụ trách', route: '/people' }, { label: 'Lịch tập', route: '/schedules' }, { label: 'Check-in của tôi', route: '/checkins' }]} /> : null;
+  return allowed ? <RoleHome role="PT" title="Nhịp tập hôm nay" description="Theo dõi Member đang phụ trách và giữ lịch tập đúng nhịp." canViewAnalysis menu={[{ label: 'Member phụ trách', description: 'Danh sách assignment đang hiệu lực.', icon: '◎', route: '/people' }, { label: 'Lịch tập', description: 'Các khung tập liên quan đến bạn.', icon: '▣', route: '/schedules', tone: 'violet' }, { label: 'Check-in', description: 'Xác nhận có mặt tại phòng.', icon: '✓', route: '/checkins', tone: 'coral' }]} /> : <GuardFallback />;
 }

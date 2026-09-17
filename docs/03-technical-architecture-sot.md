@@ -1,47 +1,47 @@
-﻿# FITNESS-MANAGE SOT 03 â€” Technical Architecture
+# FITNESS-MANAGE SOT 03 — Technical Architecture
 
-**Tráº¡ng thÃ¡i:** Source of Truth chÃ­nh cho kiáº¿n trÃºc há»‡ thá»‘ng  
-**Dá»± Ã¡n:** FITNESS-MANAGE  
-**NgÃ y cáº­p nháº­t:** 2026-09-16  
-**Pháº¡m vi:** CÃ¡ch há»‡ thá»‘ng Ä‘Ã¡p á»©ng `02-product-requirements-sot.md`  
-**NgÃ´n ngá»¯:** Tiáº¿ng Viá»‡t  
-**Quy táº¯c:** File nÃ y chá»‰ sá»Ÿ há»¯u kiáº¿n trÃºc vÃ  technical contracts cáº§n Ä‘á»ƒ Ä‘Ã¡p á»©ng requirement Ä‘Ã£ duyá»‡t. KhÃ´ng tá»± thÃªm feature má»›i.
+**Trạng thái:** Source of Truth chính cho kiến trúc hệ thống  
+**Dự án:** FITNESS-MANAGE  
+**Ngày cập nhật:** 2026-09-16  
+**Phạm vi:** Cách hệ thống đáp ứng `02-product-requirements-sot.md`  
+**Ngôn ngữ:** Tiếng Việt  
+**Quy tắc:** File này chỉ sở hữu kiến trúc và technical contracts cần để đáp ứng requirement đã duyệt. Không tự thêm feature mới.
 
 ---
 
 ## 1. Architecture principles
 
-1. **Requirement-driven:** chá»‰ táº¡o module khi cÃ³ requirement tÆ°Æ¡ng á»©ng trong PRD.
-2. **Role-safe:** quyá»n pháº£i Ä‘Æ°á»£c kiá»ƒm tra á»Ÿ server/service boundary, khÃ´ng chá»‰ áº©n nÃºt trÃªn UI.
-3. **History-preserving:** assignment, attendance vÃ  AI analysis dÃ¹ng lá»‹ch sá»­ báº¥t biáº¿n theo thá»i Ä‘iá»ƒm; khÃ´ng ghi Ä‘Ã¨ sá»± kiá»‡n cÅ© báº±ng tráº¡ng thÃ¡i má»›i.
-4. **Audit-friendly:** thay Ä‘á»•i quáº£n trá»‹ quan trá»ng pháº£i truy váº¿t Ä‘Æ°á»£c.
-5. **AI pipeline cÃ³ cáº¥u trÃºc:** computer vision/pose analysis táº¡o structured output trÆ°á»›c; LLM khÃ´ng tá»± â€œxem raw video rá»“i quyáº¿t Ä‘á»‹nh táº¥t cáº£â€.
-6. **Privacy-aware:** video cÆ¡ thá»ƒ vÃ  káº¿t quáº£ phÃ¢n tÃ­ch lÃ  dá»¯ liá»‡u nháº¡y cáº£m, pháº£i cÃ³ access control vÃ  retention rÃµ.
-7. **Stack-locked:** implementation pháº£i dÃ¹ng stack canonical trong `04-tech-stack-sot.md`: Expo/React Native Web á»Ÿ client, NestJS REST backend, Prisma + PostgreSQL/Supabase, Supabase Storage, FastAPI + OpenCV + MediaPipe Pose + OpenAI API cho AI. KhÃ´ng tá»± thay provider/framework náº¿u chÆ°a cÃ³ decision change.
+1. **Requirement-driven:** chỉ tạo module khi có requirement tương ứng trong PRD.
+2. **Role-safe:** quyền phải được kiểm tra ở server/service boundary, không chỉ ẩn nút trên UI.
+3. **History-preserving:** assignment, attendance và AI analysis dùng lịch sử bất biến theo thời điểm; không ghi đè sự kiện cũ bằng trạng thái mới.
+4. **Audit-friendly:** thay đổi quản trị quan trọng phải truy vết được.
+5. **AI pipeline có cấu trúc:** computer vision/pose analysis tạo structured output trước; LLM không tự “xem raw video rồi quyết định tất cả”.
+6. **Privacy-aware:** video cơ thể và kết quả phân tích là dữ liệu nhạy cảm, phải có access control và retention rõ.
+7. **Stack-locked:** implementation phải dùng stack canonical trong `04-tech-stack-sot.md`: Expo/React Native Web ở client, NestJS REST backend, Prisma + PostgreSQL/Supabase, Supabase Storage, FastAPI + OpenCV + MediaPipe Pose + OpenAI API cho AI. Không tự thay provider/framework nếu chưa có decision change.
 
 ---
 
 ## 2. System context
 
-Kiáº¿n trÃºc logic:
+Kiến trúc logic:
 
 ```text
 Client Application(s)
-  â”œâ”€â”€ Owner/Admin experience
-  â”œâ”€â”€ PT experience
-  â””â”€â”€ Member experience
+  ├── Owner/Admin experience
+  ├── PT experience
+  └── Member experience
           |
           v
 Application API / Backend Service
-  â”œâ”€â”€ Auth & RBAC
-  â”œâ”€â”€ PT Management
-  â”œâ”€â”€ Member Management
-  â”œâ”€â”€ PT Assignment
-  â”œâ”€â”€ Schedule / Training Window
-  â”œâ”€â”€ Check-in & Reconciliation
-  â”œâ”€â”€ Guest / Trial
-  â”œâ”€â”€ AI Analysis Orchestration
-  â””â”€â”€ Audit
+  ├── Auth & RBAC
+  ├── PT Management
+  ├── Member Management
+  ├── PT Assignment
+  ├── Schedule / Training Window
+  ├── Check-in & Reconciliation
+  ├── Guest / Trial
+  ├── AI Analysis Orchestration
+  └── Audit
           |
           +----------------------+
           |                      |
@@ -50,13 +50,13 @@ Relational Data Store       Private Media Storage
                                  |
                                  v
                          AI Analysis Pipeline
-                         â”œâ”€â”€ Input validation
-                         â”œâ”€â”€ Pose/CV extraction
-                         â”œâ”€â”€ Structured feature result
-                         â””â”€â”€ LLM recommendation/plan
+                         ├── Input validation
+                         ├── Pose/CV extraction
+                         ├── Structured feature result
+                         └── LLM recommendation/plan
 ```
 
-KhÃ´ng cÃ³ module Staff, marketplace booking hoáº·c multi-tenant trong baseline.
+Không có module Staff, marketplace booking hoặc multi-tenant trong baseline.
 
 ---
 
@@ -64,140 +64,141 @@ KhÃ´ng cÃ³ module Staff, marketplace booking hoáº·c multi-tenant trong ba
 
 ### 3.1. Presentation / Client layer
 
-Chá»‹u trÃ¡ch nhiá»‡m:
+Chịu trách nhiệm:
 
-- screen vÃ  navigation theo role;
-- input validation cáº¥p UI;
-- hiá»ƒn thá»‹ loading/error/empty state;
-- táº¡o request tá»›i application API;
-- giá»¯ session tÃ¡ch biá»‡t theo tÃ i khoáº£n;
-- upload video theo flow Ä‘Æ°á»£c backend cáº¥p quyá»n.
+- screen và navigation theo role;
+- input validation cấp UI;
+- hiển thị loading/error/empty state;
+- tạo request tới application API;
+- giữ session tách biệt theo tài khoản;
+- upload video theo flow được backend cấp quyền.
 
-KhÃ´ng chá»‹u trÃ¡ch nhiá»‡m:
+Không chịu trách nhiệm:
 
-- tá»± quyáº¿t Ä‘á»‹nh quyá»n truy cáº­p cuá»‘i cÃ¹ng;
-- tá»± thay Ä‘á»•i assignment chá»‰ báº±ng local state;
-- tá»± káº¿t luáº­n attendance exception;
-- tá»± sinh káº¿t quáº£ AI cuá»‘i cÃ¹ng tá»« raw video.
+- tự quyết định quyền truy cập cuối cùng;
+- tự thay đổi assignment chỉ bằng local state;
+- tự kết luận attendance exception;
+- tự sinh kết quả AI cuối cùng từ raw video.
 
 ### 3.2. Application service layer
 
-Chá»‹u trÃ¡ch nhiá»‡m:
+Chịu trách nhiệm:
 
 - orchestration use case;
 - enforce RBAC;
 - validate domain invariants;
-- má»Ÿ transaction;
-- gá»i repository;
-- táº¡o audit event;
-- phÃ¡t sinh job AI hoáº·c reconcile attendance.
+- mở transaction;
+- gọi repository;
+- tạo audit event;
+- phát sinh job AI hoặc reconcile attendance.
 
 ### 3.3. Domain layer
 
-Chá»©a cÃ¡c rule cá»‘t lÃµi:
+Chứa các rule cốt lõi:
 
-- má»™t member chá»‰ cÃ³ má»™t primary PT assignment active táº¡i má»™t thá»i Ä‘iá»ƒm bÃ¬nh thÆ°á»ng;
-- assignment má»›i pháº£i Ä‘Ã³ng assignment cÅ© Ä‘Ãºng thá»i Ä‘iá»ƒm;
-- lá»‹ch sá»­ khÃ´ng bá»‹ overwrite;
-- check-in Ä‘Æ°á»£c Ä‘Ã¡nh giÃ¡ theo assignment/lá»‹ch táº¡i thá»i Ä‘iá»ƒm phÃ¡t sinh;
-- khung linh hoáº¡t dÃ¹ng cá»­a sá»• há»£p lá»‡ Ä‘Ã£ cáº¥u hÃ¬nh, tá»‘i Ä‘a 2 giá» theo baseline product rule;
-- guest conversion khÃ´ng xÃ³a nguá»“n trial history;
-- AI result pháº£i gáº¯n vá»›i analysis run cá»¥ thá»ƒ.
+- một member chỉ có một primary PT assignment active tại một thời điểm bình thường;
+- assignment mới phải đóng assignment cũ đúng thời điểm;
+- lịch sử không bị overwrite;
+- check-in được đánh giá theo assignment/lịch tại thời điểm phát sinh;
+- khung linh hoạt dùng cửa sổ hợp lệ đã cấu hình, tối đa 2 giờ theo baseline product rule;
+- guest conversion không xóa nguồn trial history;
+- AI result phải gắn với analysis run cụ thể.
 
 ### 3.4. Data layer
 
-Chá»‹u trÃ¡ch nhiá»‡m:
+Chịu trách nhiệm:
 
 - relational persistence;
 - transaction;
-- optimistic/pessimistic concurrency khi cáº§n;
+- optimistic/pessimistic concurrency khi cần;
 - query theo role scope;
 - migration/versioning;
 - audit persistence.
 
 ### 3.5. Media layer
 
-Chá»‹u trÃ¡ch nhiá»‡m:
+Chịu trách nhiệm:
 
 - private upload/download;
 - metadata file;
-- signed URL hoáº·c access mechanism ngáº¯n háº¡n cá»§a Supabase Storage do backend cáº¥p quyá»n khi cáº§n;
+- signed URL hoặc access mechanism ngắn hạn của Supabase Storage do backend cấp quyền khi cần;
 - lifecycle/retention;
-- khÃ´ng public raw body video máº·c Ä‘á»‹nh.
+- không public raw body video mặc định.
 
 ### 3.6. AI processing layer
 
-Chá»‹u trÃ¡ch nhiá»‡m:
+Chịu trách nhiệm:
 
-- kiá»ƒm tra input;
-- decode video theo pipeline xá»­ lÃ½;
-- trÃ­ch xuáº¥t frame/keypoint/pose feature;
+- kiểm tra input;
+- decode video theo pipeline xử lý;
+- trích xuất frame/keypoint/pose feature;
 - quality/confidence calculation;
-- táº¡o structured analysis JSON;
-- gá»i LLM báº±ng structured data vÃ  context Ä‘Æ°á»£c phÃ©p;
+- tạo structured analysis JSON;
+- gọi LLM bằng structured data và context được phép;
 - validate output theo schema;
-- lÆ°u version/model metadata phá»¥c vá»¥ audit/reproducibility á»Ÿ má»©c cáº§n thiáº¿t.
+- lưu version/model metadata phục vụ audit/reproducibility ở mức cần thiết.
 
 ---
 
 ## 4. Module boundaries
 
-| Module | TrÃ¡ch nhiá»‡m | KhÃ´ng Ä‘Æ°á»£c lÃ m |
+| Module | Trách nhiệm | Không được làm |
 |---|---|---|
-| `auth` | session, identity, role, access token | khÃ´ng chá»©a logic assignment/check-in |
-| `users` | profile Owner/PT/Member | khÃ´ng chá»©a attendance calculation |
-| `pt` | há»“ sÆ¡ PT, tráº¡ng thÃ¡i hoáº¡t Ä‘á»™ng | khÃ´ng tá»± Ä‘á»•i assignment |
-| `members` | há»“ sÆ¡ member, má»¥c tiÃªu táº­p | khÃ´ng quáº£n lÃ½ lá»‹ch sá»­ PT trá»±c tiáº¿p |
-| `assignments` | quan há»‡ memberâ€“PT cÃ³ hiá»‡u lá»±c theo thá»i gian | khÃ´ng sá»­a lá»‹ch sá»­ check-in |
-| `schedules` | lá»‹ch/khung táº­p, fixed/flexible window | khÃ´ng quyáº¿t Ä‘á»‹nh PT hiá»‡n táº¡i náº¿u assignment khÃ´ng há»£p lá»‡ |
-| `checkins` | record hiá»‡n diá»‡n | khÃ´ng tá»± Ä‘á»•i lá»‹ch/assignment |
-| `attendance` | Ä‘á»‘i soÃ¡t check-in + lá»‹ch + assignment | khÃ´ng xÃ³a raw check-in |
-| `guests` | trial record, conversion linkage | khÃ´ng táº¡o role Ä‘Äƒng nháº­p guest |
-| `ai-analysis` | analysis run, structured result, plan generation | khÃ´ng cháº©n Ä‘oÃ¡n y khoa |
-| `audit` | immutable audit events | khÃ´ng thay data source chÃ­nh |
+| `auth` | session, identity, role, access token | không chứa logic assignment/check-in |
+| `users` | profile Owner/PT/Member | không chứa attendance calculation |
+| `pt` | hồ sơ PT, trạng thái hoạt động | không tự đổi assignment |
+| `members` | hồ sơ member, mục tiêu tập | không quản lý lịch sử PT trực tiếp |
+| `assignments` | quan hệ member–PT có hiệu lực theo thời gian | không sửa lịch sử check-in |
+| `schedules` | lịch/khung tập, fixed/flexible window | không quyết định PT hiện tại nếu assignment không hợp lệ |
+| `checkins` | record hiện diện | không tự đổi lịch/assignment |
+| `attendance` | đối soát check-in + lịch + assignment | không xóa raw check-in |
+| `guests` | trial record, conversion linkage | không tạo role đăng nhập guest |
+| `ai-analysis` | analysis run, structured result, plan generation | không chẩn đoán y khoa |
+| `owner-assistant` | truy vấn/tóm tắt dữ liệu vận hành theo scope Owner/Admin | không bypass RBAC, không mutate dữ liệu nghiệp vụ |
+| `audit` | immutable audit events | không thay data source chính |
 
 ---
 
 ## 5. Core domain model
 
-TÃªn model/table váº­t lÃ½ do Prisma/PostgreSQL triá»ƒn khai cÃ³ thá»ƒ Ä‘iá»u chá»‰nh theo naming convention, nhÆ°ng domain contract pháº£i giá»¯ Ã½ nghÄ©a sau.
+Tên model/table vật lý do Prisma/PostgreSQL triển khai có thể điều chỉnh theo naming convention, nhưng domain contract phải giữ ý nghĩa sau.
 
 ### 5.1. `users`
 
-Äáº¡i diá»‡n identity Ä‘Äƒng nháº­p.
+Đại diện identity đăng nhập.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `id`;
 - `role`: OWNER_ADMIN | PT | MEMBER;
 - `status`: ACTIVE | INACTIVE | LOCKED;
-- identity/contact fields cáº§n thiáº¿t;
+- identity/contact fields cần thiết;
 - timestamps.
 
 ### 5.2. `pt_profiles`
 
-ThÃ´ng tin nghiá»‡p vá»¥ riÃªng cá»§a PT.
+Thông tin nghiệp vụ riêng của PT.
 
 - `user_id`;
 - display/profile fields;
-- specialization/note náº¿u sáº£n pháº©m sá»­ dá»¥ng;
+- specialization/note nếu sản phẩm sử dụng;
 - active state metadata.
 
 ### 5.3. `member_profiles`
 
-ThÃ´ng tin nghiá»‡p vá»¥ member.
+Thông tin nghiệp vụ member.
 
 - `user_id`;
-- goal/notes phÃ¹ há»£p;
-- membership state tá»‘i thiá»ƒu náº¿u cáº§n Ä‘á»ƒ xÃ¡c Ä‘á»‹nh active/inactive;
-- source guest náº¿u convert;
+- goal/notes phù hợp;
+- membership state tối thiểu nếu cần để xác định active/inactive;
+- source guest nếu convert;
 - timestamps.
 
 ### 5.4. `member_pt_assignments`
 
-LÃ  source of truth cho quan há»‡ PTâ€“member theo thá»i gian.
+Là source of truth cho quan hệ PT–member theo thời gian.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `id`;
 - `member_id`;
@@ -211,18 +212,18 @@ Tá»‘i thiá»ƒu:
 
 Invariant:
 
-- khÃ´ng cÃ³ hai primary active assignment chá»“ng thá»i gian cho cÃ¹ng má»™t member;
-- Ä‘Ã³ng assignment cÅ© vÃ  táº¡o assignment má»›i trong cÃ¹ng transaction khi Ä‘á»•i PT.
+- không có hai primary active assignment chồng thời gian cho cùng một member;
+- đóng assignment cũ và tạo assignment mới trong cùng transaction khi đổi PT.
 
 ### 5.5. `training_schedules`
 
-MÃ´ táº£ lá»‹ch/khung táº­p Ä‘Ã£ thá»‘ng nháº¥t.
+Mô tả lịch/khung tập đã thống nhất.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `id`;
 - `member_id`;
-- `pt_id` snapshot/reference phÃ¹ há»£p;
+- `pt_id` snapshot/reference phù hợp;
 - date/recurrence fields;
 - `window_type`: FIXED | FLEXIBLE;
 - expected start/end;
@@ -231,28 +232,28 @@ Tá»‘i thiá»ƒu:
 
 Rule:
 
-- flexible window khÃ´ng vÆ°á»£t rule product baseline 2 giá»;
-- schedule Ä‘Ã£ hoÃ n táº¥t khÃ´ng bá»‹ viáº¿t láº¡i chá»‰ vÃ¬ assignment hiá»‡n táº¡i Ä‘á»•i.
+- flexible window không vượt rule product baseline 2 giờ;
+- schedule đã hoàn tất không bị viết lại chỉ vì assignment hiện tại đổi.
 
 ### 5.6. `checkins`
 
-Raw event xÃ¡c nháº­n hiá»‡n diá»‡n.
+Raw event xác nhận hiện diện.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `id`;
 - `actor_user_id`;
 - `actor_role`;
 - `checked_in_at`;
-- location/context metadata náº¿u product sau nÃ y duyá»‡t;
-- associated schedule id náº¿u resolve Ä‘Æ°á»£c;
+- location/context metadata nếu product sau này duyệt;
+- associated schedule id nếu resolve được;
 - immutable event metadata.
 
 ### 5.7. `attendance_reconciliations`
 
-Derived/business result tá»« schedule + assignment + check-in.
+Derived/business result từ schedule + assignment + check-in.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `id`;
 - `member_id`;
@@ -262,15 +263,15 @@ Tá»‘i thiá»ƒu:
 - PT check-in reference nullable;
 - status: MATCHED | MEMBER_ONLY | PT_ONLY | MISSING | NEEDS_REVIEW;
 - evaluated_at;
-- resolution metadata náº¿u owner xá»­ lÃ½.
+- resolution metadata nếu owner xử lý.
 
-KhÃ´ng dÃ¹ng báº£ng nÃ y Ä‘á»ƒ thay raw check-in.
+Không dùng bảng này để thay raw check-in.
 
 ### 5.8. `guest_trials`
 
-Record khÃ¡ch táº­p thá»­.
+Record khách tập thử.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `id`;
 - name/identifier;
@@ -283,9 +284,9 @@ Tá»‘i thiá»ƒu:
 
 ### 5.9. `ai_analysis_runs`
 
-Má»™t láº§n phÃ¢n tÃ­ch video.
+Một lần phân tích video.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `id`;
 - `member_id`;
@@ -293,13 +294,13 @@ Tá»‘i thiá»ƒu:
 - status: UPLOADED | VALIDATING | ANALYZING | NEEDS_RETAKE | COMPLETED | FAILED;
 - pipeline version;
 - created_at/completed_at;
-- error code an toÃ n náº¿u fail.
+- error code an toàn nếu fail.
 
 ### 5.10. `ai_analysis_results`
 
-Structured result cá»§a CV/pose stage.
+Structured result của CV/pose stage.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `analysis_run_id`;
 - input quality;
@@ -310,9 +311,9 @@ Tá»‘i thiá»ƒu:
 
 ### 5.11. `training_plan_outputs`
 
-Output sinh tá»« structured analysis.
+Output sinh từ structured analysis.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - `analysis_run_id`;
 - goal context snapshot;
@@ -324,24 +325,24 @@ Tá»‘i thiá»ƒu:
 
 ### 5.12. `audit_events`
 
-Append-only á»Ÿ má»©c logic.
+Append-only ở mức logic.
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 - actor;
 - action;
 - entity type/id;
 - timestamp;
-- before/after summary hoáº·c metadata phÃ¹ há»£p;
+- before/after summary hoặc metadata phù hợp;
 - correlation/request id.
 
 ---
 
 ## 6. Key transactions
 
-CÃ¡c hÃ nh Ä‘á»™ng sau pháº£i lÃ  transaction hoáº·c cÃ³ cÆ¡ cháº¿ Ä‘áº£m báº£o atomic tÆ°Æ¡ng Ä‘Æ°Æ¡ng.
+Các hành động sau phải là transaction hoặc có cơ chế đảm bảo atomic tương đương.
 
-### 6.1. ÄÄƒng kÃ½ member + assignment
+### 6.1. Đăng ký member + assignment
 
 ```text
 Create/activate member
@@ -351,9 +352,9 @@ Create/activate member
   -> commit
 ```
 
-KhÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ member á»Ÿ tráº¡ng thÃ¡i â€œÄ‘Äƒng kÃ½ hoÃ n táº¥tâ€ nhÆ°ng assignment ban Ä‘áº§u tháº¥t báº¡i náº¿u product flow yÃªu cáº§u PT báº¯t buá»™c.
+Không được để member ở trạng thái “đăng ký hoàn tất” nhưng assignment ban đầu thất bại nếu product flow yêu cầu PT bắt buộc.
 
-### 6.2. Äá»•i PT
+### 6.2. Đổi PT
 
 ```text
 Lock/read current assignment
@@ -365,9 +366,9 @@ Lock/read current assignment
   -> commit
 ```
 
-KhÃ´ng update check-in hoáº·c historical schedule cÅ©.
+Không update check-in hoặc historical schedule cũ.
 
-### 6.3. Convert guest thÃ nh member
+### 6.3. Convert guest thành member
 
 ```text
 Read guest
@@ -381,9 +382,9 @@ Read guest
 
 ### 6.4. Resolve attendance exception
 
-Raw check-in khÃ´ng bá»‹ sá»­a Ä‘á»ƒ â€œlÃ m Ä‘áº¹pâ€ káº¿t quáº£.
+Raw check-in không bị sửa để “làm đẹp” kết quả.
 
-Resolution cáº­p nháº­t reconciliation/audit riÃªng.
+Resolution cập nhật reconciliation/audit riêng.
 
 ---
 
@@ -392,12 +393,12 @@ Resolution cáº­p nháº­t reconciliation/audit riÃªng.
 Input:
 
 - member check-in event;
-- active/historical assignment táº¡i thá»i Ä‘iá»ƒm liÃªn quan;
+- active/historical assignment tại thời điểm liên quan;
 - schedule/training window;
 - PT check-in events;
 - allowed time window.
 
-Logic tá»‘i thiá»ƒu:
+Logic tối thiểu:
 
 ```text
 Resolve expected schedule/window
@@ -412,17 +413,17 @@ Resolve expected schedule/window
       ambiguous data    => NEEDS_REVIEW
 ```
 
-YÃªu cáº§u:
+Yêu cầu:
 
-- algorithm dÃ¹ng timestamp lá»‹ch sá»­, khÃ´ng dÃ¹ng assignment hiá»‡n táº¡i má»™t cÃ¡ch mÃ¹ quÃ¡ng;
-- flexible schedule pháº£i tÃ´n trá»ng cá»­a sá»• tá»‘i Ä‘a 2 giá» Ä‘Æ°á»£c cáº¥u hÃ¬nh;
-- classification cÃ³ thá»ƒ cháº¡y Ä‘á»“ng bá»™ sau check-in hoáº·c báº±ng job, nhÆ°ng káº¿t quáº£ cuá»‘i pháº£i idempotent.
+- algorithm dùng timestamp lịch sử, không dùng assignment hiện tại một cách mù quáng;
+- flexible schedule phải tôn trọng cửa sổ tối đa 2 giờ được cấu hình;
+- classification có thể chạy đồng bộ sau check-in hoặc bằng job, nhưng kết quả cuối phải idempotent.
 
 ---
 
 ## 8. API boundary
 
-TÃªn endpoint cá»¥ thá»ƒ phá»¥ thuá»™c stack, nhÆ°ng contract nÃªn theo resource/action rÃµ rÃ ng.
+Tên endpoint cụ thể phụ thuộc stack, nhưng contract nên theo resource/action rõ ràng.
 
 ### 8.1. Auth
 
@@ -475,44 +476,54 @@ TÃªn endpoint cá»¥ thá»ƒ phá»¥ thuá»™c stack, nhÆ°ng contract n
 - get structured summary/recommendation/plan;
 - list member analysis history.
 
+### 8.9. Owner operational assistant
+
+- submit an Owner/Admin question with an explicit operational scope;
+- retrieve only permission-filtered summaries from application services;
+- return answer metadata such as time range and source records when available;
+- provide navigation references to detail screens;
+- never mutate assignment, schedule, check-in, account or audit records through chat.
+
+The assistant is a read-oriented application capability. It does not bypass RBAC, replace deterministic reconciliation/calculation, or receive raw body video.
+
 ---
 
 ## 9. AI pipeline architecture
 
-### 9.1. Stage 1 â€” Capture guidance
+### 9.1. Stage 1 — Capture guidance
 
-Client cung cáº¥p hÆ°á»›ng dáº«n quay:
+Client cung cấp hướng dẫn quay:
 
 - framing;
-- khoáº£ng cÃ¡ch;
-- Ã¡nh sÃ¡ng;
-- gÃ³c/quá»¹ Ä‘áº¡o quay náº¿u requirement UI Ä‘á»‹nh nghÄ©a;
-- cáº£nh bÃ¡o khÃ´ng quay ná»™i dung ngoÃ i má»¥c Ä‘Ã­ch cáº§n thiáº¿t.
+- khoảng cách;
+- ánh sáng;
+- góc/quỹ đạo quay nếu requirement UI định nghĩa;
+- cảnh báo không quay nội dung ngoài mục đích cần thiết.
 
-### 9.2. Stage 2 â€” Input validation
+### 9.2. Stage 2 — Input validation
 
-Kiá»ƒm tra:
+Kiểm tra:
 
-- file cÃ³ Ä‘á»c Ä‘Æ°á»£c khÃ´ng;
-- thá»i lÆ°á»£ng/Ä‘á»™ phÃ¢n giáº£i tá»‘i thiá»ƒu theo cáº¥u hÃ¬nh ká»¹ thuáº­t;
-- cÃ³ Ä‘á»§ cÆ¡ thá»ƒ/pose trong frame hay khÃ´ng;
-- blur/occlusion quÃ¡ má»©c hay khÃ´ng.
+- file có đọc được không;
+- thời lượng/độ phân giải tối thiểu theo cấu hình kỹ thuật;
+- có đủ cơ thể/pose trong frame hay không;
+- blur/occlusion quá mức hay không.
 
-Náº¿u fail => `NEEDS_RETAKE` hoáº·c `FAILED` vá»›i reason code thÃ¢n thiá»‡n.
+Nếu fail => `NEEDS_RETAKE` hoặc `FAILED` với reason code thân thiện.
 
-### 9.3. Stage 3 â€” CV / Pose extraction
+### 9.3. Stage 3 — CV / Pose extraction
 
-Pipeline trÃ­ch xuáº¥t:
+Pipeline trích xuất:
 
 - body keypoints/pose sequence;
 - normalized geometric features;
-- symmetry/posture observations trong pháº¡m vi mÃ´ hÃ¬nh;
+- symmetry/posture observations trong phạm vi mô hình;
 - confidence per feature;
 - quality warnings.
 
-Káº¿t quáº£ Ä‘Æ°á»£c serialize thÃ nh schema versioned JSON.
+Kết quả được serialize thành schema versioned JSON.
 
-VÃ­ dá»¥ cáº¥u trÃºc logic:
+Ví dụ cấu trúc logic:
 
 ```json
 {
@@ -532,24 +543,24 @@ VÃ­ dá»¥ cáº¥u trÃºc logic:
 }
 ```
 
-ÄÃ¢y chá»‰ lÃ  shape minh há»a technical contract, khÃ´ng pháº£i feature má»›i hoáº·c medical diagnosis schema.
+Đây chỉ là shape minh họa technical contract, không phải feature mới hoặc medical diagnosis schema.
 
-### 9.4. Stage 4 â€” Recommendation generation
+### 9.4. Stage 4 — Recommendation generation
 
-LLM nháº­n:
+LLM nhận:
 
 - structured analysis JSON;
 - member goal snapshot;
 - allowed training context;
-- policy prompt yÃªu cáº§u khÃ´ng cháº©n Ä‘oÃ¡n y khoa.
+- policy prompt yêu cầu không chẩn đoán y khoa.
 
-LLM khÃ´ng cáº§n raw video trong stage nÃ y.
+LLM không cần raw video trong stage này.
 
-Output pháº£i qua schema validation trÆ°á»›c khi lÆ°u.
+Output phải qua schema validation trước khi lưu.
 
-### 9.5. Stage 5 â€” Result persistence
+### 9.5. Stage 5 — Result persistence
 
-LÆ°u:
+Lưu:
 
 - analysis run;
 - structured analyzer result;
@@ -557,7 +568,7 @@ LÆ°u:
 - generated recommendation/plan;
 - warnings/confidence.
 
-KhÃ´ng overwrite láº§n phÃ¢n tÃ­ch trÆ°á»›c.
+Không overwrite lần phân tích trước.
 
 ---
 
@@ -565,37 +576,37 @@ KhÃ´ng overwrite láº§n phÃ¢n tÃ­ch trÆ°á»›c.
 
 ### 10.1. Owner/Admin
 
-CÃ³ quyá»n rá»™ng nháº¥t trong tenant/single-gym scope.
+Có quyền rộng nhất trong tenant/single-gym scope.
 
 ### 10.2. PT
 
-Chá»‰ truy cáº­p:
+Chỉ truy cập:
 
-- báº£n thÃ¢n;
-- member Ä‘ang hoáº·c tá»«ng Ä‘Æ°á»£c giao trong pháº¡m vi lá»‹ch sá»­ cáº§n thiáº¿t;
-- lá»‹ch/check-in/AI result Ä‘Æ°á»£c policy cho phÃ©p.
+- bản thân;
+- member đang hoặc từng được giao trong phạm vi lịch sử cần thiết;
+- lịch/check-in/AI result được policy cho phép.
 
-KhÃ´ng query tÃ¹y Ã½ toÃ n bá»™ member.
+Không query tùy ý toàn bộ member.
 
 ### 10.3. Member
 
-Chá»‰ truy cáº­p:
+Chỉ truy cập:
 
-- profile cá»§a mÃ¬nh;
-- PT assignment cá»§a mÃ¬nh;
-- lá»‹ch/check-in cá»§a mÃ¬nh;
-- AI analysis cá»§a mÃ¬nh.
+- profile của mình;
+- PT assignment của mình;
+- lịch/check-in của mình;
+- AI analysis của mình.
 
 ### 10.4. Authorization enforcement
 
-Pháº£i Ã¡p dá»¥ng á»Ÿ:
+Phải áp dụng ở:
 
 - API/service layer;
-- repository/query scoping khi phÃ¹ há»£p;
+- repository/query scoping khi phù hợp;
 - object/media access;
 - AI result access.
 
-UI hiding khÃ´ng pháº£i security boundary.
+UI hiding không phải security boundary.
 
 ---
 
@@ -603,11 +614,11 @@ UI hiding khÃ´ng pháº£i security boundary.
 
 ### 11.1. Assignment uniqueness
 
-Cáº§n constraint hoáº·c transactional guard Ä‘á»ƒ trÃ¡nh hai PT active primary cho má»™t member cÃ¹ng lÃºc.
+Cần constraint hoặc transactional guard để tránh hai PT active primary cho một member cùng lúc.
 
 ### 11.2. Idempotency
 
-CÃ¡c action cÃ³ nguy cÆ¡ double-submit nÃªn há»— trá»£ idempotency hoáº·c duplicate guard:
+Các action có nguy cơ double-submit nên hỗ trợ idempotency hoặc duplicate guard:
 
 - check-in;
 - guest conversion;
@@ -616,39 +627,39 @@ CÃ¡c action cÃ³ nguy cÆ¡ double-submit nÃªn há»— trá»£ idempotenc
 
 ### 11.3. Time handling
 
-- lÆ°u timestamp theo chuáº©n thá»‘ng nháº¥t;
-- display theo timezone cá»§a gym/client;
-- reconciliation dÃ¹ng timestamp tuyá»‡t Ä‘á»‘i + timezone schedule rÃµ rÃ ng;
-- khÃ´ng so sÃ¡nh chuá»—i thá»i gian local khÃ´ng chuáº©n hÃ³a.
+- lưu timestamp theo chuẩn thống nhất;
+- display theo timezone của gym/client;
+- reconciliation dùng timestamp tuyệt đối + timezone schedule rõ ràng;
+- không so sánh chuỗi thời gian local không chuẩn hóa.
 
 ### 11.4. Soft delete / deactivation
 
-PT/member cÃ³ lá»‹ch sá»­ khÃ´ng nÃªn hard-delete náº¿u viá»‡c xÃ³a lÃ m máº¥t tÃ­nh toÃ n váº¹n audit.
+PT/member có lịch sử không nên hard-delete nếu việc xóa làm mất tính toàn vẹn audit.
 
-Æ¯u tiÃªn inactive/archive theo requirement váº­n hÃ nh.
+Ưu tiên inactive/archive theo requirement vận hành.
 
 ---
 
 ## 12. Privacy & media security
 
-Body video lÃ  dá»¯ liá»‡u nháº¡y cáº£m.
+Body video là dữ liệu nhạy cảm.
 
-Báº¯t buá»™c:
+Bắt buộc:
 
-1. media khÃ´ng public máº·c Ä‘á»‹nh;
-2. access pháº£i theo authenticated authorization;
-3. log khÃ´ng ghi raw URL/token bÃ­ máº­t;
-4. khÃ´ng nhÃºng video binary/base64 vÃ o audit hoáº·c application log;
-5. cÃ³ retention/cleanup policy Ä‘Æ°á»£c cáº¥u hÃ¬nh;
-6. xÃ³a logical record pháº£i xá»­ lÃ½ media lifecycle phÃ¹ há»£p;
-7. AI worker chá»‰ nháº­n quyá»n truy cáº­p cáº§n thiáº¿t cho job;
-8. káº¿t quáº£ AI vÃ  raw video cÃ³ policy quyá»n riÃªng biá»‡t náº¿u cáº§n.
+1. media không public mặc định;
+2. access phải theo authenticated authorization;
+3. log không ghi raw URL/token bí mật;
+4. không nhúng video binary/base64 vào audit hoặc application log;
+5. có retention/cleanup policy được cấu hình;
+6. xóa logical record phải xử lý media lifecycle phù hợp;
+7. AI worker chỉ nhận quyền truy cập cần thiết cho job;
+8. kết quả AI và raw video có policy quyền riêng biệt nếu cần.
 
 ---
 
 ## 13. Observability
 
-Cáº§n cÃ³ structured log/metric tá»‘i thiá»ƒu cho:
+Cần có structured log/metric tối thiểu cho:
 
 - auth failure rate;
 - assignment change failure;
@@ -658,9 +669,9 @@ Cáº§n cÃ³ structured log/metric tá»‘i thiá»ƒu cho:
 - AI validation `NEEDS_RETAKE`;
 - analysis latency;
 - AI pipeline failure by stage;
-- permission denied events báº¥t thÆ°á»ng.
+- permission denied events bất thường.
 
-KhÃ´ng log dá»¯ liá»‡u body analysis chi tiáº¿t hoáº·c PII khÃ´ng cáº§n thiáº¿t.
+Không log dữ liệu body analysis chi tiết hoặc PII không cần thiết.
 
 ---
 
@@ -668,7 +679,7 @@ KhÃ´ng log dá»¯ liá»‡u body analysis chi tiáº¿t hoáº·c PII khÃ´
 
 ### 14.1. Unit test
 
-Báº¯t buá»™c cho:
+Bắt buộc cho:
 
 - role permission rules;
 - assignment invariant;
@@ -680,7 +691,7 @@ Báº¯t buá»™c cho:
 
 ### 14.2. Integration test
 
-Báº¯t buá»™c cho:
+Bắt buộc cho:
 
 - create member + assign PT;
 - change PT with history;
@@ -691,7 +702,7 @@ Báº¯t buá»™c cho:
 
 ### 14.3. E2E role test
 
-DÃ¹ng ba account/session Ä‘á»™c láº­p:
+Dùng ba account/session độc lập:
 
 ```text
 Session A: Owner/Admin
@@ -699,46 +710,46 @@ Session B: PT
 Session C: Member
 ```
 
-Test flow tá»‘i thiá»ƒu:
+Test flow tối thiểu:
 
-1. Owner táº¡o member vÃ  gÃ¡n PT.
-2. PT tháº¥y member.
-3. Member tháº¥y PT.
+1. Owner tạo member và gán PT.
+2. PT thấy member.
+3. Member thấy PT.
 4. Member check-in.
-5. PT check-in hoáº·c cá»‘ tÃ¬nh khÃ´ng check-in.
-6. Owner tháº¥y matched/exception Ä‘Ãºng.
-7. Owner Ä‘á»•i PT.
-8. PT cÅ© máº¥t active assignment; PT má»›i nháº­n assignment.
-9. Lá»‹ch sá»­ check-in cÅ© váº«n trá» Ä‘Ãºng context cÅ©.
+5. PT check-in hoặc cố tình không check-in.
+6. Owner thấy matched/exception đúng.
+7. Owner đổi PT.
+8. PT cũ mất active assignment; PT mới nhận assignment.
+9. Lịch sử check-in cũ vẫn trỏ đúng context cũ.
 
 ### 14.4. AI test
 
 - valid video -> completed;
 - unusable video -> needs retake;
-- analyzer confidence tháº¥p -> output khÃ´ng overclaim;
+- analyzer confidence thấp -> output không overclaim;
 - structured JSON schema mismatch -> fail safe;
 - LLM output invalid schema -> reject/retry theo policy;
-- member khÃ´ng Ä‘á»c Ä‘Æ°á»£c analysis cá»§a member khÃ¡c.
+- member không đọc được analysis của member khác.
 
 ---
 
 ## 15. Technology stack integration
 
-Technology stack canonical náº±m á»Ÿ `04-tech-stack-sot.md`. Architecture nÃ y bind vÃ o cÃ¡c boundary sau:
+Technology stack canonical nằm ở `04-tech-stack-sot.md`. Architecture này bind vào các boundary sau:
 
-| Layer | Stack Ä‘Ã£ chá»‘t | Architecture responsibility |
+| Layer | Stack đã chốt | Architecture responsibility |
 |---|---|---|
 | Mobile/Web client | React Native + Expo + TypeScript + React Native Web | UI theo role, Expo Router, Zustand, React Hook Form + Zod, Axios |
 | Core backend | NestJS + TypeScript | REST API authority, auth/RBAC, domain orchestration, audit |
-| Authentication | JWT + Refresh Token | NestJS issue/validate/refresh/revoke theo policy; khÃ´ng dÃ¹ng Supabase Auth trong baseline |
+| Authentication | JWT + Refresh Token | NestJS issue/validate/refresh/revoke theo policy; không dùng Supabase Auth trong baseline |
 | Data access | Prisma | schema, migration, typed access, transaction |
-| Relational store | PostgreSQL trÃªn Supabase Free | source of truth cho dá»¯ liá»‡u nghiá»‡p vá»¥ |
-| Media | Supabase Storage | private body-video/media storage; backend kiá»ƒm soÃ¡t quyá»n |
-| AI service | Python + FastAPI | boundary riÃªng cho pipeline AI |
+| Relational store | PostgreSQL trên Supabase Free | source of truth cho dữ liệu nghiệp vụ |
+| Media | Supabase Storage | private body-video/media storage; backend kiểm soát quyền |
+| AI service | Python + FastAPI | boundary riêng cho pipeline AI |
 | CV/Pose | OpenCV + MediaPipe Pose | preprocessing, pose/keypoint/feature extraction, quality/confidence |
-| Generative AI | OpenAI API qua OpenAI Python SDK | nháº­n structured JSON/context Ä‘Ã£ Ä‘Æ°á»£c chuáº©n hÃ³a; khÃ´ng thay CV layer |
-| Notification | Expo Push Notifications | delivery channel khi requirement notification Ä‘Æ°á»£c implement |
-| Realtime | KhÃ´ng dÃ¹ng trong MVP | REST/refetch lÃ  baseline; khÃ´ng tá»± báº­t WebSocket/Supabase Realtime |
+| Generative AI | OpenAI API qua OpenAI Python SDK | nhận structured JSON/context đã được chuẩn hóa; không thay CV layer |
+| Notification | Expo Push Notifications | delivery channel khi requirement notification được implement |
+| Realtime | Không dùng trong MVP | REST/refetch là baseline; không tự bật WebSocket/Supabase Realtime |
 
 ### 15.1. Core request path
 
@@ -768,52 +779,52 @@ Expo client
 
 ### 15.3. Supabase boundary
 
-Supabase trong baseline chá»‰ lÃ  **managed PostgreSQL + Storage**. KhÃ´ng suy ra ráº±ng dá»± Ã¡n dÃ¹ng Supabase Auth, Realtime hoáº·c Edge Functions. Backend NestJS váº«n lÃ  authority cho auth, RBAC vÃ  nghiá»‡p vá»¥.
+Supabase trong baseline chỉ là **managed PostgreSQL + Storage**. Không suy ra rằng dự án dùng Supabase Auth, Realtime hoặc Edge Functions. Backend NestJS vẫn là authority cho auth, RBAC và nghiệp vụ.
 
 ### 15.4. Change rule
 
-Muá»‘n Ä‘á»•i framework/provider pháº£i cáº­p nháº­t `04-tech-stack-sot.md`, Ä‘Ã¡nh giÃ¡ impact lÃªn architecture nÃ y vÃ  ghi `CHANGELOG.md` trÆ°á»›c khi coi lá»±a chá»n má»›i lÃ  canonical.
+Muốn đổi framework/provider phải cập nhật `04-tech-stack-sot.md`, đánh giá impact lên architecture này và ghi `CHANGELOG.md` trước khi coi lựa chọn mới là canonical.
 
 ---
 
 ## 16. Architecture acceptance checklist
 
-Kiáº¿n trÃºc Ä‘Æ°á»£c coi lÃ  bÃ¡m Ä‘Ãºng PRD khi:
+Kiến trúc được coi là bám đúng PRD khi:
 
-1. CÃ³ ba role vÃ  RBAC server-side.
-2. Assignment PTâ€“member lÃ  entity cÃ³ lá»‹ch sá»­.
-3. Check-in lÃ  raw event Ä‘á»™c láº­p vá»›i reconciliation.
-4. Reconciliation dÃ¹ng Ä‘Ãºng assignment/lá»‹ch táº¡i thá»i Ä‘iá»ƒm phÃ¡t sinh.
-5. Flexible window há»— trá»£ rule tá»‘i Ä‘a 2 giá».
-6. Guest khÃ´ng cáº§n role login vÃ  cÃ³ thá»ƒ convert thÃ nh member.
-7. AI dÃ¹ng pipeline raw video -> CV/pose -> structured result -> LLM recommendation.
-8. Raw video Ä‘Æ°á»£c báº£o vá»‡ nhÆ° private media.
-9. AI output khÃ´ng Ä‘Æ°á»£c thiáº¿t káº¿ nhÆ° medical diagnosis.
-10. Audit khÃ´ng dÃ¹ng Ä‘á»ƒ thay source of truth.
-11. Ba role cÃ³ thá»ƒ Ä‘Æ°á»£c test Ä‘á»“ng thá»i báº±ng session tÃ¡ch biá»‡t.
-12. Architecture khÃ´ng thÃªm Staff, marketplace booking hoáº·c multi-tenant feature.
-
----
-
-## 17. Quy táº¯c thay Ä‘á»•i Technical Architecture
-
-Khi muá»‘n Ä‘á»•i architecture:
-
-1. chá»‰ Ä‘Æ°á»£c xuáº¥t phÃ¡t tá»« requirement Ä‘Ã£ cÃ³ hoáº·c non-functional need rÃµ rÃ ng;
-2. ghi impact lÃªn module/data/API/security/testing;
-3. khÃ´ng tá»± thÃªm hÃ nh vi ngÆ°á»i dÃ¹ng má»›i;
-4. náº¿u thay Ä‘á»•i lÃ m xuáº¥t hiá»‡n behavior má»›i, pháº£i sá»­a Product Requirements trÆ°á»›c;
-5. cáº­p nháº­t `CHANGELOG.md`.
+1. Có ba role và RBAC server-side.
+2. Assignment PT–member là entity có lịch sử.
+3. Check-in là raw event độc lập với reconciliation.
+4. Reconciliation dùng đúng assignment/lịch tại thời điểm phát sinh.
+5. Flexible window hỗ trợ rule tối đa 2 giờ.
+6. Guest không cần role login và có thể convert thành member.
+7. AI dùng pipeline raw video -> CV/pose -> structured result -> LLM recommendation.
+8. Raw video được bảo vệ như private media.
+9. AI output không được thiết kế như medical diagnosis.
+10. Audit không dùng để thay source of truth.
+11. Ba role có thể được test đồng thời bằng session tách biệt.
+12. Architecture không thêm Staff, marketplace booking hoặc multi-tenant feature.
 
 ---
 
-## 18. Mapping sang technical SOT chi tiáº¿t
+## 17. Quy tắc thay đổi Technical Architecture
 
-| Chá»§ Ä‘á» | File chi tiáº¿t |
+Khi muốn đổi architecture:
+
+1. chỉ được xuất phát từ requirement đã có hoặc non-functional need rõ ràng;
+2. ghi impact lên module/data/API/security/testing;
+3. không tự thêm hành vi người dùng mới;
+4. nếu thay đổi làm xuất hiện behavior mới, phải sửa Product Requirements trước;
+5. cập nhật `CHANGELOG.md`.
+
+---
+
+## 18. Mapping sang technical SOT chi tiết
+
+| Chủ đề | File chi tiết |
 |---|---|
 | Technology stack/framework/provider | `04-tech-stack-sot.md` |
 | Transaction, invariant, RBAC enforcement, concurrency, audit, sensitive data | `10-tech-data-security-audit-sot.md` |
 | AI upload/CV/pose/structured schema/LLM/versioning | `11-tech-ai-analysis-pipeline-sot.md` |
-| Thá»© tá»± implement vÃ  test theo requirement | `12-Agent-task-splitting-sot.md` |
+| Thứ tự implement và test theo requirement | `12-Agent-task-splitting-sot.md` |
 
-CÃ¡c file nÃ y khÃ´ng Ä‘Æ°á»£c tá»± thÃªm feature ngoÃ i Product Requirements hoáº·c thay Ä‘á»•i architecture cáº¥p há»‡ thá»‘ng mÃ  khÃ´ng cáº­p nháº­t file `03` vÃ  `CHANGELOG.md`.
+Các file này không được tự thêm feature ngoài Product Requirements hoặc thay đổi architecture cấp hệ thống mà không cập nhật file `03` và `CHANGELOG.md`.

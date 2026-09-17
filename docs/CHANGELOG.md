@@ -12,6 +12,55 @@ Format:
 
 ---
 
+## [1.6.0] — 2026-09-17
+
+### Added
+
+- Chuẩn hóa UI/UX theo toàn bộ ảnh tham chiếu trong `screenshots/`: Owner dashboard, quản lý Member/PT, lịch-check-in theo role, AI Member, dashboard Member/PT và setting.
+- Bổ sung `PR-AI-005` cho chatbot trợ lý vận hành của Owner/Admin với boundary đọc dữ liệu, RBAC và không tự mutate nghiệp vụ.
+- Bổ sung technical contract cho Owner operational assistant.
+- Cập nhật `AGENTS.md` để Agent bắt buộc đối chiếu `docs/13-ui-ux-sot.md` và ảnh khi làm UI.
+
+### Affected files
+
+- `docs/13-ui-ux-sot.md`
+- `docs/02-product-requirements-sot.md`
+- `docs/03-technical-architecture-sot.md`
+- `docs/README.md`
+- `AGENTS.md`
+- `apps/api/src/owner-assistant/`
+- `apps/app/app/owner-assistant.tsx`
+- `apps/app/app/owner_admin.tsx`
+
+### Reason
+
+Owner bổ sung bộ ảnh UI và yêu cầu chatbot AI riêng cho vận hành Owner để giảm thời gian tổng hợp dữ liệu mà không thay đổi quyền hoặc lịch sử nghiệp vụ.
+
+---
+
+## [1.5.0] — 2026-09-17
+
+### Changed
+
+- Thêm UI/UX SOT cho design system Expo mobile/web.
+- Dashboard ba role dùng visual language Modern Athletic Wellness: canvas sáng, mint/coral state, card bo lớn, KPI theo scope API, quick actions và bottom navigation.
+- Ảnh `screenshots/dashboard-owner.jpg` được ghi nhận là visual reference cho hierarchy Owner dashboard; không tạo requirement hoặc business rule mới.
+
+### Affected files
+
+- `13-ui-ux-sot.md`
+- `apps/app/src/design-system/`
+- `apps/app/src/components/role-home.tsx`
+- `apps/app/app/owner_admin.tsx`
+- `apps/app/app/pt.tsx`
+- `apps/app/app/member.tsx`
+
+### Reason
+
+Owner cung cấp design direction và ảnh mẫu để chuẩn hóa trải nghiệm quản lý trên mobile/web mà vẫn giữ nguyên phạm vi sản phẩm đã chốt.
+
+---
+
 ## [1.4.0] — 2026-09-17
 
 ### Changed

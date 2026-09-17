@@ -1,133 +1,133 @@
-﻿# FITNESS-MANAGE â€” Source of Truth
+# FITNESS-MANAGE — Source of Truth
 
-**Tráº¡ng thÃ¡i:** Canonical SOT entry point  
-**Dá»± Ã¡n:** FITNESS-MANAGE  
-**NgÃ y cáº­p nháº­t:** 2026-09-16  
-**NgÃ´n ngá»¯:** Tiáº¿ng Viá»‡t
-
----
-
-## 1. Má»¥c Ä‘Ã­ch
-
-Folder nÃ y lÃ  nguá»“n tham chiáº¿u chÃ­nh thá»©c Ä‘á»ƒ Product, Codex/AI Agent vÃ  developer hiá»ƒu **FITNESS-MANAGE Ä‘ang lÃ m gÃ¬, Ä‘Æ°á»£c phÃ©p lÃ m gÃ¬, dÃ¹ng cÃ´ng nghá»‡ nÃ o vÃ  pháº£i implement theo kiáº¿n trÃºc nÃ o**.
-
-KhÃ´ng dÃ¹ng chat cÅ©, comment code hoáº·c suy Ä‘oÃ¡n cÃ¡ nhÃ¢n Ä‘á»ƒ override SOT.
-
-Náº¿u code vÃ  SOT mÃ¢u thuáº«n, pháº£i xÃ¡c minh quyáº¿t Ä‘á»‹nh má»›i nháº¥t rá»“i cáº­p nháº­t Ä‘Ãºng tÃ i liá»‡u trÆ°á»›c khi má»Ÿ rá»™ng implementation.
+**Trạng thái:** Canonical SOT entry point  
+**Dự án:** FITNESS-MANAGE  
+**Ngày cập nhật:** 2026-09-16  
+**Ngôn ngữ:** Tiếng Việt
 
 ---
 
-## 2. Bá»™ tÃ i liá»‡u SOT
+## 1. Mục đích
 
-### 2.1. Core SOT báº¯t buá»™c
+Folder này là nguồn tham chiếu chính thức để Product, Codex/AI Agent và developer hiểu **FITNESS-MANAGE đang làm gì, được phép làm gì, dùng công nghệ nào và phải implement theo kiến trúc nào**.
 
-| File | Sá»Ÿ há»¯u | KhÃ´ng Ä‘Æ°á»£c sá»Ÿ há»¯u |
+Không dùng chat cũ, comment code hoặc suy đoán cá nhân để override SOT.
+
+Nếu code và SOT mâu thuẫn, phải xác minh quyết định mới nhất rồi cập nhật đúng tài liệu trước khi mở rộng implementation.
+
+---
+
+## 2. Bộ tài liệu SOT
+
+### 2.1. Core SOT bắt buộc
+
+| File | Sở hữu | Không được sở hữu |
 |---|---|---|
-| `01-product-brief-sot.md` | why, positioning, audience, outcome, product principles, business model, boundary | workflow chi tiáº¿t, acceptance, framework, database |
-| `02-product-requirements-sot.md` | canonical requirement IDs, behavior, scope, acceptance criteria | framework/provider, schema váº­t lÃ½, code pattern |
-| `03-technical-architecture-sot.md` | kiáº¿n trÃºc há»‡ thá»‘ng, module boundary, domain contract, security/AI architecture | feature má»›i chÆ°a cÃ³ trong PRD |
-| `04-tech-stack-sot.md` | framework, library, provider vÃ  stack cÃ´ng nghá»‡ Ä‘Ã£ chá»‘t | business behavior, requirement má»›i |
-| `CHANGELOG.md` | lá»‹ch sá»­ thay Ä‘á»•i SOT | quyáº¿t Ä‘á»‹nh canonical thay cho file chÃ­nh |
-| `README.md` | cÃ¡ch Ä‘á»c, conflict priority, báº£n Ä‘á»“ tÃ i liá»‡u, rule cho Agent | duplicate chi tiáº¿t feature |
+| `01-product-brief-sot.md` | why, positioning, audience, outcome, product principles, business model, boundary | workflow chi tiết, acceptance, framework, database |
+| `02-product-requirements-sot.md` | canonical requirement IDs, behavior, scope, acceptance criteria | framework/provider, schema vật lý, code pattern |
+| `03-technical-architecture-sot.md` | kiến trúc hệ thống, module boundary, domain contract, security/AI architecture | feature mới chưa có trong PRD |
+| `04-tech-stack-sot.md` | framework, library, provider và stack công nghệ đã chốt | business behavior, requirement mới |
+| `CHANGELOG.md` | lịch sử thay đổi SOT | quyết định canonical thay cho file chính |
+| `README.md` | cách đọc, conflict priority, bản đồ tài liệu, rule cho Agent | duplicate chi tiết feature |
 
-### 2.2. Business SOT chi tiáº¿t theo chá»©c nÄƒng
+### 2.2. Business SOT chi tiết theo chức năng
 
-CÃ¡c file nÃ y **chi tiáº¿t hÃ³a requirement ID Ä‘Ã£ tá»“n táº¡i trong `02`**. ChÃºng khÃ´ng Ä‘Æ°á»£c táº¡o feature má»›i náº¿u `02` chÆ°a cÃ³ requirement tÆ°Æ¡ng á»©ng.
+Các file này **chi tiết hóa requirement ID đã tồn tại trong `02`**. Chúng không được tạo feature mới nếu `02` chưa có requirement tương ứng.
 
-| File | Pháº¡m vi | Requirement chÃ­nh |
+| File | Phạm vi | Requirement chính |
 |---|---|---|
 | `05-business-auth-role-access-sot.md` | login, account status, RBAC, PT access, 3-role session test | `PR-AUTH-*`, `PR-PT-*`, `PR-TEST-001` |
-| `06-business-member-pt-assignment-sot.md` | Member registration, PT 1-1 assignment, Ä‘á»•i PT, history | `PR-MEMBER-*`, `PR-ASSIGN-*` |
-| `07-business-schedule-checkin-attendance-sot.md` | lá»‹ch, khung linh hoáº¡t 2h, Member/PT check-in, Ä‘á»‘i soÃ¡t | `PR-SCHEDULE-*`, `PR-CHECKIN-*` |
-| `08-business-guest-trial-conversion-sot.md` | khÃ¡ch táº­p thá»­, trial history, Guest -> Member | `PR-GUEST-*` |
+| `06-business-member-pt-assignment-sot.md` | Member registration, PT 1-1 assignment, đổi PT, history | `PR-MEMBER-*`, `PR-ASSIGN-*` |
+| `07-business-schedule-checkin-attendance-sot.md` | lịch, khung linh hoạt 2h, Member/PT check-in, đối soát | `PR-SCHEDULE-*`, `PR-CHECKIN-*` |
+| `08-business-guest-trial-conversion-sot.md` | khách tập thử, trial history, Guest -> Member | `PR-GUEST-*` |
 | `09-business-ai-body-analysis-sot.md` | AI body analysis behavior, structured result, plan, history | `PR-AI-*` |
 
-### 2.3. Technical SOT chi tiáº¿t
+### 2.3. Technical SOT chi tiết
 
-| File | Pháº¡m vi |
+| File | Phạm vi |
 |---|---|
 | `10-tech-data-security-audit-sot.md` | transaction, invariant, concurrency, RBAC enforcement, time, audit, sensitive data |
 | `11-tech-ai-analysis-pipeline-sot.md` | FastAPI/OpenCV/MediaPipe/OpenAI pipeline, structured schema, confidence gate, generation, versioning |
-| `12-Agent-task-splitting-sot.md` | thá»© tá»± implement, mapping requirement -> SOT -> task -> acceptance |
+| `12-Agent-task-splitting-sot.md` | thứ tự implement, mapping requirement -> SOT -> task -> acceptance |
 
 ---
 
-## 3. Thá»© tá»± Ä‘á»c báº¯t buá»™c
+## 3. Thứ tự đọc bắt buộc
 
-### 3.1. Má»i task
+### 3.1. Mọi task
 
 1. `README.md`
 2. `01-product-brief-sot.md`
 3. `02-product-requirements-sot.md`
 4. `03-technical-architecture-sot.md`
 5. `04-tech-stack-sot.md`
-6. file SOT chi tiáº¿t liÃªn quan task
-7. `CHANGELOG.md` náº¿u cáº§n lá»‹ch sá»­ quyáº¿t Ä‘á»‹nh
+6. file SOT chi tiết liên quan task
+7. `CHANGELOG.md` nếu cần lịch sử quyết định
 
 ### 3.2. Mapping theo task
 
-| Task | Äá»c thÃªm |
+| Task | Đọc thêm |
 |---|---|
 | Setup project/dependency | `04`, `10`, `12` |
 | Login / permission / PT management | `05`, `10` |
-| Táº¡o Member / gÃ¡n PT / Ä‘á»•i PT | `06`, `10` |
-| Lá»‹ch / check-in / attendance | `07`, `10` |
-| Guest / táº­p thá»­ / conversion | `08`, `10` |
+| Tạo Member / gán PT / đổi PT | `06`, `10` |
+| Lịch / check-in / attendance | `07`, `10` |
+| Guest / tập thử / conversion | `08`, `10` |
 | AI behavior/UI flow | `09`, `11` |
 | AI backend/pipeline | `09`, `10`, `11` |
 | Chia task Codex/Agent | `12` |
 
-KhÃ´ng nháº£y tháº³ng vÃ o file chi tiáº¿t rá»“i bá» qua `02`, `03`, `04`, vÃ¬ file chi tiáº¿t chá»‰ má»Ÿ rá»™ng requirement/architecture/stack Ä‘Ã£ Ä‘Æ°á»£c khÃ³a á»Ÿ core SOT.
+Không nhảy thẳng vào file chi tiết rồi bỏ qua `02`, `03`, `04`, vì file chi tiết chỉ mở rộng requirement/architecture/stack đã được khóa ở core SOT.
 
 ---
 
-## 4. Quy táº¯c Æ°u tiÃªn khi tÃ i liá»‡u mÃ¢u thuáº«n
+## 4. Quy tắc ưu tiên khi tài liệu mâu thuẫn
 
-1. **Product Brief (`01`)** quyáº¿t Ä‘á»‹nh sáº£n pháº©m lÃ  gÃ¬, phá»¥c vá»¥ ai vÃ  boundary á»Ÿ Ä‘Ã¢u.
-2. **Product Requirements (`02`)** quyáº¿t Ä‘á»‹nh canonical requirement, scope vÃ  acceptance.
-3. **Technical Architecture (`03`)** quyáº¿t Ä‘á»‹nh kiáº¿n trÃºc tá»•ng quan Ä‘á»ƒ Ä‘Ã¡p á»©ng requirement.
-4. **Technology Stack (`04`)** quyáº¿t Ä‘á»‹nh framework/library/provider Ä‘Æ°á»£c phÃ©p dÃ¹ng trong baseline.
-5. **Business detail (`05`â€“`09`)** quyáº¿t Ä‘á»‹nh flow/state/edge case chi tiáº¿t trong pháº¡m vi requirement Ä‘Ã£ cÃ³; khÃ´ng Ä‘Æ°á»£c trÃ¡i `02`.
-6. **Technical detail (`10`â€“`11`)** quyáº¿t Ä‘á»‹nh invariant/technical contract chi tiáº¿t trong pháº¡m vi `03` + `04`; khÃ´ng Ä‘Æ°á»£c tá»± thÃªm business behavior.
-7. **Task guide (`12`)** chá»‰ chia viá»‡c, khÃ´ng override nghiá»‡p vá»¥, architecture hoáº·c stack.
-8. **README** quyáº¿t Ä‘á»‹nh cÃ¡ch Ä‘á»c vÃ  sá»­ dá»¥ng bá»™ SOT.
-9. **CHANGELOG** chá»‰ ghi lá»‹ch sá»­, khÃ´ng override ná»™i dung hiá»‡n hÃ nh.
+1. **Product Brief (`01`)** quyết định sản phẩm là gì, phục vụ ai và boundary ở đâu.
+2. **Product Requirements (`02`)** quyết định canonical requirement, scope và acceptance.
+3. **Technical Architecture (`03`)** quyết định kiến trúc tổng quan để đáp ứng requirement.
+4. **Technology Stack (`04`)** quyết định framework/library/provider được phép dùng trong baseline.
+5. **Business detail (`05`–`09`)** quyết định flow/state/edge case chi tiết trong phạm vi requirement đã có; không được trái `02`.
+6. **Technical detail (`10`–`11`)** quyết định invariant/technical contract chi tiết trong phạm vi `03` + `04`; không được tự thêm business behavior.
+7. **Task guide (`12`)** chỉ chia việc, không override nghiệp vụ, architecture hoặc stack.
+8. **README** quyết định cách đọc và sử dụng bộ SOT.
+9. **CHANGELOG** chỉ ghi lịch sử, không override nội dung hiện hành.
 
-Náº¿u `05`â€“`09` mÃ¢u thuáº«n `02`, **`02` tháº¯ng** vÃ  file chi tiáº¿t pháº£i Ä‘Æ°á»£c Ä‘á»“ng bá»™.  
-Náº¿u `10`â€“`11` mÃ¢u thuáº«n `03`, **`03` tháº¯ng** cho tá»›i khi owner duyá»‡t thay Ä‘á»•i kiáº¿n trÃºc.  
-Náº¿u implementation dÃ¹ng cÃ´ng nghá»‡ khÃ¡c `04`, **`04` tháº¯ng** cho tá»›i khi owner duyá»‡t thay stack vÃ  cáº­p nháº­t SOT.
-
----
-
-## 5. CÃ¡c quyáº¿t Ä‘á»‹nh sáº£n pháº©m Ä‘Ã£ khÃ³a
-
-Baseline hiá»‡n táº¡i:
-
-- mÃ´ hÃ¬nh lÃ  phÃ²ng gym cÃ¡ nhÃ¢n;
-- chá»‰ cÃ³ ba role Ä‘Äƒng nháº­p chÃ­nh: `Owner/Admin`, `PT`, `Member`;
-- khÃ´ng cÃ³ role Staff;
-- khÃ´ng cÃ³ role Dev trong nghiá»‡p vá»¥;
-- PT Ä‘Æ°á»£c gÃ¡n cho member tá»« khi Ä‘Äƒng kÃ½, khÃ´ng book PT theo tá»«ng buá»•i;
-- member cÃ³ thá»ƒ Ä‘á»•i PT náº¿u khÃ´ng phÃ¹ há»£p;
-- check-in dÃ¹ng Ä‘á»ƒ Ä‘á»‘i soÃ¡t member vÃ  PT;
-- member Ä‘áº¿n nhÆ°ng PT khÃ´ng cÃ³ máº·t trong khung há»£p lá»‡ pháº£i táº¡o tráº¡ng thÃ¡i cáº§n owner kiá»ƒm tra;
-- lá»‹ch cÃ³ thá»ƒ há»— trá»£ khung linh hoáº¡t tá»‘i Ä‘a 2 giá» theo baseline Ä‘Ã£ chá»‘t;
-- khÃ¡ch má»›i cÃ³ thá»ƒ Ä‘Æ°á»£c ghi nháº­n ngay Ä‘á»ƒ táº­p thá»­, chÆ°a cáº§n tÃ i khoáº£n;
-- guest data pháº£i giá»¯ Ä‘Æ°á»£c Ä‘á»ƒ thá»‘ng kÃª/chÄƒm sÃ³c vá» sau;
-- AI phÃ¢n tÃ­ch video cÆ¡ thá»ƒ lÃ  feature Ä‘Ã£ duyá»‡t;
-- video Ä‘Æ°á»£c chuyá»ƒn thÃ nh dá»¯ liá»‡u cÃ³ cáº¥u trÃºc trÆ°á»›c khi LLM sinh lá»i khuyÃªn/lá»™ trÃ¬nh;
-- AI khÃ´ng Ä‘Æ°á»£c dÃ¹ng nhÆ° cÃ´ng cá»¥ cháº©n Ä‘oÃ¡n bá»‡nh/cháº¥n thÆ°Æ¡ng.
+Nếu `05`–`09` mâu thuẫn `02`, **`02` thắng** và file chi tiết phải được đồng bộ.  
+Nếu `10`–`11` mâu thuẫn `03`, **`03` thắng** cho tới khi owner duyệt thay đổi kiến trúc.  
+Nếu implementation dùng công nghệ khác `04`, **`04` thắng** cho tới khi owner duyệt thay stack và cập nhật SOT.
 
 ---
 
-## 6. Tech stack Ä‘Ã£ khÃ³a
+## 5. Các quyết định sản phẩm đã khóa
 
-Canonical chi tiáº¿t náº±m á»Ÿ `04-tech-stack-sot.md`.
+Baseline hiện tại:
+
+- mô hình là phòng gym cá nhân;
+- chỉ có ba role đăng nhập chính: `Owner/Admin`, `PT`, `Member`;
+- không có role Staff;
+- không có role Dev trong nghiệp vụ;
+- PT được gán cho member từ khi đăng ký, không book PT theo từng buổi;
+- member có thể đổi PT nếu không phù hợp;
+- check-in dùng để đối soát member và PT;
+- member đến nhưng PT không có mặt trong khung hợp lệ phải tạo trạng thái cần owner kiểm tra;
+- lịch có thể hỗ trợ khung linh hoạt tối đa 2 giờ theo baseline đã chốt;
+- khách mới có thể được ghi nhận ngay để tập thử, chưa cần tài khoản;
+- guest data phải giữ được để thống kê/chăm sóc về sau;
+- AI phân tích video cơ thể là feature đã duyệt;
+- video được chuyển thành dữ liệu có cấu trúc trước khi LLM sinh lời khuyên/lộ trình;
+- AI không được dùng như công cụ chẩn đoán bệnh/chấn thương.
+
+---
+
+## 6. Tech stack đã khóa
+
+Canonical chi tiết nằm ở `04-tech-stack-sot.md`.
 
 Baseline:
 
 - **Frontend mobile:** React Native + Expo + TypeScript;
-- **Web:** cÃ¹ng Expo codebase qua React Native Web;
+- **Web:** cùng Expo codebase qua React Native Web;
 - **Routing:** Expo Router;
 - **State:** Zustand;
 - **Form/Validation:** React Hook Form + Zod;
@@ -136,94 +136,94 @@ Baseline:
 - **API:** REST;
 - **Authentication:** JWT + Refresh Token;
 - **ORM:** Prisma;
-- **Database:** PostgreSQL trÃªn Supabase Free;
+- **Database:** PostgreSQL trên Supabase Free;
 - **Storage:** Supabase Storage;
 - **AI Service:** Python + FastAPI;
 - **CV/Pose:** OpenCV + MediaPipe Pose;
-- **Generative AI:** OpenAI API nháº­n structured JSON tá»« táº§ng CV;
+- **Generative AI:** OpenAI API nhận structured JSON từ tầng CV;
 - **Notification:** Expo Push Notifications;
-- **Realtime:** chÆ°a dÃ¹ng WebSocket trong MVP;
-- **Deploy:** Æ°u tiÃªn local/free tier;
+- **Realtime:** chưa dùng WebSocket trong MVP;
+- **Deploy:** ưu tiên local/free tier;
 - **Source control:** Git + GitHub.
 
-Supabase **khÃ´ng Ä‘á»“ng nghÄ©a dÃ¹ng toÃ n bá»™ Supabase stack**. MVP hiá»‡n chá»‰ khÃ³a PostgreSQL managed + Storage; auth váº«n do NestJS + JWT/Refresh Token quáº£n lÃ½.
+Supabase **không đồng nghĩa dùng toàn bộ Supabase stack**. MVP hiện chỉ khóa PostgreSQL managed + Storage; auth vẫn do NestJS + JWT/Refresh Token quản lý.
 
 ---
 
-## 7. Quy táº¯c cho Codex / AI Agent
+## 7. Quy tắc cho Codex / AI Agent
 
-TrÆ°á»›c khi code:
+Trước khi code:
 
-1. Ä‘á»c Ä‘á»§ `README`, `01`, `02`, `03`, `04` vÃ  file chi tiáº¿t Ä‘Ãºng chá»©c nÄƒng;
-2. xÃ¡c Ä‘á»‹nh requirement ID Ä‘ang implement;
-3. dÃ¹ng Ä‘Ãºng stack trong `04-tech-stack-sot.md`;
-4. khÃ´ng thÃªm feature â€œcho tiá»‡nâ€;
-5. khÃ´ng tá»± Ä‘á»•i role model;
-6. khÃ´ng biáº¿n PT assignment thÃ nh booking theo buá»•i;
-7. khÃ´ng ghi Ä‘Ã¨ lá»‹ch sá»­ assignment/check-in;
-8. vá»›i AI, giá»¯ pipeline `video -> OpenCV/MediaPipe Pose -> structured JSON -> OpenAI API`;
-9. khÃ´ng tá»± báº­t Supabase Auth/Realtime/Edge Functions;
-10. khÃ´ng tá»± thay Axios, Zustand, Prisma hoáº·c REST báº±ng lá»±a chá»n khÃ¡c;
-11. cuá»‘i task pháº£i ghi rÃµ file code Ä‘Ã£ sá»­a, test Ä‘Ã£ cháº¡y vÃ  requirement ID Ä‘Ã£ Ä‘Ã¡p á»©ng.
+1. đọc đủ `README`, `01`, `02`, `03`, `04` và file chi tiết đúng chức năng;
+2. xác định requirement ID đang implement;
+3. dùng đúng stack trong `04-tech-stack-sot.md`;
+4. không thêm feature “cho tiện”;
+5. không tự đổi role model;
+6. không biến PT assignment thành booking theo buổi;
+7. không ghi đè lịch sử assignment/check-in;
+8. với AI, giữ pipeline `video -> OpenCV/MediaPipe Pose -> structured JSON -> OpenAI API`;
+9. không tự bật Supabase Auth/Realtime/Edge Functions;
+10. không tự thay Axios, Zustand, Prisma hoặc REST bằng lựa chọn khác;
+11. cuối task phải ghi rõ file code đã sửa, test đã chạy và requirement ID đã đáp ứng.
 
 ---
 
-## 8. Prompt chuáº©n giao task cho Codex
+## 8. Prompt chuẩn giao task cho Codex
 
 ```text
-Báº¡n Ä‘ang implement FITNESS-MANAGE.
-Tráº£ lá»i báº±ng tiáº¿ng Viá»‡t.
+Bạn đang implement FITNESS-MANAGE.
+Trả lời bằng tiếng Việt.
 
-Äá»c trÆ°á»›c:
+Đọc trước:
 - README.md
 - 01-product-brief-sot.md
 - 02-product-requirements-sot.md
 - 03-technical-architecture-sot.md
 - 04-tech-stack-sot.md
-- <file SOT chi tiáº¿t liÃªn quan>
+- <file SOT chi tiết liên quan>
 
 Task:
-<ghi task cá»¥ thá»ƒ>
+<ghi task cụ thể>
 
 Requirement IDs:
-<vÃ­ dá»¥ PR-MEMBER-002, PR-CHECKIN-003>
+<ví dụ PR-MEMBER-002, PR-CHECKIN-003>
 
-YÃªu cáº§u:
-- KhÃ´ng thÃªm feature ngoÃ i Product Requirements.
-- KhÃ´ng Ä‘á»•i business rule Ä‘á»ƒ code dá»… hÆ¡n.
-- DÃ¹ng Ä‘Ãºng stack trong 04-tech-stack-sot.md.
-- KhÃ´ng tá»± thÃªm Staff/Dev role.
-- KhÃ´ng biáº¿n PT assignment thÃ nh booking tá»«ng buá»•i.
+Yêu cầu:
+- Không thêm feature ngoài Product Requirements.
+- Không đổi business rule để code dễ hơn.
+- Dùng đúng stack trong 04-tech-stack-sot.md.
+- Không tự thêm Staff/Dev role.
+- Không biến PT assignment thành booking từng buổi.
 - Preserve history cho assignment/check-in/AI analysis.
-- Náº¿u task AI: video pháº£i qua OpenCV + MediaPipe Pose táº¡o structured JSON trÆ°á»›c OpenAI API.
-- KhÃ´ng tá»± báº­t Supabase Auth/Realtime/Edge Functions.
-- Sau khi hoÃ n thÃ nh: tÃ³m táº¯t file sá»­a, migration, test, requirement Ä‘Ã£ cover vÃ  rá»§i ro cÃ²n láº¡i.
+- Nếu task AI: video phải qua OpenCV + MediaPipe Pose tạo structured JSON trước OpenAI API.
+- Không tự bật Supabase Auth/Realtime/Edge Functions.
+- Sau khi hoàn thành: tóm tắt file sửa, migration, test, requirement đã cover và rủi ro còn lại.
 ```
 
 ---
 
-## 9. Definition of Done cho má»™t task
+## 9. Definition of Done cho một task
 
-Má»™t task chá»‰ Ä‘Æ°á»£c coi lÃ  xong khi:
+Một task chỉ được coi là xong khi:
 
-- bÃ¡m Ä‘Ãºng requirement ID;
-- dÃ¹ng Ä‘Ãºng stack canonical;
-- khÃ´ng phÃ¡ boundary role;
-- business invariant cÃ³ test náº¿u cÃ³ logic;
-- error/empty/permission state Ä‘Æ°á»£c xá»­ lÃ½;
-- migration Ä‘Æ°á»£c thÃªm náº¿u data model thay Ä‘á»•i;
-- khÃ´ng sá»­a lá»‹ch sá»­ ngoÃ i Ã½ muá»‘n;
-- khÃ´ng táº¡o data race/double-submit á»Ÿ action quan trá»ng;
-- test phÃ¹ há»£p cháº¡y thÃ nh cÃ´ng;
-- SOT/CHANGELOG Ä‘Æ°á»£c cáº­p nháº­t náº¿u decision thay Ä‘á»•i.
+- bám đúng requirement ID;
+- dùng đúng stack canonical;
+- không phá boundary role;
+- business invariant có test nếu có logic;
+- error/empty/permission state được xử lý;
+- migration được thêm nếu data model thay đổi;
+- không sửa lịch sử ngoài ý muốn;
+- không tạo data race/double-submit ở action quan trọng;
+- test phù hợp chạy thành công;
+- SOT/CHANGELOG được cập nhật nếu decision thay đổi.
 
 ---
 
-## 10. Quy táº¯c update SOT
+## 10. Quy tắc update SOT
 
 ### Product Brief
 
-Chá»‰ khi Ä‘á»•i:
+Chỉ khi đổi:
 
 - why;
 - positioning;
@@ -235,7 +235,7 @@ Chá»‰ khi Ä‘á»•i:
 
 ### Product Requirements
 
-Khi Ä‘á»•i:
+Khi đổi:
 
 - behavior;
 - flow;
@@ -245,7 +245,7 @@ Khi Ä‘á»•i:
 
 ### Technical Architecture
 
-Khi Ä‘á»•i:
+Khi đổi:
 
 - module boundary;
 - domain model;
@@ -257,10 +257,10 @@ Khi Ä‘á»•i:
 
 ### Technology Stack
 
-Khi Ä‘á»•i:
+Khi đổi:
 
 - framework;
-- library chÃ­nh;
+- library chính;
 - ORM/database provider;
 - auth mechanism;
 - storage provider;
@@ -271,25 +271,28 @@ Khi Ä‘á»•i:
 
 ### CHANGELOG
 
-Má»i thay Ä‘á»•i decision-level pháº£i ghi vÃ o `CHANGELOG.md`.
+Mọi thay đổi decision-level phải ghi vào `CHANGELOG.md`.
 
 ---
 
-## 11. Nhá»¯ng Ä‘iá»u tuyá»‡t Ä‘á»‘i khÃ´ng tá»± thÃªm/thay
+## 11. Những điều tuyệt đối không tự thêm/thay
 
 - Staff role;
 - Dev role;
-- booking PT tá»± do theo buá»•i;
+- booking PT tự do theo buổi;
 - marketplace;
 - multi-tenant SaaS;
 - payroll/HR;
-- CRM automation Ä‘áº§y Ä‘á»§;
-- medical diagnosis báº±ng AI;
-- Supabase Auth thay JWT/Refresh Token cá»§a NestJS;
-- Supabase Realtime/WebSocket á»Ÿ MVP náº¿u chÆ°a cÃ³ quyáº¿t Ä‘á»‹nh má»›i;
+- CRM automation đầy đủ;
+- medical diagnosis bằng AI;
+- Supabase Auth thay JWT/Refresh Token của NestJS;
+- Supabase Realtime/WebSocket ở MVP nếu chưa có quyết định mới;
 - GraphQL thay REST;
-- ORM khÃ¡c thay Prisma;
-- frontend web riÃªng thay React Native Web cÃ¹ng Expo codebase;
-- raw video Ä‘Æ°a tháº³ng vÃ o LLM Ä‘á»ƒ bá» qua CV/Pose;
-- provider/framework má»›i chá»‰ vÃ¬ Agent thÃ­ch dÃ¹ng;
-- feature khÃ´ng cÃ³ requirement ID hoáº·c chÆ°a Ä‘Æ°á»£c owner duyá»‡t.
+- ORM khác thay Prisma;
+- frontend web riêng thay React Native Web cùng Expo codebase;
+- raw video đưa thẳng vào LLM để bỏ qua CV/Pose;
+- provider/framework mới chỉ vì Agent thích dùng;
+- feature không có requirement ID hoặc chưa được owner duyệt.
+## 12. UI/UX SOT
+
+`13-ui-ux-sot.md` là quy chuẩn cho visual language, ảnh tham chiếu, dashboard theo role, lịch/check-in theo từng role, AI UI, setting, responsive và accessibility. File này phải được đọc thêm khi task làm giao diện; requirement và quyền canonical vẫn lấy từ các SOT ưu tiên cao hơn.

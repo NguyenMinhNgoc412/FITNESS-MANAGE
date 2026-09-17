@@ -1,14 +1,14 @@
-﻿# FITNESS-MANAGE SOT 11 â€” Technical Spec: AI Analysis Pipeline
+# FITNESS-MANAGE SOT 11 — Technical Spec: AI Analysis Pipeline
 
-**Tráº¡ng thÃ¡i:** SOT ká»¹ thuáº­t chi tiáº¿t  
-**Dá»± Ã¡n:** FITNESS-MANAGE  
-**NgÃ y cáº­p nháº­t:** 2026-09-16  
-**LiÃªn quan:** `PR-AI-001..004`, `03-technical-architecture-sot.md`, `04-tech-stack-sot.md`, `09-business-ai-body-analysis-sot.md`  
-**NguyÃªn táº¯c:** Pipeline Ä‘Ã£ khÃ³a `FastAPI -> OpenCV -> MediaPipe Pose -> structured JSON -> OpenAI API`. KhÃ´ng Ä‘Æ°á»£c Ä‘á»•i thÃ nh â€œraw video -> LLM -> káº¿t luáº­nâ€.
+**Trạng thái:** SOT kỹ thuật chi tiết  
+**Dự án:** FITNESS-MANAGE  
+**Ngày cập nhật:** 2026-09-16  
+**Liên quan:** `PR-AI-001..004`, `03-technical-architecture-sot.md`, `04-tech-stack-sot.md`, `09-business-ai-body-analysis-sot.md`  
+**Nguyên tắc:** Pipeline đã khóa `FastAPI -> OpenCV -> MediaPipe Pose -> structured JSON -> OpenAI API`. Không được đổi thành “raw video -> LLM -> kết luận”.
 
 ---
 
-## 1. Pipeline chuáº©n
+## 1. Pipeline chuẩn
 
 ```text
 Member video
@@ -28,7 +28,7 @@ Member video
 
 ## 2. Analysis run state machine
 
-Tá»‘i thiá»ƒu:
+Tối thiểu:
 
 ```text
 UPLOADED
@@ -37,7 +37,7 @@ UPLOADED
   -> COMPLETED
 ```
 
-NhÃ¡nh lá»—i:
+Nhánh lỗi:
 
 ```text
 VALIDATING -> NEEDS_RETAKE
@@ -45,40 +45,40 @@ VALIDATING -> FAILED
 ANALYZING  -> FAILED
 ```
 
-KhÃ´ng set `COMPLETED` náº¿u chÆ°a cÃ³ output há»£p lá»‡ theo schema.
+Không set `COMPLETED` nếu chưa có output hợp lệ theo schema.
 
 ---
 
 ## 3. Upload boundary
 
-Backend/service pháº£i validate:
+Backend/service phải validate:
 
-- actor lÃ  Member há»£p lá»‡ hoáº·c flow Ä‘Æ°á»£c á»§y quyá»n;
-- file type cho phÃ©p;
-- file size/duration theo budget implementation Ä‘Ã£ duyá»‡t;
-- media reference thuá»™c Ä‘Ãºng Member;
-- khÃ´ng public upload path.
+- actor là Member hợp lệ hoặc flow được ủy quyền;
+- file type cho phép;
+- file size/duration theo budget implementation đã duyệt;
+- media reference thuộc đúng Member;
+- không public upload path.
 
-Budget sá»‘ cá»¥ thá»ƒ chÆ°a cÃ³ trong source hiá»‡n táº¡i, vÃ¬ váº­y khÃ´ng hard-code vÃ o SOT nÃ y.
+Budget số cụ thể chưa có trong source hiện tại, vì vậy không hard-code vào SOT này.
 
 ---
 
 ## 4. Input preprocessing
 
-Má»¥c tiÃªu:
+Mục tiêu:
 
-- decode media an toÃ n;
-- chá»n frame/keyframe cáº§n thiáº¿t;
-- normalize orientation/resolution khi pipeline cáº§n;
-- khÃ´ng Ä‘Æ°a toÃ n bá»™ binary vÃ o application state/cache khÃ´ng cáº§n thiáº¿t.
+- decode media an toàn;
+- chọn frame/keyframe cần thiết;
+- normalize orientation/resolution khi pipeline cần;
+- không đưa toàn bộ binary vào application state/cache không cần thiết.
 
-Implementation preprocessing náº±m trong Python/FastAPI service vÃ  dÃ¹ng OpenCV; output sang MediaPipe Pose pháº£i Ä‘á»§ deterministic Ä‘á»ƒ debug/version.
+Implementation preprocessing nằm trong Python/FastAPI service và dùng OpenCV; output sang MediaPipe Pose phải đủ deterministic để debug/version.
 
 ---
 
 ## 5. CV / Pose extraction contract
 
-Output structured tá»‘i thiá»ƒu nÃªn cÃ³ shape logic:
+Output structured tối thiểu nên có shape logic:
 
 ```json
 {
@@ -98,7 +98,7 @@ Output structured tá»‘i thiá»ƒu nÃªn cÃ³ shape logic:
 }
 ```
 
-TÃªn field váº­t lÃ½ cÃ³ thá»ƒ khÃ¡c, nhÆ°ng pháº£i giá»¯ cÃ¡c nhÃ³m Ã½ nghÄ©a:
+Tên field vật lý có thể khác, nhưng phải giữ các nhóm ý nghĩa:
 
 - quality;
 - extracted feature;
@@ -106,39 +106,39 @@ TÃªn field váº­t lÃ½ cÃ³ thá»ƒ khÃ¡c, nhÆ°ng pháº£i giá»¯ 
 - warning;
 - schema/analyzer version.
 
-KhÃ´ng Ä‘Æ°a diagnosis y khoa vÃ o structured result náº¿u product chÆ°a duyá»‡t.
+Không đưa diagnosis y khoa vào structured result nếu product chưa duyệt.
 
 ---
 
 ## 6. Confidence gate
 
-TrÆ°á»›c LLM:
+Trước LLM:
 
-1. náº¿u input invalid -> `NEEDS_RETAKE`/`FAILED`;
-2. náº¿u feature critical thiáº¿u -> context pháº£i Ä‘Ã¡nh dáº¥u insufficient;
-3. náº¿u confidence tháº¥p -> generation prompt/context pháº£i giá»¯ uncertainty;
-4. khÃ´ng tá»± fill missing metric báº±ng giÃ¡ trá»‹ tÆ°á»Ÿng tÆ°á»£ng.
+1. nếu input invalid -> `NEEDS_RETAKE`/`FAILED`;
+2. nếu feature critical thiếu -> context phải đánh dấu insufficient;
+3. nếu confidence thấp -> generation prompt/context phải giữ uncertainty;
+4. không tự fill missing metric bằng giá trị tưởng tượng.
 
 ---
 
 ## 7. OpenAI context builder
 
-OpenAI API chá»‰ nháº­n dá»¯ liá»‡u cáº§n thiáº¿t:
+OpenAI API chỉ nhận dữ liệu cần thiết:
 
 - structured CV/pose result;
-- goal/context Member Ä‘Æ°á»£c phÃ©p;
+- goal/context Member được phép;
 - safety/product instruction;
 - output schema.
 
-KhÃ´ng gá»­i raw video trá»±c tiáº¿p cho OpenAI API trong baseline; input chÃ­nh lÃ  structured JSON tá»« OpenCV/MediaPipe Pose.
+Không gửi raw video trực tiếp cho OpenAI API trong baseline; input chính là structured JSON từ OpenCV/MediaPipe Pose.
 
-KhÃ´ng Ä‘Æ°a secret/internal audit khÃ´ng liÃªn quan vÃ o prompt.
+Không đưa secret/internal audit không liên quan vào prompt.
 
 ---
 
 ## 8. Output schema
 
-Output logic nÃªn cÃ³ cáº¥u trÃºc thay vÃ¬ prose tá»± do duy nháº¥t:
+Output logic nên có cấu trúc thay vì prose tự do duy nhất:
 
 ```json
 {
@@ -153,21 +153,21 @@ Output logic nÃªn cÃ³ cáº¥u trÃºc thay vÃ¬ prose tá»± do duy nhá�
 }
 ```
 
-Schema cá»¥ thá»ƒ cÃ³ thá»ƒ má»Ÿ rá»™ng khi requirement thay Ä‘á»•i, nhÆ°ng pháº£i validate trÆ°á»›c khi persist `COMPLETED`.
+Schema cụ thể có thể mở rộng khi requirement thay đổi, nhưng phải validate trước khi persist `COMPLETED`.
 
 ---
 
 ## 9. Versioning
 
-Má»—i run cáº§n truy Ä‘Æ°á»£c:
+Mỗi run cần truy được:
 
 - pipeline version;
 - structured schema version;
-- analyzer/model version á»Ÿ má»©c há»‡ thá»‘ng cho phÃ©p lÆ°u;
+- analyzer/model version ở mức hệ thống cho phép lưu;
 - generation/prompt version;
-- thá»i Ä‘iá»ƒm táº¡o.
+- thời điểm tạo.
 
-Má»¥c tiÃªu lÃ  giáº£i thÃ­ch vÃ¬ sao hai run khÃ¡c nhau cÃ³ thá»ƒ cho output khÃ¡c nhau mÃ  khÃ´ng rewrite lá»‹ch sá»­.
+Mục tiêu là giải thích vì sao hai run khác nhau có thể cho output khác nhau mà không rewrite lịch sử.
 
 ---
 
@@ -175,36 +175,36 @@ Má»¥c tiÃªu lÃ  giáº£i thÃ­ch vÃ¬ sao hai run khÃ¡c nhau cÃ³ t
 
 ### 10.1. Upload retry
 
-Pháº£i trÃ¡nh táº¡o nhiá»u run ngoÃ i Ã½ muá»‘n náº¿u client retry cÃ¹ng request.
+Phải tránh tạo nhiều run ngoài ý muốn nếu client retry cùng request.
 
 ### 10.2. CV fail
 
-Cho retry theo policy; khÃ´ng táº¡o LLM output náº¿u structured result chÆ°a há»£p lá»‡.
+Cho retry theo policy; không tạo LLM output nếu structured result chưa hợp lệ.
 
 ### 10.3. LLM fail sau CV success
 
-CÃ³ thá»ƒ retry generation tá»« structured result Ä‘Ã£ lÆ°u, khÃ´ng báº¯t buá»™c reprocess video náº¿u analyzer result váº«n há»£p lá»‡.
+Có thể retry generation từ structured result đã lưu, không bắt buộc reprocess video nếu analyzer result vẫn hợp lệ.
 
 ### 10.4. Permanent failure
 
-Persist tráº¡ng thÃ¡i lá»—i an toÃ n; khÃ´ng lá»™ stack trace/model secret cho Member.
+Persist trạng thái lỗi an toàn; không lộ stack trace/model secret cho Member.
 
 ---
 
 ## 11. Storage & access
 
-- raw video á»Ÿ private Supabase Storage;
-- metadata/run á»Ÿ relational/domain store;
-- structured result vÃ  plan gáº¯n run id;
-- access raw video/result pháº£i kiá»ƒm tra role scope;
-- khÃ´ng dÃ¹ng public URL lÃ¢u dÃ i máº·c Ä‘á»‹nh;
-- retention khÃ´ng tá»± quyáº¿t Ä‘á»‹nh trong code náº¿u chÆ°a cÃ³ product policy.
+- raw video ở private Supabase Storage;
+- metadata/run ở relational/domain store;
+- structured result và plan gắn run id;
+- access raw video/result phải kiểm tra role scope;
+- không dùng public URL lâu dài mặc định;
+- retention không tự quyết định trong code nếu chưa có product policy.
 
 ---
 
 ## 12. Observability
 
-Theo dÃµi tá»‘i thiá»ƒu:
+Theo dõi tối thiểu:
 
 - run duration theo stage;
 - failure reason category;
@@ -212,7 +212,7 @@ Theo dÃµi tá»‘i thiá»ƒu:
 - analyzer/generation version;
 - correlation id.
 
-KhÃ´ng log raw body video hoáº·c prompt chá»©a dá»¯ liá»‡u nháº¡y cáº£m má»™t cÃ¡ch khÃ´ng cáº§n thiáº¿t.
+Không log raw body video hoặc prompt chứa dữ liệu nhạy cảm một cách không cần thiết.
 
 ---
 
@@ -231,28 +231,28 @@ KhÃ´ng log raw body video hoáº·c prompt chá»©a dá»¯ liá»‡u nháº
 - upload -> run creation;
 - CV result -> generation;
 - generation fail -> retry;
-- history khÃ´ng overwrite.
+- history không overwrite.
 
 ### AI regression fixture
 
-DÃ¹ng táº­p input fixture Ä‘Æ°á»£c kiá»ƒm soÃ¡t Ä‘á»ƒ kiá»ƒm tra:
+Dùng tập input fixture được kiểm soát để kiểm tra:
 
-- pose extraction khÃ´ng Ä‘á»•i báº¥t ngá»;
-- low-quality input bá»‹ tá»« chá»‘i Ä‘Ãºng;
-- output luÃ´n giá»¯ safety boundary;
-- schema backward compatibility khi version thay Ä‘á»•i.
+- pose extraction không đổi bất ngờ;
+- low-quality input bị từ chối đúng;
+- output luôn giữ safety boundary;
+- schema backward compatibility khi version thay đổi.
 
 ---
 
-## 14. Acceptance checklist ká»¹ thuáº­t
+## 14. Acceptance checklist kỹ thuật
 
-- [ ] KhÃ´ng cÃ³ Ä‘Æ°á»ng táº¯t raw video -> LLM káº¿t luáº­n toÃ n bá»™.
-- [ ] Run cÃ³ state rÃµ.
-- [ ] CV structured output cÃ³ version/confidence.
-- [ ] Invalid input dá»«ng trÆ°á»›c generation.
-- [ ] LLM context khÃ´ng tá»± fill missing data.
-- [ ] Output validate schema trÆ°á»›c `COMPLETED`.
-- [ ] Run má»›i khÃ´ng overwrite run cÅ©.
-- [ ] Retry khÃ´ng táº¡o duplicate run ngoÃ i Ã½ muá»‘n.
-- [ ] Raw media private vÃ  scope access Ä‘Ãºng.
-- [ ] KhÃ´ng cháº©n Ä‘oÃ¡n y khoa á»Ÿ pipeline output.
+- [ ] Không có đường tắt raw video -> LLM kết luận toàn bộ.
+- [ ] Run có state rõ.
+- [ ] CV structured output có version/confidence.
+- [ ] Invalid input dừng trước generation.
+- [ ] LLM context không tự fill missing data.
+- [ ] Output validate schema trước `COMPLETED`.
+- [ ] Run mới không overwrite run cũ.
+- [ ] Retry không tạo duplicate run ngoài ý muốn.
+- [ ] Raw media private và scope access đúng.
+- [ ] Không chẩn đoán y khoa ở pipeline output.

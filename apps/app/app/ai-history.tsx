@@ -5,7 +5,7 @@ import { AppButton, Card, Feedback, Screen, colors, spacing, typography } from '
 import { getHistory } from '../src/features/ai-analysis/api';
 import { AnalysisResultCard } from '../src/features/ai-analysis/result-card';
 import { AiRun } from '../src/features/ai-analysis/types';
-import { useAuthGuard } from '../src/use-role-guard';
+import { GuardFallback, useAuthGuard } from '../src/use-role-guard';
 
 export default function AiHistory() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function AiHistory() {
   }, [session]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-  if (!session) return null;
+  if (!session) return <GuardFallback />;
   return (
     <Screen title="Lịch sử phân tích" subtitle="Mỗi lần phân tích được giữ thành một record riêng." headerAction={<AppButton label="Quay lại" variant="secondary" onPress={() => router.back()} />}>
       {loading ? <ActivityIndicator accessibilityLabel="Đang tải lịch sử" color={colors.primary} size="large" /> : null}
