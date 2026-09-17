@@ -250,9 +250,22 @@ Trong baseline hiện tại, quy tắc vận hành cần hỗ trợ **khung dao 
 **Acceptance:**
 
 - owner có thể biết một lịch là cố định hay linh hoạt;
+- lịch tạo mới phải có giờ bắt đầu cách thời điểm tạo ít nhất 2 giờ; UI và API cùng phải chặn thời điểm không hợp lệ;
 - check-in được đánh giá theo đúng loại khung đã cấu hình;
 - không đánh dấu vắng ngay khi người dùng vẫn còn nằm trong cửa sổ hợp lệ;
 - cửa sổ linh hoạt không được dùng để biến thành booking PT tùy ý.
+
+### PR-SCHEDULE-003 — Member yêu cầu sửa lịch, Owner chốt lịch
+
+Member chỉ có thể gửi yêu cầu đổi thời gian cho lịch của chính mình đang chờ thực hiện. Yêu cầu không tự sửa lịch hiện hành. Owner xác nhận ngoài hệ thống với PT và Member, sau đó duyệt hoặc từ chối trong hệ thống.
+
+**Acceptance:**
+
+- yêu cầu có trạng thái `PENDING`, `APPROVED` hoặc `REJECTED` và Member chỉ xem được yêu cầu của mình;
+- mỗi lịch chỉ có một yêu cầu `PENDING` tại một thời điểm;
+- chỉ Owner/Admin được duyệt hoặc từ chối; PT không được duyệt thay;
+- chỉ khi Owner duyệt, thời gian lịch mới được cập nhật atomically; lịch cũ và audit event vẫn truy vết được;
+- thời gian được yêu cầu và được duyệt đều phải còn cách hiện tại ít nhất 2 giờ.
 
 ---
 

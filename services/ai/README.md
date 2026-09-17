@@ -1,14 +1,22 @@
-﻿# FITNESS-MANAGE AI Service
+# FITNESS-MANAGE AI Service
 
-FastAPI service thá»±c hiá»‡n hai stage tÃ¡ch biá»‡t:
+AI service dùng FastAPI và thực hiện pipeline hai stage:
 
-1. `POST /v1/analyze/pose`: táº£i signed private video, OpenCV preprocessing, MediaPipe Pose vÃ  structured JSON.
-2. `POST /v1/generate/plan`: nháº­n structured JSON cÃ¹ng má»¥c tiÃªu Member rá»“i gá»i OpenAI API vá»›i Pydantic response schema.
+1. `POST /v1/analyze/pose`: nhận signed private video, tiền xử lý bằng OpenCV, chạy MediaPipe Pose và tạo structured JSON.
+2. `POST /v1/generate/plan`: nhận structured JSON cùng mục tiêu của Member rồi gọi OpenAI API với Pydantic response schema.
 
-Service khÃ´ng gá»­i raw video tá»›i OpenAI API. CÃ¡c threshold cháº¥t lÆ°á»£ng vÃ  `OPENAI_MODEL` pháº£i Ä‘Æ°á»£c Owner cáº¥u hÃ¬nh; source khÃ´ng tá»± chá»n giÃ¡ trá»‹ canonical.
+Service không gửi raw video tới OpenAI API. Owner phải cấu hình các quality threshold và `OPENAI_MODEL`; source không tự chọn các giá trị canonical.
 
-Cháº¡y local sau khi táº¡o virtual environment vÃ  cÃ i `requirements.txt`:
+## Chạy local
+
+Tạo virtual environment, cài [`requirements.txt`](requirements.txt), cấu hình [`.env.example`](.env.example), rồi chạy:
 
 ```text
 uvicorn app.main:app --reload --port 8000
+```
+
+Có thể chạy từ root repository bằng:
+
+```powershell
+pnpm dev:ai
 ```

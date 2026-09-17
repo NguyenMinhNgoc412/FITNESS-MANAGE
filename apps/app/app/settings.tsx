@@ -1,4 +1,4 @@
-import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
@@ -27,9 +27,11 @@ export default function Settings() {
   const roleName = roleLabel(session.user.role);
   const initials = session.user.role === 'OWNER_ADMIN' ? 'OA' : session.user.role === 'MEMBER' ? 'MB' : 'PT';
   const chooseAvatar = async () => {
-    const result = await DocumentPicker.getDocumentAsync({ type: 'image/*', copyToCacheDirectory: true, multiple: false });
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) { setAvatarError('Cần quyền truy cập Thư viện ảnh để chọn ảnh đại diện.'); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.85 });
     if (result.canceled) return;
-    if ((result.assets[0].size ?? 0) > 3 * 1024 * 1024) { setAvatarError('Ảnh phải nhỏ hơn 3 MB.'); return; }
+    if ((result.assets[0].fileSize ?? 0) > 3 * 1024 * 1024) { setAvatarError('Ảnh phải nhỏ hơn 3 MB.'); return; }
     setSaving(true); setMessage(''); setAvatarError('');
     try { const stableUri = await persistAvatar(session.user.id, result.assets[0].uri, result.assets[0].mimeType); await setAvatar(stableUri); setMessage('Đã cập nhật ảnh đại diện trên thiết bị này.'); }
     catch { setAvatarError('Không thể lưu ảnh đại diện. Vui lòng thử ảnh khác.'); }

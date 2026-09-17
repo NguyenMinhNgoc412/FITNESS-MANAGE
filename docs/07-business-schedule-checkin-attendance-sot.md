@@ -2,7 +2,7 @@
 
 **Trạng thái:** SOT nghiệp vụ chi tiết  
 **Dự án:** FITNESS-MANAGE  
-**Ngày cập nhật:** 2026-09-16  
+**Ngày cập nhật:** 2026-09-18  
 **Requirement liên quan:** `PR-SCHEDULE-001..002`, `PR-CHECKIN-001..004`, `PR-AUDIT-002`  
 **Nguyên tắc:** Check-in là raw evidence về sự có mặt; attendance là kết quả đối soát với lịch/assignment. Không sửa lịch sử để khớp trạng thái mới.
 
@@ -62,6 +62,8 @@ Là kết quả hệ thống đối chiếu:
 4. Owner xem toàn bộ lịch vận hành.
 5. Lịch đã hoàn thành không bị đổi PT chỉ vì current assignment sau này thay đổi.
 6. Lịch tương lai có thể cần cập nhật khi đổi PT.
+7. Lịch tạo mới phải có giờ bắt đầu cách thời điểm tạo ít nhất 2 giờ. Client hỗ trợ chọn ngày/giờ và API là authority từ chối thời điểm không đạt điều kiện.
+8. Member có thể gửi yêu cầu đổi thời gian cho lịch tương lai của chính mình. Yêu cầu chờ Owner xác nhận với PT/Member và không thay đổi lịch cho đến khi Owner duyệt; từ chối giữ nguyên lịch hiện hành.
 
 ---
 

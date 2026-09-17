@@ -24,7 +24,28 @@ export class AttendanceService {
     return this.prisma.attendanceReconciliation.upsert({ where: { scheduleId }, create: { scheduleId, memberId: schedule.memberId, ptId: schedule.ptId, memberCheckinId: memberCheckin?.id, ptCheckinId: ptCheckin?.id, status, evaluatedAt }, update: { memberCheckinId: memberCheckin?.id, ptCheckinId: ptCheckin?.id, status, evaluatedAt } });
   }
   async reviewList() {
-    return this.prisma.attendanceReconciliation.findMany({ where: { status: { in: [AttendanceStatus.MEMBER_ONLY, AttendanceStatus.NEEDS_REVIEW] } }, include: { schedule: true, memberCheckin: true, ptCheckin: true }, orderBy: { evaluatedAt: 'desc' } });
+    return this.prisma.attendanceReconciliation.findMany({ where: { status: { in: [AttendanceStatus.MEMBER_ONLY, AttendanceStatus.PT_ONLY, AttendanceStatus.NEEDS_REVIEW] } }, include: { schedule: true, memberCheckin: true, ptCheckin: true }, orderBy: { evaluatedAt: 'desc' } });
+  }
+  async overview() {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+    const today = { gte: dayStart, lt: dayEnd };
+    const [memberCheckins, ptCheckins, needsReview, totalGuests, convertedGuests, recentArrivals] = await Promise.all([
+      this.prisma.checkin.count({ where: { actorRole: Role.MEMBER, checkedInAt: today } }),
+      this.prisma.checkin.count({ where: { actorRole: Role.PT, checkedInAt: today } }),
+      this.prisma.attendanceReconciliation.count({ where: { status: { in: [AttendanceStatus.MEMBER_ONLY, AttendanceStatus.PT_ONLY, AttendanceStatus.NEEDS_REVIEW] } } }),
+      this.prisma.guestTrial.count(),
+      this.prisma.guestTrial.count({ where: { convertedMemberId: { not: null } } }),
+      this.prisma.checkin.findMany({ where: { checkedInAt: today }, include: { actor: { select: { fullName: true } } }, orderBy: { checkedInAt: 'desc' }, take: 3 }),
+    ]);
+    return {
+      checkins: { member: memberCheckins, pt: ptCheckins },
+      attendance: { needsReview },
+      business: { totalGuests, convertedGuests, conversionRate: totalGuests ? Math.round((convertedGuests / totalGuests) * 100) : 0 },
+      recentArrivals: recentArrivals.map((item) => ({ id: item.id, fullName: item.actor.fullName, actorRole: item.actorRole, checkedInAt: item.checkedInAt })),
+    };
   }
   async detail(scheduleId: string) {
     const result = await this.prisma.attendanceReconciliation.findUnique({ where: { scheduleId }, include: { schedule: true, memberCheckin: true, ptCheckin: true } });

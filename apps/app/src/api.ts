@@ -1,8 +1,16 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+import { resolveApiBaseUrl } from './api-base-url';
 import { Session, sessionSchema } from './features/auth/types';
 import { useAuthStore } from './store/auth';
 
-const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api';
+const baseURL = resolveApiBaseUrl({
+  configuredUrl: process.env.EXPO_PUBLIC_API_URL,
+  hostUri: Constants.expoConfig?.hostUri ?? Constants.manifest?.hostUri,
+  isDevelopment: __DEV__,
+  isWeb: Platform.OS === 'web',
+});
 export const api = axios.create({ baseURL, timeout: 30_000 });
 const refreshClient = axios.create({ baseURL, timeout: 30_000 });
 let refreshPromise: Promise<Session> | null = null;

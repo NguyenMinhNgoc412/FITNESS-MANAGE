@@ -1,4 +1,6 @@
 ---
+title: FITNESS-MANAGE UI/UX SOT
+description: Quy chuẩn visual language, màn hình tham chiếu và accessibility cho MVP.
 name: Modern Athletic Wellness
 colors:
   surface: '#faf8ff'

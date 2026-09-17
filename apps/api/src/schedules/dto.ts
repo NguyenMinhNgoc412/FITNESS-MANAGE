@@ -1,4 +1,4 @@
-import { ScheduleStatus, WindowType } from '@prisma/client';
+import { ScheduleChangeRequestStatus, ScheduleStatus, WindowType } from '@prisma/client';
 import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 export class CreateScheduleDto {
   @IsString() memberId!: string;
@@ -12,4 +12,13 @@ export class UpdateScheduleDto {
   @IsOptional() @IsDateString() windowStart?: string;
   @IsOptional() @IsDateString() windowEnd?: string;
   @IsOptional() @IsEnum(ScheduleStatus) status?: ScheduleStatus;
+}
+export class CreateScheduleChangeRequestDto {
+  @IsDateString() requestedStart!: string;
+  @IsDateString() requestedEnd!: string;
+  @IsOptional() @IsString() reason?: string;
+}
+export class ReviewScheduleChangeRequestDto {
+  @IsEnum(ScheduleChangeRequestStatus) status!: 'APPROVED' | 'REJECTED';
+  @IsOptional() @IsString() reviewNote?: string;
 }

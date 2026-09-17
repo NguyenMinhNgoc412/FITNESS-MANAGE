@@ -31,7 +31,7 @@ function titleFor(item: Record<string, unknown>, schedule: Record<string, unknow
 }
 function detailsFor(item: Record<string, unknown>, schedule: Record<string, unknown> | undefined, kind: DataListKind): [string, unknown][] {
   if (schedule) return [['windowStart', schedule.windowStart], ['windowEnd', schedule.windowEnd], ['memberId', schedule.memberId], ['ptId', schedule.ptId]].filter((entry) => entry[1]) as [string, unknown][];
-  const preferred = kind === 'schedule' ? ['windowStart', 'windowEnd', 'windowType', 'memberName', 'ptName', 'memberId', 'ptId'] : kind === 'checkin' ? ['checkedInAt', 'actorRole', 'scheduleId'] : kind === 'person' ? ['email', 'phone', 'specialization', 'goal', 'assignedAt', 'createdAt'] : kind === 'guest' ? ['phone', 'email', 'trialAt', 'convertedAt'] : ['entityType', 'createdAt', 'trialAt', 'phone'];
+  const preferred = kind === 'schedule' ? ['memberName', 'memberPhone', 'ptName', 'windowStart'] : kind === 'checkin' ? ['checkedInAt', 'actorRole', 'scheduleId'] : kind === 'person' ? ['email', 'phone', 'specialization', 'goal', 'assignedAt', 'createdAt'] : kind === 'guest' ? ['phone', 'email', 'trialAt', 'convertedAt'] : ['entityType', 'createdAt', 'trialAt', 'phone'];
   return preferred.filter((key) => item[key] !== null && item[key] !== undefined).slice(0, 5).map((key) => [key, item[key]]);
 }
 
@@ -42,7 +42,7 @@ function StatusPill({ value }: { value: string }) {
 }
 
 function label(key: string) {
-  return ({ email: 'Email', phone: 'Điện thoại', goal: 'Mục tiêu', specialization: 'Chuyên môn', assignedAt: 'Giao từ', windowStart: 'Bắt đầu', windowEnd: 'Kết thúc', windowType: 'Loại khung', memberName: 'Member', ptName: 'PT', memberId: 'Mã Member', ptId: 'Mã PT', scheduleId: 'Lịch', actorRole: 'Vai trò', checkedInAt: 'Đã check-in', entityType: 'Loại dữ liệu', createdAt: 'Tạo lúc', trialAt: 'Ngày tập thử', convertedAt: 'Đã chuyển đổi' } as Record<string, string>)[key] ?? key;
+  return ({ email: 'Email', phone: 'Điện thoại', goal: 'Mục tiêu', specialization: 'Chuyên môn', assignedAt: 'Giao từ', windowStart: 'Giờ tập', windowEnd: 'Kết thúc', windowType: 'Loại khung', memberName: 'Khách', memberPhone: 'Điện thoại', ptName: 'PT', memberId: 'Mã Member', ptId: 'Mã PT', scheduleId: 'Lịch', actorRole: 'Vai trò', checkedInAt: 'Đã check-in', entityType: 'Loại dữ liệu', createdAt: 'Tạo lúc', trialAt: 'Ngày tập thử', convertedAt: 'Đã chuyển đổi' } as Record<string, string>)[key] ?? key;
 }
 function statusLabel(value: string) { return ({ MATCHED: 'ĐÃ KHỚP', MEMBER_ONLY: 'CHỈ MEMBER', PT_ONLY: 'CHỈ PT', NEEDS_REVIEW: 'CẦN XEM XÉT', MISSING: 'CHƯA CÓ MẶT', ACTIVE: 'ĐANG HOẠT ĐỘNG', COMPLETED: 'HOÀN THÀNH', CANCELLED: 'ĐÃ HỦY', NEEDS_RETAKE: 'CẦN QUAY LẠI' } as Record<string, string>)[value] ?? value; }
 function format(value: unknown) {

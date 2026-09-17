@@ -12,6 +12,30 @@ Format:
 
 ---
 
+## [1.6.1] — 2026-09-18
+
+### Changed
+
+- Bổ sung thời hạn báo trước tối thiểu 2 giờ khi Owner tạo lịch mới; client và API cùng kiểm tra.
+- Bổ sung `PR-SCHEDULE-003`: Member gửi yêu cầu đổi lịch, Owner xác nhận với PT/Member rồi duyệt hoặc từ chối; chỉ duyệt mới cập nhật lịch trong transaction và ghi audit.
+- Dashboard Owner ưu tiên check-in Member/PT trong ngày, exception đối soát và tỷ lệ chuyển đổi Guest; không suy diễn doanh thu khi chưa có dữ liệu giao dịch.
+- PT không còn entry point AI; lịch PT chỉ hiển thị khách, số điện thoại và giờ tập.
+- Chọn ảnh đại diện mở Thư viện ảnh; lịch Owner dùng bộ chọn ngày/giờ và hướng dẫn được thu gọn.
+
+### Affected files
+
+- `docs/02-product-requirements-sot.md`
+- `docs/07-business-schedule-checkin-attendance-sot.md`
+- `apps/api/src/attendance/`
+- `apps/api/src/schedules/`
+- `apps/app/app/`
+
+### Reason
+
+Owner phản hồi sau khi kiểm thử iPhone: giảm nhiễu giao diện, dùng native picker phù hợp và chặn lịch tạo quá sát giờ tập.
+
+---
+
 ## [1.6.0] — 2026-09-17
 
 ### Added

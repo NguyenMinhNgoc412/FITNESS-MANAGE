@@ -35,6 +35,12 @@ enum ScheduleStatus {
   CANCELLED
 }
 
+enum ScheduleChangeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum AttendanceStatus {
   MATCHED
   MEMBER_ONLY
@@ -71,6 +77,8 @@ model User {
   checkins Checkin[]
   createdSchedules TrainingSchedule[]
   createdGuestTrials GuestTrial[]
+  requestedScheduleChanges ScheduleChangeRequest[] @relation("scheduleChangeRequester")
+  reviewedScheduleChanges ScheduleChangeRequest[] @relation("scheduleChangeReviewer")
 }
 model PTProfile {
   userId String @id
@@ -123,8 +131,27 @@ model TrainingSchedule {
   createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
   checkins Checkin[]
   attendance AttendanceReconciliation?
+  changeRequests ScheduleChangeRequest[]
   @@index([memberId, windowStart])
   @@index([ptId, windowStart])
+}
+model ScheduleChangeRequest {
+  id String @id @default(cuid())
+  scheduleId String
+  requesterId String
+  requestedStart DateTime
+  requestedEnd DateTime
+  reason String?
+  status ScheduleChangeRequestStatus @default(PENDING)
+  reviewerId String?
+  reviewedAt DateTime?
+  reviewNote String?
+  createdAt DateTime @default(now())
+  schedule TrainingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
+  requester User @relation("scheduleChangeRequester", fields: [requesterId], references: [id], onDelete: Restrict)
+  reviewer User? @relation("scheduleChangeReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  @@index([scheduleId, status])
+  @@index([requesterId, createdAt])
 }
 model Checkin {
   id String @id @default(cuid())

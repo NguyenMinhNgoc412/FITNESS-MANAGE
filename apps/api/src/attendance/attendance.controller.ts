@@ -7,6 +7,7 @@ import { AttendanceService } from './attendance.service';
 @Controller('attendance') @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.OWNER_ADMIN)
 export class AttendanceController {
   constructor(private readonly attendance: AttendanceService) {}
+  @Get('overview') overview() { return this.attendance.overview(); }
   @Get('review') review() { return this.attendance.reviewList(); }
   @Get(':scheduleId') detail(@Param('scheduleId') scheduleId: string) { return this.attendance.detail(scheduleId); }
   @Post(':scheduleId/reconcile') reconcile(@Param('scheduleId') scheduleId: string) { return this.attendance.reconcileSchedule(scheduleId); }
