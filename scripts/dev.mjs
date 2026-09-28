@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 
 const isWindows = process.platform === 'win32';
-const pnpm = isWindows ? 'pnpm.cmd' : 'pnpm';
+const pnpm = 'pnpm';
 const services = [
   { name: 'API', command: pnpm, args: ['dev:api'] },
   { name: 'AI', command: process.execPath, args: ['scripts/ai.mjs', 'dev'] },
@@ -10,7 +10,9 @@ const services = [
 
 const children = services.map(({ name, command, args }) => {
   const stdio = name === 'EXPO' ? 'inherit' : ['ignore', 'inherit', 'inherit'];
-  const child = spawn(command, args, { cwd: process.cwd(), stdio, shell: isWindows });
+  const child = isWindows && command === pnpm
+    ? spawn(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', [command, ...args].join(' ')], { cwd: process.cwd(), stdio })
+    : spawn(command, args, { cwd: process.cwd(), stdio });
   return { name, child };
 });
 
