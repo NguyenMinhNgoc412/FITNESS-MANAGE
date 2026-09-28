@@ -1,122 +1,58 @@
-import json
 import os
-import shutil
-import tempfile
 import unittest
-from unittest.mock import Mock, patch
-
-import cv2
-import numpy as np
+from unittest.mock import patch
 from fastapi.testclient import TestClient
-
-from app.analyzer import _angle, analyze_video
-from app.generation import generate_plan
 from app.main import app
-from app.models import InputQuality, PlanPayload, PoseData, StructuredPoseResult
-
-
-def structured_result(status: str = "VALID") -> StructuredPoseResult:
-    return StructuredPoseResult(
-        schemaVersion="1.0.0",
-        inputQuality=InputQuality(status=status, reasons=[]),
-        pose=PoseData(
-            features={"sampledFrames": 10, "detectedFrames": 8},
-            keypoints=[{"frame": 0, "averageVisibility": 0.9}],
-            derivedMetrics={"poseDetectionRatio": 0.8},
-        ),
-        confidence={"poseDetectionRatio": 0.8},
-        warnings=[],
-        analyzerVersion="test-analyzer",
-    )
 
 
 class ServiceTests(unittest.TestCase):
-    def setUp(self) -> None:
-        os.environ["AI_SERVICE_TOKEN"] = "test-token"
-
-    def test_health_and_internal_auth(self) -> None:
-        client = TestClient(app)
-        self.assertEqual(client.get("/health").json(), {"status": "ok"})
-        response = client.post(
-            "/v1/analyze/pose",
-            json={"mediaUrl": "https://example.test/video.mp4", "correlationId": "test"},
-        )
-        self.assertEqual(response.status_code, 401)
-
-    def test_pose_angle_uses_three_landmarks(self) -> None:
-        a = Mock(x=0.0, y=0.0); b = Mock(x=0.0, y=1.0); c = Mock(x=1.0, y=1.0)
-        self.assertEqual(_angle(a, b, c), 90.0)
-
-    def test_generation_rejects_invalid_cv_result_before_llm(self) -> None:
-        with patch("app.generation.OpenAI") as openai:
-            with self.assertRaisesRegex(ValueError, "not valid"):
-                generate_plan(structured_result("NEEDS_RETAKE"), "Tăng sức bền")
-            openai.assert_not_called()
-
-    def test_generation_sends_only_structured_result_and_disables_storage(self) -> None:
-        os.environ["OPENAI_API_KEY"] = "test-key"
-        os.environ["OPENAI_MODEL"] = "test-openai-model"
-        payload = {
-            "summary": "Kế hoạch thử nghiệm",
-            "focusAreas": ["Sức bền"],
-            "recommendations": ["Tập đều"],
-            "trainingPlan": {
-                "phases": [
-                    {
-                        "name": "Nền tảng",
-                        "durationWeeks": 2,
-                        "goals": ["Ổn định"],
-                        "exercises": ["Squat"],
-                    }
-                ]
-            },
-            "limitations": ["Dữ liệu thử nghiệm"],
-            "safetyFlags": [],
+    def setUp(self):
+        self.env = patch.dict(os.environ, {"AI_SERVICE_TOKEN": "unit-test-only"})
+        self.env.start()
+        self.client = TestClient(app)
+        self.headers = {"X-Service-Token": "unit-test-only"}
+        self.valid = {
+            "schemaVersion": "1.0", "exercise": "SQUAT", "status": "COMPLETED",
+            "reps": 2, "metrics": {"minKneeAngle": 95, "detectedRatio": 0.9},
+            "issues": [{"code": "INSUFFICIENT_DEPTH", "confidence": 0.8}],
         }
-        response = Mock()
-        response.choices = [Mock(message=Mock(content=json.dumps(payload, ensure_ascii=False)))]
-        client = Mock()
-        client.chat.completions.create.return_value = response
-        with patch("app.generation.OpenAI", return_value=client) as openai:
-            result = generate_plan(structured_result(), "Tăng sức bền")
 
-        openai.assert_called_once_with(api_key="test-key")
-        call = client.chat.completions.create.call_args.kwargs
-        sent = json.loads(call["messages"][1]["content"])
-        self.assertEqual(call["model"], "test-openai-model")
-        self.assertEqual(set(sent), {"structuredResult", "memberGoal"})
-        self.assertNotIn("mediaUrl", call["messages"][1]["content"])
-        self.assertEqual(call["response_format"], {"type": "json_object"})
-        self.assertEqual(result.modelVersion, "test-openai-model")
-        client.close.assert_called_once()
+    def tearDown(self):
+        self.client.close()
+        self.env.stop()
 
-    def test_pose_pipeline_reads_video_and_returns_retake(self) -> None:
-        os.environ["POSE_MIN_DETECTED_RATIO"] = "0.5"
-        os.environ["POSE_MIN_BRIGHTNESS"] = "10"
-        os.environ["POSE_MIN_SAMPLED_FRAMES"] = "3"
-        with tempfile.TemporaryDirectory() as directory:
-            video_path = os.path.join(directory, "blank.avi")
-            writer = cv2.VideoWriter(
-                video_path,
-                cv2.VideoWriter_fourcc(*"MJPG"),
-                10.0,
-                (320, 240),
-            )
-            self.assertTrue(writer.isOpened())
-            for _ in range(10):
-                writer.write(np.full((240, 320, 3), 200, dtype=np.uint8))
-            writer.release()
+    def test_requires_gateway_auth(self):
+        self.assertEqual(self.client.post("/ai/form-analysis", json=self.valid).status_code, 401)
 
-            def copy_video(_url: str, destination: str) -> None:
-                shutil.copyfile(video_path, destination)
+    def test_only_form_feedback(self):
+        response = self.client.post("/ai/form-analysis", headers=self.headers, json=self.valid)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.json()), {"schemaVersion", "status", "feedback"})
 
-            with patch("app.analyzer._download", side_effect=copy_video):
-                result = analyze_video("https://example.test/blank.avi")
+    def test_rejects_media_at_any_schema_level(self):
+        for key in ["video", "base64", "mediaUrl", "thumbnail", "memberId"]:
+            with self.subTest(field=key):
+                response = self.client.post("/ai/form-analysis", headers=self.headers, json={**self.valid, key: "forbidden"})
+                self.assertEqual(response.status_code, 422)
+                self.assertNotIn("forbidden", response.text)
+        value = {**self.valid, "metrics": {**self.valid["metrics"], "video": "forbidden"}}
+        self.assertEqual(self.client.post("/ai/form-analysis", headers=self.headers, json=value).status_code, 422)
 
-        self.assertEqual(result.inputQuality.status, "NEEDS_RETAKE")
-        self.assertIn("POSE_NOT_VISIBLE_ENOUGH", result.inputQuality.reasons)
-        self.assertGreaterEqual(result.pose.features["sampledFrames"], 3)
+    def test_old_video_and_plan_routes_removed(self):
+        for path in ["/v1/analyze/pose", "/v1/generate/plan"]:
+            self.assertEqual(self.client.post(path, headers=self.headers, json={}).status_code, 404)
 
+    def test_failure_does_not_invent_issues(self):
+        value = {**self.valid, "status": "POSE_NOT_DETECTED", "reps": 0, "issues": []}
+        result = self.client.post("/ai/form-analysis", headers=self.headers, json=value)
+        self.assertEqual(result.json()["status"], "POSE_NOT_DETECTED")
+        value["issues"] = self.valid["issues"]
+        self.assertEqual(self.client.post("/ai/form-analysis", headers=self.headers, json=value).status_code, 422)
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_rejects_unsupported_exercise_and_bad_confidence(self):
+        for value in [{**self.valid, "exercise": "BENCH_PRESS"}, {**self.valid, "metrics": {"minKneeAngle": 90, "detectedRatio": 0.2}}]:
+            self.assertEqual(self.client.post("/ai/form-analysis", headers=self.headers, json=value).status_code, 422)
+
+    def test_rejects_non_json_and_large_body(self):
+        self.assertEqual(self.client.post("/ai/form-analysis", content=b"video", headers={"Content-Type": "video/mp4"}).status_code, 415)
+        self.assertEqual(self.client.post("/ai/form-analysis", content=b"x" * 9000, headers={"Content-Type": "application/json"}).status_code, 413)

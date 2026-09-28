@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 enum Role {
-  OWNER_ADMIN
+  OWNER
   PT
   MEMBER
 }
@@ -19,250 +19,237 @@ enum AccountStatus {
   LOCKED
 }
 
-enum AssignmentStatus {
-  ACTIVE
-  ENDED
-}
-
-enum WindowType {
-  FIXED
-  FLEXIBLE
-}
-
-enum ScheduleStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-}
-
-enum ScheduleChangeRequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum AttendanceStatus {
-  MATCHED
-  MEMBER_ONLY
-  PT_ONLY
-  MISSING
-  NEEDS_REVIEW
-}
-
-enum AiRunStatus {
-  UPLOAD_PENDING
-  UPLOADED
-  VALIDATING
-  ANALYZING
-  NEEDS_RETAKE
-  COMPLETED
-  FAILED
+enum PackageMode {
+  TIME_BASED
+  SESSION_BASED
 }
 
 model User {
-  id String @id @default(cuid())
-  email String @unique
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  phone        String        @unique
   passwordHash String
-  role Role
-  status AccountStatus @default(ACTIVE)
-  fullName String
-  phone String?
+  role         Role
+  status       AccountStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  profile      Profile?
+  sessions     Session[]
+  @@map("users")
+}
+
+model Profile {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  fullName  String
+  cccd      String?
+  dob       DateTime?
+  gender    String?
+  address   String?
+  avatarUrl String?
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  ptProfile PTProfile?
-  memberProfile MemberProfile?
-  createdAssignments Assignment[] @relation("assignmentCreator")
-  auditEvents AuditEvent[] @relation("auditActor")
-  sessions Session[]
-  checkins Checkin[]
-  createdSchedules TrainingSchedule[]
-  createdGuestTrials GuestTrial[]
-  requestedScheduleChanges ScheduleChangeRequest[] @relation("scheduleChangeRequester")
-  reviewedScheduleChanges ScheduleChangeRequest[] @relation("scheduleChangeReviewer")
+  @@map("profiles")
 }
-model PTProfile {
-  userId String @id
-  specialization String?
-  note String?
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
-  assignments Assignment[]
-  schedules TrainingSchedule[]
-}
-model MemberProfile {
-  userId String @id
-  goal String
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
-  assignments Assignment[] @relation("memberAssignments")
-  schedules TrainingSchedule[] @relation("memberSchedules")
-  sourceGuestTrial GuestTrial? @relation("guestConversion")
-  aiAnalysisRuns AiAnalysisRun[]
-}
-model Assignment {
-  id String @id @default(cuid())
-  memberId String
-  ptId String
-  status AssignmentStatus @default(ACTIVE)
-  startedAt DateTime @default(now())
-  endedAt DateTime?
-  changeReason String?
-  idempotencyKey String? @unique
-  scheduleReviewRequired Boolean @default(false)
-  createdById String
-  createdAt DateTime @default(now())
-  member MemberProfile @relation("memberAssignments", fields: [memberId], references: [userId], onDelete: Restrict)
-  pt PTProfile @relation(fields: [ptId], references: [userId], onDelete: Restrict)
-  createdBy User @relation("assignmentCreator", fields: [createdById], references: [id], onDelete: Restrict)
-  @@index([ptId, status])
-  @@index([memberId, startedAt])
-}
-model TrainingSchedule {
-  id String @id @default(cuid())
-  memberId String
-  ptId String
-  windowType WindowType
-  windowStart DateTime
-  windowEnd DateTime
-  status ScheduleStatus @default(SCHEDULED)
-  createdById String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  member MemberProfile @relation("memberSchedules", fields: [memberId], references: [userId], onDelete: Restrict)
-  pt PTProfile @relation(fields: [ptId], references: [userId], onDelete: Restrict)
-  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  checkins Checkin[]
-  attendance AttendanceReconciliation?
-  changeRequests ScheduleChangeRequest[]
-  @@index([memberId, windowStart])
-  @@index([ptId, windowStart])
-}
-model ScheduleChangeRequest {
-  id String @id @default(cuid())
-  scheduleId String
-  requesterId String
-  requestedStart DateTime
-  requestedEnd DateTime
-  reason String?
-  status ScheduleChangeRequestStatus @default(PENDING)
-  reviewerId String?
-  reviewedAt DateTime?
-  reviewNote String?
-  createdAt DateTime @default(now())
-  schedule TrainingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
-  requester User @relation("scheduleChangeRequester", fields: [requesterId], references: [id], onDelete: Restrict)
-  reviewer User? @relation("scheduleChangeReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
-  @@index([scheduleId, status])
-  @@index([requesterId, createdAt])
-}
-model Checkin {
-  id String @id @default(cuid())
-  actorUserId String
-  actorRole Role
-  checkedInAt DateTime @default(now())
-  scheduleId String?
-  idempotencyKey String @unique
-  createdAt DateTime @default(now())
-  actor User @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
-  schedule TrainingSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
-  memberAttendance AttendanceReconciliation[] @relation("memberCheckin")
-  ptAttendance AttendanceReconciliation[] @relation("ptCheckin")
-  @@index([actorUserId, checkedInAt])
-  @@index([scheduleId])
-}
-model AttendanceReconciliation {
-  id String @id @default(cuid())
-  scheduleId String @unique
-  memberId String
-  ptId String
-  memberCheckinId String?
-  ptCheckinId String?
-  status AttendanceStatus
-  evaluatedAt DateTime @default(now())
-  schedule TrainingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Restrict)
-  memberCheckin Checkin? @relation("memberCheckin", fields: [memberCheckinId], references: [id], onDelete: SetNull)
-  ptCheckin Checkin? @relation("ptCheckin", fields: [ptCheckinId], references: [id], onDelete: SetNull)
-  @@index([status, evaluatedAt])
-}
-model GuestTrial {
-  id String @id @default(cuid())
-  displayName String
-  phone String?
-  email String?
-  note String?
-  trialAt DateTime
-  createdById String
-  createdAt DateTime @default(now())
-  convertedAt DateTime?
-  convertedMemberId String? @unique
-  conversionIdempotencyKey String? @unique
-  createdBy User @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  convertedMember MemberProfile? @relation("guestConversion", fields: [convertedMemberId], references: [userId], onDelete: Restrict)
-  @@index([phone])
-  @@index([email])
-  @@index([trialAt])
-}
-model AiAnalysisRun {
-  id String @id @default(cuid())
-  memberId String
-  mediaPath String
-  mimeType String
-  sizeBytes Int
-  status AiRunStatus @default(UPLOAD_PENDING)
-  idempotencyKey String @unique
-  correlationId String @unique
-  pipelineVersion String
-  errorCode String?
-  createdAt DateTime @default(now())
-  completedAt DateTime?
-  member MemberProfile @relation(fields: [memberId], references: [userId], onDelete: Restrict)
-  result AiAnalysisResult?
-  plan TrainingPlanOutput?
-  @@index([memberId, createdAt])
-  @@index([status, createdAt])
-}
-model AiAnalysisResult {
-  id String @id @default(cuid())
-  analysisRunId String @unique
-  inputQuality Json
-  extractedFeatures Json
-  confidence Json
-  warnings Json
-  schemaVersion String
-  analyzerVersion String
-  createdAt DateTime @default(now())
-  run AiAnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
-}
-model TrainingPlanOutput {
-  id String @id @default(cuid())
-  analysisRunId String @unique
-  summary String
-  focusAreas Json
-  recommendations Json
-  trainingPlan Json
-  limitations Json
-  safetyFlags Json
-  promptVersion String
-  modelVersion String
-  createdAt DateTime @default(now())
-  run AiAnalysisRun @relation(fields: [analysisRunId], references: [id], onDelete: Restrict)
-}
+
 model Session {
-  id String @id
-  userId String
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @db.ObjectId
   refreshTokenHash String
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  user             User     @relation(fields: [userId], references: [id])
+  createdAt        DateTime @default(now())
+  @@index([userId])
+  @@map("sessions")
 }
-model AuditEvent {
-  id String @id @default(cuid())
-  actorId String
-  action String
-  entityType String
-  entityId String
-  requestId String?
-  summary Json?
+
+model Customer {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  phone        String   @unique
+  fullName     String
+  trialUsedEver Boolean @default(true)
+  memberUserId String?  @db.ObjectId
+  status       String   @default("TRIAL")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@map("customers")
+}
+
+model TrialEntitlement {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  customerId    String @unique @db.ObjectId
+  totalSessions Int    @default(3)
+  usedSessions  Int    @default(0)
+  status        String @default("ACTIVE")
+  createdAt     DateTime @default(now())
+  @@map("trial_entitlements")
+}
+
+model Membership {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  memberId      String      @db.ObjectId
+  mode          PackageMode
+  name          String
+  startAt       DateTime
+  endAt         DateTime?
+  totalSessions Int?
+  usedSessions  Int         @default(0)
+  status        String      @default("ACTIVE")
+  createdBy     String      @db.ObjectId
+  renewedFromId String?     @db.ObjectId
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  @@index([memberId, startAt])
+  @@map("memberships")
+}
+
+model PtAssignment {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  memberId  String    @db.ObjectId
+  ptId      String    @db.ObjectId
+  startAt   DateTime  @default(now())
+  endAt     DateTime?
+  status    String    @default("ACTIVE")
+  reason    String
+  changedBy String    @db.ObjectId
+  @@index([ptId, status])
+  @@index([memberId, startAt])
+  @@map("pt_assignments")
+}
+
+model Booking {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  memberId     String    @db.ObjectId
+  ptId         String    @db.ObjectId
+  startAt      DateTime
+  endAt        DateTime
+  status       String    @default("SCHEDULED")
+  notes        String?
+  createdBy    String    @db.ObjectId
+  cancelReason String?
+  cancelledBy  String?   @db.ObjectId
+  cancelledAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  @@index([ptId, startAt, endAt])
+  @@index([memberId, startAt, endAt])
+  @@map("bookings")
+}
+
+model MemberCheckin {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  subjectType      String
+  customerId       String?  @db.ObjectId
+  memberId         String?  @db.ObjectId
+  context          String
+  bookingId        String?  @db.ObjectId
+  membershipId     String?  @db.ObjectId
+  externalPtPassId String?  @db.ObjectId
+  checkedInAt      DateTime @default(now())
+  method           String
+  operatorId       String   @db.ObjectId
+  idempotencyKey   String   @unique
+  @@index([memberId, checkedInAt])
+  @@index([customerId, checkedInAt])
+  @@index([checkedInAt])
+  @@map("member_checkins")
+}
+
+model PtAttendanceLog {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  ptId           String   @db.ObjectId
+  checkedInAt    DateTime @default(now())
+  source         String   @default("APP")
+  idempotencyKey String   @unique
+  @@index([ptId, checkedInAt])
+  @@map("pt_attendance_logs")
+}
+
+model ExternalPtPass {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  memberId  String   @db.ObjectId
+  totalUses Int
+  usedUses  Int      @default(0)
+  status    String   @default("ACTIVE")
+  createdBy String   @db.ObjectId
   createdAt DateTime @default(now())
-  actor User @relation("auditActor", fields: [actorId], references: [id], onDelete: Restrict)
-  @@index([entityType, entityId])
+  @@index([memberId, status])
+  @@map("external_pt_passes")
+}
+
+model ExternalPtRequest {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  memberId     String   @db.ObjectId
+  membershipId String   @db.ObjectId
+  passId       String   @db.ObjectId
+  initiatedBy  String   @db.ObjectId
+  status       String   @default("PENDING")
+  checkinId    String?  @db.ObjectId
+  createdAt    DateTime @default(now())
+  @@index([memberId, status])
+  @@map("external_pt_requests")
+}
+
+model SalesAlert {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sourceKey    String   @unique
+  customerId   String?  @db.ObjectId
+  memberId     String?  @db.ObjectId
+  type         String
+  status       String   @default("OPEN")
+  ownerNote    String?
+  triggeredAt  DateTime @default(now())
+  resolvedAt   DateTime?
+  @@index([status, type])
+  @@map("sales_alerts")
+}
+
+model DeviceToken {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String @db.ObjectId
+  token     String @unique
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+model Notification {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  recipientId String   @db.ObjectId
+  type        String
+  resourceId  String
+  status      String   @default("PENDING")
+  errorCode   String?
+  createdAt   DateTime @default(now())
+  @@index([recipientId, createdAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  actorId      String   @db.ObjectId
+  action       String
+  resourceType String
+  resourceId   String
+  reason       String?
+  before       Json?
+  after        Json?
+  createdAt    DateTime @default(now())
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Command {
+  id          String   @id @map("_id")
+  fingerprint String
+  result      Json
+  createdAt   DateTime @default(now())
+  @@map("commands")
+}
+
+model WriteLock {
+  id      String @id @map("_id")
+  version Int    @default(0)
+  @@map("write_locks")
 }

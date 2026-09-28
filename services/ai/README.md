@@ -1,22 +1,9 @@
-# FITNESS-MANAGE AI Service
+﻿# AI feedback service
 
-AI service dùng FastAPI và thực hiện pipeline hai stage:
+FastAPI nhận POST /ai/form-analysis với JSON allowlist và X-Service-Token. Body tối đa 8192 bytes; không nhận video, multipart, URL media hoặc base64. Endpoint upload video/tạo kế hoạch cũ đã bỏ.
 
-1. `POST /v1/analyze/pose`: nhận signed private video, tiền xử lý bằng OpenCV, chạy MediaPipe Pose và tạo structured JSON.
-2. `POST /v1/generate/plan`: nhận structured JSON cùng mục tiêu của Member rồi gọi OpenAI API với Pydantic response schema.
+Member phân tích video bằng MediaPipe trên thiết bị trước. Service phản hồi tiếng Việt cho INSUFFICIENT_DEPTH đã implement/test; không thấy pose/không đủ rep có trạng thái riêng. Phiên bản này dùng feedback xác định, chưa cần gọi OpenAI. Không tạo workout plan, chẩn đoán hoặc lưu video/results server.
 
-Service không gửi raw video tới OpenAI API. Owner phải cấu hình các quality threshold và `OPENAI_MODEL`; source không tự chọn các giá trị canonical.
+Tạo .venv, cài requirements.txt, cấu hình token theo .env.example. Từ root chạy pnpm dev:ai; runner đọc .env của service. NestJS dùng cùng token và proxy JSON sau khi kiểm tra role Member.
 
-## Chạy local
-
-Tạo virtual environment, cài [`requirements.txt`](requirements.txt), cấu hình [`.env.example`](.env.example), rồi chạy:
-
-```text
-uvicorn app.main:app --reload --port 8000
-```
-
-Có thể chạy từ root repository bằng:
-
-```powershell
-pnpm dev:ai
-```
+pnpm test:ai kiểm tra auth, schema strict, payload media/quá lớn, failure state, unsupported issue và endpoint cũ trả 404. GET /health là healthcheck.

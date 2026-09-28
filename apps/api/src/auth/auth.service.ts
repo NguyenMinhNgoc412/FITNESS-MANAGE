@@ -1,39 +1,50 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from '@prisma/client';
+import { createHash, randomBytes } from 'crypto';
 import * as bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma.service';
+import { Db, TransactionService } from '../common/transaction.service';
 
-type TokenPayload = { sub: string; role: string; sessionId: string };
+export type TokenPayload = { sub: string; role: Role; sessionId: string; kind: 'access' | 'refresh' };
+const tokenHash = (value: string) => createHash('sha256').update(value).digest('hex');
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService, private readonly jwt: JwtService) {}
-  async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || user.status !== 'ACTIVE' || !(await bcrypt.compare(password, user.passwordHash))) throw new UnauthorizedException('Email hoặc mật khẩu không đúng.');
-    return this.issue(user.id, user.role);
+  constructor(private readonly prisma: PrismaService, private readonly jwt: JwtService, private readonly transactions: TransactionService) {}
+  async login(phone: string, password: string) {
+    const user = await this.prisma.user.findUnique({ where: { phone } });
+    if (!user || user.status !== 'ACTIVE' || !(await bcrypt.compare(password, user.passwordHash))) throw new UnauthorizedException('Số điện thoại hoặc mật khẩu không đúng.');
+    return this.transactions.run(async db => {
+      const current = await db.user.findUnique({ where: { id: user.id } });
+      if (!current || current.status !== 'ACTIVE') throw new UnauthorizedException();
+      return this.issue(db, current.id, current.role);
+    });
   }
-  async refresh(refreshToken: string) {
-    try {
-      const payload = await this.jwt.verifyAsync<TokenPayload>(refreshToken, { secret: process.env.JWT_REFRESH_SECRET });
-      const session = await this.prisma.session.findUnique({ where: { id: payload.sessionId }, include: { user: true } });
-      if (!session || session.revokedAt || session.expiresAt <= new Date() || session.user.status !== 'ACTIVE' || !(await bcrypt.compare(refreshToken, session.refreshTokenHash))) throw new Error('invalid');
-      await this.prisma.session.update({ where: { id: session.id }, data: { revokedAt: new Date() } });
-      return this.issue(session.user.id, session.user.role);
-    } catch { throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn.'); }
+  async refresh(token: string) {
+    let payload: TokenPayload;
+    try { payload = await this.jwt.verifyAsync<TokenPayload>(token, { secret: process.env.JWT_REFRESH_SECRET }); }
+    catch { throw new UnauthorizedException('Phiên đăng nhập đã hết hạn.'); }
+    if (payload.kind !== 'refresh') throw new UnauthorizedException();
+    return this.transactions.run(async db => {
+      const session = await db.session.findUnique({ where: { id: payload.sessionId }, include: { user: true } });
+      if (!session || session.userId !== payload.sub || session.revokedAt || session.expiresAt <= new Date() || session.user.status !== 'ACTIVE' || session.refreshTokenHash !== tokenHash(token)) throw new UnauthorizedException('Phiên đăng nhập không hợp lệ.');
+      await db.session.update({ where: { id: session.id }, data: { revokedAt: new Date() } });
+      return this.issue(db, session.userId, session.user.role);
+    });
   }
-  async logout(sessionId: string) { await this.prisma.session.updateMany({ where: { id: sessionId, revokedAt: null }, data: { revokedAt: new Date() } }); }
-  async profile(userId: string) {
-    return this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true, fullName: true, email: true, phone: true, role: true, status: true } });
+  async logout(sessionId: string) {
+    await this.transactions.run(db => db.session.updateMany({ where: { id: sessionId }, data: { revokedAt: new Date() } }));
   }
-  private async issue(userId: string, role: string) {
-    const sessionId = randomUUID(); const payload: TokenPayload = { sub: userId, role, sessionId };
-    const accessTtl = process.env.JWT_ACCESS_TTL ?? '15m';
-    const refreshTtl = process.env.JWT_REFRESH_TTL ?? '7d';
-    const accessToken = await this.jwt.signAsync(payload, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: accessTtl as never });
-    const refreshToken = await this.jwt.signAsync(payload, { secret: process.env.JWT_REFRESH_SECRET, expiresIn: refreshTtl as never });
+  profile(userId: string) {
+    return this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true, phone: true, role: true, status: true, profile: true } });
+  }
+  private async issue(db: Db, userId: string, role: Role) {
+    const sessionId = randomBytes(12).toString('hex');
+    const payload = { sub: userId, role, sessionId };
+    const accessToken = await this.jwt.signAsync({ ...payload, kind: 'access' }, { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' });
+    const refreshToken = await this.jwt.signAsync({ ...payload, kind: 'refresh' }, { secret: process.env.JWT_REFRESH_SECRET, expiresIn: '7d' });
     const decoded = this.jwt.decode(refreshToken) as { exp: number };
-    await this.prisma.session.create({ data: { id: sessionId, userId, refreshTokenHash: await bcrypt.hash(refreshToken, 12), expiresAt: new Date(decoded.exp * 1000) } });
+    await db.session.create({ data: { id: sessionId, userId, refreshTokenHash: tokenHash(refreshToken), expiresAt: new Date(decoded.exp * 1000) } });
     return { accessToken, refreshToken, user: { id: userId, role } };
   }
 }

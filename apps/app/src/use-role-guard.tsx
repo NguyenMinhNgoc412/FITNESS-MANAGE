@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { colors } from './design-system';
+import { colors } from './design-system/theme';
 import { Role, roleRoute } from './features/auth/types';
 import { useAuthStore } from './store/auth';
 

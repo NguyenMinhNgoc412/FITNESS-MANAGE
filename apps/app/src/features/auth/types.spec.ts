@@ -2,7 +2,7 @@ import { roleRoute, sessionSchema } from './types';
 
 describe('auth contract', () => {
   it.each([
-    ['OWNER_ADMIN', '/owner_admin'],
+    ['OWNER', '/owner'],
     ['PT', '/pt'],
     ['MEMBER', '/member'],
   ] as const)('đưa role %s tới đúng route', (role, route) => {

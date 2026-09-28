@@ -1,298 +1,175 @@
-# FITNESS-MANAGE — Source of Truth
+# FITNESS-MANAGE — Source of Truth (SOT)
 
-**Trạng thái:** Canonical SOT entry point  
+**Trạng thái:** Canonical baseline đã chốt  
 **Dự án:** FITNESS-MANAGE  
-**Ngày cập nhật:** 2026-09-16  
-**Ngôn ngữ:** Tiếng Việt
+**Ngày cập nhật:** 2026-09-23  
+**Ngôn ngữ:** Tiếng Việt  
+**Mục tiêu:** Làm nguồn tham chiếu duy nhất cho Codex/dev khi phân tích, thiết kế, implement và test hệ thống.
 
 ---
 
 ## 1. Mục đích
 
-Folder này là nguồn tham chiếu chính thức để Product, Codex/AI Agent và developer hiểu **FITNESS-MANAGE đang làm gì, được phép làm gì, dùng công nghệ nào và phải implement theo kiến trúc nào**.
+Bộ tài liệu này khóa các quyết định đã chốt về:
 
-Không dùng chat cũ, comment code hoặc suy đoán cá nhân để override SOT.
+- sản phẩm và boundary;
+- nghiệp vụ phòng gym thực tế;
+- quyền của `OWNER`, `PT`, `MEMBER`;
+- Trial 3 buổi, CRM và Sales Trigger;
+- Membership theo tháng hoặc theo số buổi;
+- PT nội bộ, assignment và booking;
+- check-in Member, Trial, PT nội bộ và PT ngoài;
+- AI kiểm tra form bài tập với raw video local-only;
+- tech stack, data ownership, API, security, UI/UX và testing.
 
-Nếu code và SOT mâu thuẫn, phải xác minh quyết định mới nhất rồi cập nhật đúng tài liệu trước khi mở rộng implementation.
-
----
-
-## 2. Bộ tài liệu SOT
-
-### 2.1. Core SOT bắt buộc
-
-| File | Sở hữu | Không được sở hữu |
-|---|---|---|
-| `01-product-brief-sot.md` | why, positioning, audience, outcome, product principles, business model, boundary | workflow chi tiết, acceptance, framework, database |
-| `02-product-requirements-sot.md` | canonical requirement IDs, behavior, scope, acceptance criteria | framework/provider, schema vật lý, code pattern |
-| `03-technical-architecture-sot.md` | kiến trúc hệ thống, module boundary, domain contract, security/AI architecture | feature mới chưa có trong PRD |
-| `04-tech-stack-sot.md` | framework, library, provider và stack công nghệ đã chốt | business behavior, requirement mới |
-| `CHANGELOG.md` | lịch sử thay đổi SOT | quyết định canonical thay cho file chính |
-| `README.md` | cách đọc, conflict priority, bản đồ tài liệu, rule cho Agent | duplicate chi tiết feature |
-
-### 2.2. Business SOT chi tiết theo chức năng
-
-Các file này **chi tiết hóa requirement ID đã tồn tại trong `02`**. Chúng không được tạo feature mới nếu `02` chưa có requirement tương ứng.
-
-| File | Phạm vi | Requirement chính |
-|---|---|---|
-| `05-business-auth-role-access-sot.md` | login, account status, RBAC, PT access, 3-role session test | `PR-AUTH-*`, `PR-PT-*`, `PR-TEST-001` |
-| `06-business-member-pt-assignment-sot.md` | Member registration, PT 1-1 assignment, đổi PT, history | `PR-MEMBER-*`, `PR-ASSIGN-*` |
-| `07-business-schedule-checkin-attendance-sot.md` | lịch, khung linh hoạt 2h, Member/PT check-in, đối soát | `PR-SCHEDULE-*`, `PR-CHECKIN-*` |
-| `08-business-guest-trial-conversion-sot.md` | khách tập thử, trial history, Guest -> Member | `PR-GUEST-*` |
-| `09-business-ai-body-analysis-sot.md` | AI body analysis behavior, structured result, plan, history | `PR-AI-*` |
-
-### 2.3. Technical SOT chi tiết
-
-| File | Phạm vi |
-|---|---|
-| `10-tech-data-security-audit-sot.md` | transaction, invariant, concurrency, RBAC enforcement, time, audit, sensitive data |
-| `11-tech-ai-analysis-pipeline-sot.md` | FastAPI/OpenCV/MediaPipe/OpenAI pipeline, structured schema, confidence gate, generation, versioning |
-| `12-Agent-task-splitting-sot.md` | thứ tự implement, mapping requirement -> SOT -> task -> acceptance |
+Codex **không được tự bổ sung feature, role, workflow hoặc provider** ngoài bộ SOT này.
 
 ---
 
-## 3. Thứ tự đọc bắt buộc
+## 2. Thứ tự đọc bắt buộc
 
-### 3.1. Mọi task
+### 2.1. Mọi task
+
+Đọc theo thứ tự:
 
 1. `README.md`
 2. `01-product-brief-sot.md`
 3. `02-product-requirements-sot.md`
 4. `03-technical-architecture-sot.md`
-5. `04-tech-stack-sot.md`
-6. file SOT chi tiết liên quan task
-7. `CHANGELOG.md` nếu cần lịch sử quyết định
+5. file chi tiết đúng phạm vi task
+6. `CHANGELOG.md` nếu cần biết lịch sử thay đổi
 
-### 3.2. Mapping theo task
+### 2.2. Task giao diện
 
-| Task | Đọc thêm |
+Đọc thêm:
+
+- `05-design-system-sot.md`
+- file business của chức năng đang làm
+
+### 2.3. Task database/API/backend
+
+Đọc thêm:
+
+- `04-tech-stack-sot.md`
+- `15-tech-data-model-storage-sot.md`
+- `16-tech-api-contract-sot.md`
+- `17-tech-security-audit-sot.md`
+
+### 2.4. Task AI
+
+Đọc thêm:
+
+- `14-business-ai-form-analysis-sot.md`
+- `18-tech-local-ai-privacy-sot.md`
+- `04-tech-stack-sot.md`
+
+### 2.5. Khi giao việc cho Codex
+
+Đọc thêm:
+
+- `19-Agent-task-splitting-sot.md`
+- `20-testing-acceptance-sot.md`
+
+---
+
+## 3. Bản đồ tài liệu
+
+| File | Sở hữu quyết định |
 |---|---|
-| Setup project/dependency | `04`, `10`, `12` |
-| Login / permission / PT management | `05`, `10` |
-| Tạo Member / gán PT / đổi PT | `06`, `10` |
-| Lịch / check-in / attendance | `07`, `10` |
-| Guest / tập thử / conversion | `08`, `10` |
-| AI behavior/UI flow | `09`, `11` |
-| AI backend/pipeline | `09`, `10`, `11` |
-| Chia task Codex/Agent | `12` |
-
-Không nhảy thẳng vào file chi tiết rồi bỏ qua `02`, `03`, `04`, vì file chi tiết chỉ mở rộng requirement/architecture/stack đã được khóa ở core SOT.
-
----
-
-## 4. Quy tắc ưu tiên khi tài liệu mâu thuẫn
-
-1. **Product Brief (`01`)** quyết định sản phẩm là gì, phục vụ ai và boundary ở đâu.
-2. **Product Requirements (`02`)** quyết định canonical requirement, scope và acceptance.
-3. **Technical Architecture (`03`)** quyết định kiến trúc tổng quan để đáp ứng requirement.
-4. **Technology Stack (`04`)** quyết định framework/library/provider được phép dùng trong baseline.
-5. **Business detail (`05`–`09`)** quyết định flow/state/edge case chi tiết trong phạm vi requirement đã có; không được trái `02`.
-6. **Technical detail (`10`–`11`)** quyết định invariant/technical contract chi tiết trong phạm vi `03` + `04`; không được tự thêm business behavior.
-7. **Task guide (`12`)** chỉ chia việc, không override nghiệp vụ, architecture hoặc stack.
-8. **README** quyết định cách đọc và sử dụng bộ SOT.
-9. **CHANGELOG** chỉ ghi lịch sử, không override nội dung hiện hành.
-
-Nếu `05`–`09` mâu thuẫn `02`, **`02` thắng** và file chi tiết phải được đồng bộ.  
-Nếu `10`–`11` mâu thuẫn `03`, **`03` thắng** cho tới khi owner duyệt thay đổi kiến trúc.  
-Nếu implementation dùng công nghệ khác `04`, **`04` thắng** cho tới khi owner duyệt thay stack và cập nhật SOT.
+| `01-product-brief-sot.md` | Why, định vị, audience, outcome, product principles, business model, boundary |
+| `02-product-requirements-sot.md` | Scope, requirement ID, hành vi và acceptance cấp sản phẩm |
+| `03-technical-architecture-sot.md` | Kiến trúc hệ thống cấp cao, module/layer/data flow |
+| `04-tech-stack-sot.md` | Framework, database, provider, library và rule đổi stack |
+| `05-design-system-sot.md` | UI/UX, palette, typography, component, layout theo role |
+| `06-business-auth-role-access-sot.md` | 3 role đăng nhập và quyền |
+| `07-business-lead-trial-conversion-sot.md` | Lead/Trial 3 buổi, check-in trial, conversion |
+| `08-business-membership-package-sot.md` | Gói theo tháng/buổi, lifecycle, gia hạn |
+| `09-business-member-profile-pt-assignment-sot.md` | Hồ sơ Member/PT, CCCD, PT chính, đổi/hủy PT |
+| `10-business-booking-schedule-sot.md` | Booking từng buổi, Owner quản lý lịch, conflict rule |
+| `11-business-checkin-attendance-sot.md` | QR/SĐT, context check-in, PT attendance log |
+| `12-business-external-pt-pass-sot.md` | PT ngoài, pass, check-in bằng SĐT Member, xác nhận |
+| `13-business-sales-trigger-notification-sot.md` | Trial cuối, Member sắp hết gói, notification |
+| `14-business-ai-form-analysis-sot.md` | AI kiểm tra form, output và privacy nghiệp vụ |
+| `15-tech-data-model-storage-sot.md` | MongoDB server, SQLite local, collection/entity model |
+| `16-tech-api-contract-sot.md` | REST boundary, endpoint/resource contract và error rules |
+| `17-tech-security-audit-sot.md` | Auth, RBAC, token, audit, concurrency, integrity |
+| `18-tech-local-ai-privacy-sot.md` | Local video, MediaPipe, SQLite, File System, JSON-only cloud |
+| `19-Agent-task-splitting-sot.md` | Thứ tự và cách chia task Codex |
+| `20-testing-acceptance-sot.md` | Test matrix và release gate |
+| `CHANGELOG.md` | Lịch sử thay đổi SOT |
 
 ---
 
-## 5. Các quyết định sản phẩm đã khóa
+## 4. Quy tắc ưu tiên khi mâu thuẫn
 
-Baseline hiện tại:
+1. `01` quyết định **sản phẩm tồn tại để làm gì và boundary**.
+2. `02` quyết định **feature/behavior nào thuộc scope**.
+3. Các file business `06`–`14` quyết định **nghiệp vụ chi tiết**.
+4. `03` quyết định **kiến trúc cấp hệ thống**.
+5. `04` quyết định **tech stack/provider**.
+6. Các file technical `15`–`18` quyết định **implementation contract kỹ thuật**.
+7. `05` quyết định **UI/UX và design system**.
+8. `19` chỉ chia việc, không được sửa nghiệp vụ.
+9. `20` chỉ định cách verify, không được tạo feature mới.
+10. `CHANGELOG` chỉ ghi lịch sử; không thay thế nội dung canonical.
 
-- mô hình là phòng gym cá nhân;
-- chỉ có ba role đăng nhập chính: `Owner/Admin`, `PT`, `Member`;
-- không có role Staff;
-- không có role Dev trong nghiệp vụ;
-- PT được gán cho member từ khi đăng ký, không book PT theo từng buổi;
-- member có thể đổi PT nếu không phù hợp;
-- check-in dùng để đối soát member và PT;
-- member đến nhưng PT không có mặt trong khung hợp lệ phải tạo trạng thái cần owner kiểm tra;
-- lịch có thể hỗ trợ khung linh hoạt tối đa 2 giờ theo baseline đã chốt;
-- khách mới có thể được ghi nhận ngay để tập thử, chưa cần tài khoản;
-- guest data phải giữ được để thống kê/chăm sóc về sau;
-- AI phân tích video cơ thể là feature đã duyệt;
-- video được chuyển thành dữ liệu có cấu trúc trước khi LLM sinh lời khuyên/lộ trình;
-- AI không được dùng như công cụ chẩn đoán bệnh/chấn thương.
+Nếu hai file cùng cấp mâu thuẫn, **dừng implement và báo rõ hai đoạn mâu thuẫn**. Không tự chọn một bên.
 
 ---
 
-## 6. Tech stack đã khóa
+## 5. Quyết định khóa nhanh
 
-Canonical chi tiết nằm ở `04-tech-stack-sot.md`.
-
-Baseline:
-
-- **Frontend mobile:** React Native + Expo + TypeScript;
-- **Web:** cùng Expo codebase qua React Native Web;
-- **Routing:** Expo Router;
-- **State:** Zustand;
-- **Form/Validation:** React Hook Form + Zod;
-- **API client:** Axios;
-- **Backend:** NestJS + TypeScript;
-- **API:** REST;
-- **Authentication:** JWT + Refresh Token;
-- **ORM:** Prisma;
-- **Database:** PostgreSQL trên Supabase Free;
-- **Storage:** Supabase Storage;
-- **AI Service:** Python + FastAPI;
-- **CV/Pose:** OpenCV + MediaPipe Pose;
-- **Generative AI:** OpenAI API nhận structured JSON từ tầng CV;
-- **Notification:** Expo Push Notifications;
-- **Realtime:** chưa dùng WebSocket trong MVP;
-- **Deploy:** ưu tiên local/free tier;
-- **Source control:** Git + GitHub.
-
-Supabase **không đồng nghĩa dùng toàn bộ Supabase stack**. MVP hiện chỉ khóa PostgreSQL managed + Storage; auth vẫn do NestJS + JWT/Refresh Token quản lý.
-
----
-
-## 7. Quy tắc cho Codex / AI Agent
-
-Trước khi code:
-
-1. đọc đủ `README`, `01`, `02`, `03`, `04` và file chi tiết đúng chức năng;
-2. xác định requirement ID đang implement;
-3. dùng đúng stack trong `04-tech-stack-sot.md`;
-4. không thêm feature “cho tiện”;
-5. không tự đổi role model;
-6. không biến PT assignment thành booking theo buổi;
-7. không ghi đè lịch sử assignment/check-in;
-8. với AI, giữ pipeline `video -> OpenCV/MediaPipe Pose -> structured JSON -> OpenAI API`;
-9. không tự bật Supabase Auth/Realtime/Edge Functions;
-10. không tự thay Axios, Zustand, Prisma hoặc REST bằng lựa chọn khác;
-11. cuối task phải ghi rõ file code đã sửa, test đã chạy và requirement ID đã đáp ứng.
+1. Chỉ có 3 role đăng nhập: `OWNER`, `PT`, `MEMBER`.
+2. Không có `STAFF`, `DEV`, `TRIAL`, `LEAD`, `EXTERNAL_PT` dưới dạng role đăng nhập.
+3. Trial chỉ cần tên + SĐT, có **3 buổi cố định**.
+4. Một SĐT chỉ được hưởng Trial **một lần**.
+5. Khi Trial chuyển Member, giữ cùng customer identity/history; không tạo hồ sơ trùng.
+6. Hồ sơ Member/PT chính thức có CCCD; CCCD unique khi đã nhập.
+7. Membership hỗ trợ **gói theo thời gian** và **gói theo số buổi**.
+8. Có cảnh báo Trial buổi cuối và Member sắp hết gói.
+9. Member dùng PT nội bộ có một PT chính active tại một thời điểm.
+10. Member muốn đổi/hủy PT phải báo Owner; chỉ Owner thay đổi assignment.
+11. Có booking PT từng buổi.
+12. Chỉ Owner tạo/sửa/hủy booking; Member/PT chỉ xem.
+13. Một booking là một khoảng giờ cụ thể; bỏ khái niệm ca.
+14. Một PT chỉ tập với một Member trong cùng khoảng thời gian; không overlap.
+15. Member có thể `SELF_TRAINING` không cần PT.
+16. Member check-in ưu tiên QR, SĐT là fallback.
+17. PT nội bộ check-in độc lập; hệ thống **không tự match** PT log với Member log để kết luận attendance.
+18. Owner đối chiếu booking + check-in logs khi cần điều tra.
+19. PT ngoài không account; Member mua External PT Pass với Owner; tra bằng SĐT Member.
+20. AI chỉ giúp Member kiểm tra form bài tập và gợi ý sửa tư thế; không tạo workout plan.
+21. Chỉ Member xem AI result.
+22. Raw AI video phải local-only; không upload cloud trong flow chuẩn.
+23. MongoDB Atlas là server source-of-truth; SQLite là local mobile store/cache.
+24. UI đơn giản, dễ nhìn, dễ thao tác; màu năng động/tươi sáng nhưng không gắt; rất ít animation.
 
 ---
 
-## 8. Prompt chuẩn giao task cho Codex
+## 6. Quy tắc cho Codex/dev
 
-```text
-Bạn đang implement FITNESS-MANAGE.
-Trả lời bằng tiếng Việt.
-
-Đọc trước:
-- README.md
-- 01-product-brief-sot.md
-- 02-product-requirements-sot.md
-- 03-technical-architecture-sot.md
-- 04-tech-stack-sot.md
-- <file SOT chi tiết liên quan>
-
-Task:
-<ghi task cụ thể>
-
-Requirement IDs:
-<ví dụ PR-MEMBER-002, PR-CHECKIN-003>
-
-Yêu cầu:
-- Không thêm feature ngoài Product Requirements.
-- Không đổi business rule để code dễ hơn.
-- Dùng đúng stack trong 04-tech-stack-sot.md.
-- Không tự thêm Staff/Dev role.
-- Không biến PT assignment thành booking từng buổi.
-- Preserve history cho assignment/check-in/AI analysis.
-- Nếu task AI: video phải qua OpenCV + MediaPipe Pose tạo structured JSON trước OpenAI API.
-- Không tự bật Supabase Auth/Realtime/Edge Functions.
-- Sau khi hoàn thành: tóm tắt file sửa, migration, test, requirement đã cover và rủi ro còn lại.
-```
+- Không tự thêm role.
+- Không tự thêm Staff vì tài liệu tham khảo cũ có Lễ tân; trong MVP Owner kiêm thao tác quầy.
+- Không cho Member/PT mutation booking.
+- Không tự tạo attendance matching engine giữa PT và Member.
+- Không upload raw AI video lên NestJS, FastAPI, Supabase Storage hoặc OpenAI.
+- Không dùng Supabase Auth/Realtime/Edge Functions.
+- Không đổi MongoDB sang PostgreSQL.
+- Không dùng SQLite làm server database.
+- Không đưa business data canonical vào Zustand.
+- Không dùng AI để tạo giáo án thay PT.
+- Không cho PT/Owner xem AI result của Member.
+- Không tự thay provider/library đã khóa trong `04`.
+- Nếu implementation buộc phải đổi SOT, ghi proposal gồm: vấn đề, lý do, file ảnh hưởng, migration, test; chờ duyệt trước.
 
 ---
 
-## 9. Definition of Done cho một task
+## 7. Quy tắc cập nhật SOT
 
-Một task chỉ được coi là xong khi:
-
-- bám đúng requirement ID;
-- dùng đúng stack canonical;
-- không phá boundary role;
-- business invariant có test nếu có logic;
-- error/empty/permission state được xử lý;
-- migration được thêm nếu data model thay đổi;
-- không sửa lịch sử ngoài ý muốn;
-- không tạo data race/double-submit ở action quan trọng;
-- test phù hợp chạy thành công;
-- SOT/CHANGELOG được cập nhật nếu decision thay đổi.
-
----
-
-## 10. Quy tắc update SOT
-
-### Product Brief
-
-Chỉ khi đổi:
-
-- why;
-- positioning;
-- audience;
-- outcome;
-- principles;
-- business model;
-- boundary.
-
-### Product Requirements
-
-Khi đổi:
-
-- behavior;
-- flow;
-- scope;
-- requirement;
-- acceptance criteria.
-
-### Technical Architecture
-
-Khi đổi:
-
-- module boundary;
-- domain model;
-- API/data contract;
-- transaction/invariant;
-- security architecture;
-- AI architecture;
-- testing architecture.
-
-### Technology Stack
-
-Khi đổi:
-
-- framework;
-- library chính;
-- ORM/database provider;
-- auth mechanism;
-- storage provider;
-- AI/CV/LLM provider;
-- realtime strategy;
-- deploy baseline;
-- source-control baseline.
-
-### CHANGELOG
-
-Mọi thay đổi decision-level phải ghi vào `CHANGELOG.md`.
-
----
-
-## 11. Những điều tuyệt đối không tự thêm/thay
-
-- Staff role;
-- Dev role;
-- booking PT tự do theo buổi;
-- marketplace;
-- multi-tenant SaaS;
-- payroll/HR;
-- CRM automation đầy đủ;
-- medical diagnosis bằng AI;
-- Supabase Auth thay JWT/Refresh Token của NestJS;
-- Supabase Realtime/WebSocket ở MVP nếu chưa có quyết định mới;
-- GraphQL thay REST;
-- ORM khác thay Prisma;
-- frontend web riêng thay React Native Web cùng Expo codebase;
-- raw video đưa thẳng vào LLM để bỏ qua CV/Pose;
-- provider/framework mới chỉ vì Agent thích dùng;
-- feature không có requirement ID hoặc chưa được owner duyệt.
-## 12. UI/UX SOT
-
-`13-ui-ux-sot.md` là quy chuẩn cho visual language, ảnh tham chiếu, dashboard theo role, lịch/check-in theo từng role, AI UI, setting, responsive và accessibility. File này phải được đọc thêm khi task làm giao diện; requirement và quyền canonical vẫn lấy từ các SOT ưu tiên cao hơn.
+- Thay đổi nghiệp vụ: sửa `02` và file business đúng phạm vi; cập nhật `CHANGELOG`.
+- Thay đổi architecture: sửa `03`; cập nhật `CHANGELOG`.
+- Thay đổi tech stack: sửa `04`; cập nhật `CHANGELOG`.
+- Thay đổi data/API/security/AI implementation: sửa file technical tương ứng.
+- Thay đổi UI/UX: sửa `05`.
+- Thêm/xóa/đổi tên file: cập nhật `README` và `CHANGELOG`.
+- Không duplicate đặc tả chi tiết vào file tổng quát.

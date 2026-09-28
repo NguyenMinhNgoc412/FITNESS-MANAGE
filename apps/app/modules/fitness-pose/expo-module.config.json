@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["FitnessPoseModule"] },
+  "android": { "modules": ["expo.modules.fitnesspose.FitnessPoseModule"] }
+}

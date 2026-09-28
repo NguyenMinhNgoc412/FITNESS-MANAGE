@@ -27,7 +27,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const request = error.config as RetryableRequest | undefined;
-    const isAuthEndpoint = request?.url?.startsWith('/auth/');
+    const isAuthEndpoint = ['/auth/login', '/auth/refresh', '/auth/logout'].includes(request?.url ?? '');
     if (error.response?.status !== 401 || !request || request._retry || isAuthEndpoint) return Promise.reject(error);
 
     const refreshToken = useAuthStore.getState().session?.refreshToken;

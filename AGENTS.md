@@ -1,133 +1,150 @@
 # FITNESS-MANAGE — Quy tắc làm việc cho AI Agent
 
-**Phạm vi:** Toàn bộ repository FITNESS-MANAGE  
+**Phạm vi:** Toàn bộ repository `FITNESS-MANAGE`
 **Ngôn ngữ trao đổi:** Tiếng Việt  
-**Nguồn nghiệp vụ, kiến trúc và công nghệ:** Bộ Source of Truth trong `docs/`
+**Nguồn quyết định:** Bộ Source of Truth trong `docs/`
 
----
+## 1. Mục tiêu và nguyên tắc chung
 
-## 1. Mục tiêu
+Agent phải thay đổi đúng phạm vi Owner yêu cầu, tuân thủ SOT hiện hành và báo cáo kết quả có thể kiểm tra được. Không tự suy diễn nghiệp vụ, role, workflow, provider hoặc công nghệ ngoài codebase và SOT.
 
-File này hướng dẫn AI Agent thực hiện task trong repository. Agent phải thay đổi đúng phạm vi yêu cầu, tuân thủ Source of Truth (SOT), và báo cáo kết quả có thể kiểm tra được.
+Các nguyên tắc khóa:
 
-Không suy diễn nghiệp vụ hoặc quyết định kỹ thuật ngoài những gì đã có trong codebase và SOT. Stack MVP đã được chốt trong `docs/04-tech-stack-sot.md` và phải được tuân thủ.
+- Chỉ có 3 role đăng nhập: `OWNER`, `PT`, `MEMBER`. `LEAD`, `TRIAL` và `EXTERNAL_PT` không phải role đăng nhập.
+- Owner kiểm soát mutation nhạy cảm về customer, package, PT assignment và booking.
+- Trial có 3 buổi cố định; một số điện thoại chỉ được hưởng Trial một lần; conversion phải giữ identity/history.
+- Membership hỗ trợ `TIME_BASED` và `SESSION_BASED`; quota không được âm hoặc consume hai lần.
+- Member dùng PT nội bộ chỉ có tối đa một primary PT active; assignment phải preserve history.
+- Booking là từng buổi cụ thể; chỉ Owner tạo/sửa/hủy. PT và Member chỉ xem.
+- PT attendance là log độc lập; không tự động match với Member check-in để kết luận có mặt/vắng.
+- Member check-in ưu tiên QR, SĐT là fallback; `SELF_TRAINING` không cần PT.
+- PT ngoài không có account; External PT Pass do Owner quản lý và có audit khi fallback.
+- AI chỉ hỗ trợ Member kiểm tra form và gợi ý sửa tư thế; không tạo workout plan, không chẩn đoán y khoa và không thay PT.
+- Raw AI video chỉ ở local device; chỉ structured metrics/JSON tối thiểu mới được rời thiết bị khi cần.
 
-## 2. Giao tiếp với Owner
+## 2. Giao tiếp và cập nhật tiến độ
 
-1. Luôn trả lời Owner bằng tiếng Việt, kể cả khi câu hỏi hoặc tài liệu tham khảo dùng ngôn ngữ khác.
-2. Trước khi thực hiện thay đổi hoặc hành động, phải nói rõ: Owner yêu cầu gì, sẽ làm gì, phạm vi file/module dự kiến và vì sao việc đó cần thiết.
-3. Nêu rủi ro có thể phát sinh và ảnh hưởng dự kiến. Nếu không thấy rủi ro đáng kể, nói rõ điều đó.
-4. Với bước khảo sát chỉ đọc hoặc thao tác kiểm tra thông thường, có thể gộp lý do và rủi ro vào một cập nhật ngắn; không cần lặp lại giải thích dài cho từng lệnh.
-5. Không biến phần giải thích thành yêu cầu xin phép nếu Owner đã giao rõ task và hành động nằm trong phạm vi đó.
+1. Luôn trả lời Owner bằng tiếng Việt.
+2. Trước khi sửa hoặc thực hiện hành động, nêu rõ: requirement/mục tiêu, file/module dự kiến tác động, hành động sẽ làm, lý do và rủi ro/giới hạn.
+3. Với khảo sát chỉ đọc, có thể gộp lý do và rủi ro trong một cập nhật ngắn.
+4. Với task có dùng công cụ, gửi cập nhật sau các mốc có ý nghĩa: đã đọc SOT, đã xác định nguyên nhân, hoàn tất implementation, có kết quả test/build.
+5. Khi hoàn tất, phải nêu:
+   - kết quả đạt được;
+   - file đã sửa và thay đổi chính;
+   - lệnh kiểm tra đã chạy cùng kết quả thực tế;
+   - requirement/acceptance đã cover;
+   - phần chưa làm, giới hạn và rủi ro còn lại nếu có.
+6. Không tuyên bố đã đọc đủ tài liệu hoặc test/build thành công nếu chưa thực sự kiểm tra; nếu output bị rút gọn phải đọc lại phần cần thiết.
 
-### 2.1. Cập nhật tiến độ bắt buộc
+## 3. Thứ tự đọc tài liệu
 
-Với task có dùng công cụ, Agent phải gửi cập nhật ngắn bằng tiếng Việt trước khi bắt đầu và sau từng mốc có ý nghĩa: đọc SOT, xác định nguyên nhân, hoàn tất implementation hoặc có kết quả test/build. Cập nhật phải giúp Owner biết chính xác Agent đang làm gì, đã làm gì và bước tiếp theo là gì.
+### Mọi task
 
-Trước khi sửa, nội dung cập nhật tối thiểu gồm:
+1. `docs/README.md`
+2. `docs/01-product-brief-sot.md`
+3. `docs/02-product-requirements-sot.md`
+4. `docs/03-technical-architecture-sot.md`
+5. `docs/04-tech-stack-sot.md`
+6. SOT chi tiết đúng phạm vi task
+7. `docs/CHANGELOG.md` nếu task thay đổi hoặc cần đối chiếu lịch sử quyết định
 
-- mục tiêu/requirement đang xử lý;
-- file hoặc module dự kiến tác động;
-- hành động sẽ thực hiện;
-- rủi ro hoặc giới hạn dự kiến; nếu không có rủi ro đáng kể phải nói rõ.
+### Theo loại task
 
-Khi hoàn tất, câu trả lời tối thiểu phải nêu:
+- UI/UX: đọc `docs/05-design-system-sot.md`, SOT business liên quan và ảnh trong `images/` theo bảng ở mục 7.
+- Auth/RBAC: `docs/06-business-auth-role-access-sot.md`, `docs/17-tech-security-audit-sot.md`, `docs/16-tech-api-contract-sot.md`.
+- Trial/CRM: `docs/07-business-lead-trial-conversion-sot.md`, `docs/08-business-membership-package-sot.md`, `docs/13-business-sales-trigger-notification-sot.md`.
+- Profile/PT: `docs/09-business-member-profile-pt-assignment-sot.md`.
+- Booking/schedule: `docs/10-business-booking-schedule-sot.md`, `docs/13-business-sales-trigger-notification-sot.md`.
+- Check-in/attendance: `docs/11-business-checkin-attendance-sot.md`, `docs/12-business-external-pt-pass-sot.md`.
+- AI/privacy: `docs/14-business-ai-form-analysis-sot.md`, `docs/18-tech-local-ai-privacy-sot.md`.
+- Data/API/security: `docs/15-tech-data-model-storage-sot.md`, `docs/16-tech-api-contract-sot.md`, `docs/17-tech-security-audit-sot.md`.
+- Chia task hoặc lập thứ tự triển khai: `docs/19-Agent-task-splitting-sot.md`.
+- Verification/release: `docs/20-testing-acceptance-sot.md`.
 
-- kết quả đã đạt được;
-- file đã sửa và phần thay đổi chính;
-- lệnh kiểm tra đã chạy cùng kết quả thực tế;
-- phần chưa làm, giới hạn và rủi ro còn lại nếu có.
-
-Không dùng câu trả lời chung chung như “đã xử lý” mà không nói rõ đã xử lý phần nào. Không tuyên bố đã đọc đủ tài liệu khi output bị rút gọn hoặc chưa kiểm tra đủ nội dung; phải nói rõ giới hạn và đọc lại phần cần thiết.
-
-## 3. Đọc tài liệu trước khi làm
-
-Với mỗi task, đọc theo thứ tự:
-
-1. `docs/README.md`;
-2. `docs/01-product-brief-sot.md`;
-3. `docs/02-product-requirements-sot.md`;
-4. `docs/03-technical-architecture-sot.md`;
-5. `docs/04-tech-stack-sot.md`;
-6. SOT chi tiết liên quan trong `docs/`;
-7. `docs/CHANGELOG.md` nếu task thay đổi quyết định sản phẩm, kiến trúc hoặc stack.
-
-Nếu task liên quan bảo mật, transaction, concurrency, audit hoặc dữ liệu nhạy cảm, đọc thêm `docs/10-tech-data-security-audit-sot.md`.
-
-Nếu task liên quan AI, đọc `docs/09-business-ai-body-analysis-sot.md` và `docs/11-tech-ai-analysis-pipeline-sot.md`.
-
-Nếu task chia nhỏ hoặc lập thứ tự triển khai, đọc `docs/12-Agent-task-splitting-sot.md`.
+Nếu phát hiện SOT thiếu quyết định bắt buộc hoặc mâu thuẫn, dừng phần implementation bị ảnh hưởng và báo rõ file/mục mâu thuẫn. Không tự chọn behavior để lấp khoảng trống.
 
 ## 4. Tech stack bắt buộc
 
-Dùng đúng stack MVP đã khóa trong `docs/04-tech-stack-sot.md`:
+- Client: React Native, Expo, TypeScript, React Native Web, Expo Router, Zustand, React Hook Form, Zod, Axios, `expo-sqlite`, `expo-file-system`.
+- Backend/API: NestJS, TypeScript, REST API, JWT Access Token + Refresh Token, Prisma.
+- Server database: MongoDB, ưu tiên MongoDB Atlas Free Tier. MongoDB là source-of-truth cho business data.
+- Local data: SQLite qua `expo-sqlite` cho local AI session/result, file URI, cache hoặc pending sync phù hợp; SQLite không thay MongoDB.
+- Storage: Supabase Storage chỉ cho cloud-safe files như avatar nếu cần; không dùng Supabase Auth, Realtime hoặc Edge Functions.
+- AI: MediaPipe Pose on-device; Python + FastAPI; OpenCV khi phù hợp; OpenAI API chỉ nhận structured JSON/metrics tối thiểu.
+- Notifications/source control: Expo Push Notifications, Git, GitHub.
+- Realtime: không dùng WebSocket hoặc Supabase Realtime trong MVP; sau mutation dùng REST refresh/re-fetch.
 
-- **Client mobile/web:** React Native, Expo, TypeScript, React Native Web, Expo Router, Zustand, React Hook Form, Zod, Axios.
-- **Backend/API:** NestJS, TypeScript, REST API, JWT + Refresh Token, Prisma.
-- **Database/storage:** PostgreSQL trên Supabase Free và Supabase Storage.
-- **AI service:** Python, FastAPI, OpenCV, MediaPipe Pose, OpenAI API qua OpenAI Python SDK.
-- **Platform:** Expo Push Notifications; Git + GitHub; không dùng WebSocket/Realtime trong MVP.
+Pipeline AI bắt buộc:
 
-NestJS là authority cho authentication, RBAC, nghiệp vụ và cấp quyền media. Supabase trong baseline chỉ cung cấp PostgreSQL managed và Storage; không tự dùng Supabase Auth, Realtime, Edge Functions hoặc truy cập database trực tiếp từ client. Không thay stack bằng framework/provider khác hoặc thêm công nghệ ngoài baseline nếu chưa cập nhật SOT và `docs/CHANGELOG.md` theo quy trình duyệt quyết định.
+`video local → on-device pose/metrics → structured JSON → FastAPI → OpenAI nếu cần → structured feedback`
 
-## 5. Quy tắc thực hiện
+Không đổi stack, provider hoặc thêm dependency ngoài baseline nếu chưa cập nhật SOT sở hữu nội dung và `docs/CHANGELOG.md` theo quy trình quyết định.
 
-1. Xác định requirement ID và tiêu chí chấp nhận trước khi sửa.
-2. Không thêm feature ngoài Product Requirements.
-3. Không đổi business rule để code dễ hơn.
-4. Không tự thêm Staff/Dev role. Ba role đăng nhập là `Owner/Admin`, `PT`, `Member`; Guest/Trial không phải role đăng nhập.
-5. Không biến PT assignment thành booking theo từng buổi.
-6. Preserve history cho assignment, check-in và AI analysis; không ghi đè sự kiện cũ để thể hiện trạng thái mới.
-7. Nếu task AI, video phải qua structured CV/pose analysis trước LLM theo pipeline `video -> structured CV/pose result -> LLM`; không thiết kế AI như công cụ chẩn đoán y khoa.
-8. Nếu phát hiện SOT thiếu quyết định bắt buộc hoặc có mâu thuẫn, nêu đúng tài liệu và mục còn thiếu/mâu thuẫn. Không tự bịa provider hoặc behavior.
-9. Kiểm tra quyền ở server/service boundary; ẩn thành phần UI không thay thế kiểm tra quyền.
-10. Dùng quy ước và công cụ đã có trong codebase cùng stack tại mục 4. Không tự thêm framework, provider, thư viện hoặc nền tảng ngoài stack đã chốt.
-11. Thay đổi sản phẩm, kiến trúc hoặc stack phải cập nhật đúng SOT sở hữu nội dung và ghi `docs/CHANGELOG.md`.
+## 5. Quy tắc implementation
 
-## 6. Quy ước code
+1. Xác định requirement ID và acceptance trước khi sửa.
+2. Không thêm feature ngoài `docs/02-product-requirements-sot.md`.
+3. Business rule nằm ở service/domain; controller nhận request; component không tự quyết định nghiệp vụ.
+4. Kiểm tra quyền ở server/service boundary; UI ẩn control không thay thế RBAC.
+5. Preserve history cho conversion, package, assignment, booking cancellation, check-in, attendance và AI session/result; không ghi đè sự kiện cũ.
+6. Mutation consume/quota/check-in phải có idempotency/concurrency guard phù hợp; booking phải chống overlap cho cả PT và Member.
+7. Không cho PT/Member mutation booking hoặc PT assignment.
+8. Không tạo service auto-match PT attendance với Member check-in.
+9. Không upload raw AI video lên NestJS, FastAPI, Supabase Storage, OpenAI hoặc MongoDB; không đưa toàn video/base64 vào JS state.
+10. AI chỉ hiển thị issue đã được algorithm implement/test; pose failure phải là trạng thái rõ ràng, không bịa feedback.
+11. Không đưa secret, password, token, CCCD, raw video hoặc PII không cần thiết vào log, fixture, test output hay tài liệu.
+12. Schema/data contract phải có migration hoặc cập nhật tương ứng theo công cụ hiện có.
+13. Xem file lân cận trước khi sửa; giữ cách tổ chức, naming, format hiện tại; tránh refactor/format diện rộng.
 
-- Trước khi sửa, xem các file lân cận để theo đúng cách tổ chức, đặt tên và định dạng đang dùng.
-- Ưu tiên thay đổi nhỏ, nhất quán với cấu trúc hiện có; không định dạng lại diện rộng ngoài phạm vi task.
-- Không thêm dependency nếu có thể đáp ứng yêu cầu bằng công cụ hoặc thư viện hiện có.
-- Không đưa secret, thông tin cá nhân hoặc dữ liệu phân tích cơ thể nhạy cảm vào log, fixture hay tài liệu không cần thiết.
-- Thay đổi schema/data contract phải có migration tương ứng theo công cụ hiện có.
-- Thêm hoặc cập nhật kiểm thử cho logic nghiệp vụ, quyền truy cập và invariant bị ảnh hưởng theo chiến lược test của dự án.
+## 6. UI/UX
 
-Quy tắc chi tiết như dấu nháy, dấu chấm phẩy, cấu trúc thư mục và độ rộng dòng phải theo cấu hình và mã nguồn hiện có. Nếu chưa có cấu hình tương ứng, chọn cách nhất quán với phần gần nhất trong codebase; không tự áp đặt quy ước diện rộng.
+Tuân thủ `docs/05-design-system-sot.md`: UI đơn giản, dễ đọc/thao tác, responsive mobile/tablet/web, màu tươi sáng nhưng không neon, ít animation, spacing 4/8px, touch target khoảng 44–48px, trạng thái không chỉ dựa vào màu.
 
-## 7. Kiểm tra và hoàn tất task
+Mọi flow phù hợp phải có loading, empty, error, success và permission state; error không lộ stack trace; nút mutation disable khi pending để chống double-submit.
 
-Trước khi kết thúc:
+- Owner: Dashboard, Khách hàng, Gói tập, Lịch tập, Check-in, PT, Sales/Cảnh báo, Logs/Báo cáo, Cài đặt. Dashboard ưu tiên KPI/queue, không biến thành nơi làm mọi CRUD.
+- PT: Hôm nay, Lịch, Member, Tài khoản; chỉ xem lịch của mình/member được assign và thực hiện PT check-in; không có create/edit/delete booking, sales hoặc doanh thu.
+- Member: Trang chủ, Lịch, Check-in, AI, Tài khoản; package/booking read-only, QR rõ ràng, AI theo flow chọn bài → video local → phân tích → kết quả.
 
-1. Sau khi hoàn tất implementation, bắt buộc chạy test phù hợp với task trước khi trả kết quả cho Owner.
-2. Chạy các lệnh kiểm tra khác phù hợp đã được cấu hình trong repository, như build, lint hoặc generate migration khi task có ảnh hưởng.
-3. Không tuyên bố task hoàn tất, test hoặc build thành công nếu chưa chạy.
-4. Nếu test không thể chạy, nêu rõ lệnh, nguyên nhân và rủi ro còn lại; không trình bày task như đã được xác minh hoàn toàn.
-5. Nêu rõ lệnh đã chạy và kết quả.
-6. Tóm tắt file đã sửa, test đã chạy và kết quả, requirement ID đã cover, cùng rủi ro còn lại nếu có.
-7. Cập nhật SOT/CHANGELOG khi có thay đổi ở cấp quyết định sản phẩm hoặc kiến trúc.
+## 7. Ảnh tham chiếu UI hiện hành
 
-## 8. Thứ tự ưu tiên khi có mâu thuẫn
+Không dùng thư mục `screenshots/` hoặc tên ảnh cũ. Ảnh canonical hiện nằm trong `images/`:
 
-Áp dụng thứ tự ưu tiên đã quy định trong `docs/README.md`. Tóm tắt:
+| Surface | Ảnh | Phạm vi tham chiếu |
+|---|---|---|
+| Owner | `images/owner/dashboard-owner.JPG` | Dashboard Owner |
+| Owner | `images/owner/guest-member-owner.JPG` | Khách/Member, customer management |
+| Owner | `images/owner/schedule-owner.JPG` | Lịch/booking Owner |
+| Owner | `images/owner/check-in-owner.JPG` | Check-in tại quầy |
+| PT | `images/pt/PT.JPG` | Trang chính PT |
+| PT | `images/pt/schedule-pt.JPG` | Lịch PT |
+| PT | `images/pt/member-pt.JPG` | Member được assign |
+| PT | `images/pt/check-in-pt.JPG` | PT attendance check-in |
+| Member | `images/member/home-member.JPG` | Home Member |
+| Member | `images/member/schedule-member.JPG` | Lịch Member |
+| Member | `images/member/check-in-member.JPG` | QR/check-in Member |
+| Member | `images/member/AI-member.JPG` | AI form analysis Member |
 
-1. `01-product-brief-sot.md` quyết định định hướng và ranh giới sản phẩm.
-2. `02-product-requirements-sot.md` quyết định requirement, hành vi và acceptance.
-3. `03-technical-architecture-sot.md` quyết định kiến trúc để đáp ứng requirement.
-4. `04-tech-stack-sot.md` quyết định framework, thư viện và provider được dùng.
-5. Các SOT chi tiết chỉ cụ thể hóa nội dung trong phạm vi được giao.
-6. `AGENTS.md` hướng dẫn cách làm việc, không thay thế hoặc ghi đè SOT.
+Khi task làm giao diện, đối chiếu đúng surface/ảnh liên quan và giữ boundary quyền; không để ảnh tham chiếu tạo ra feature hoặc role ngoài SOT.
 
-Nếu phát hiện mâu thuẫn, ưu tiên SOT có thẩm quyền theo `docs/README.md`, ghi nhận mâu thuẫn và cập nhật tài liệu liên quan khi được phép.
-## 12. Quy chuẩn UI/UX theo ảnh tham chiếu
+## 8. Kiểm tra và hoàn tất
 
-Khi task làm giao diện, bắt buộc đọc `docs/13-ui-ux-sot.md` và đối chiếu ảnh tương ứng trong `screenshots/`:
+Sau implementation, bắt buộc chạy test phù hợp. Chạy thêm build/lint/typecheck/generate migration khi repository hoặc task yêu cầu. Các release blocker cần đặc biệt kiểm tra:
 
-- `dashboard-owner.jpg`: Owner/Admin dashboard;
-- `Quản-lí-member.JPG`: quản lý Member/PT theo phạm vi quyền;
-- `lịch-tập-checkin.JPG`: lịch và check-in, phải biến thể theo từng role;
-- `giao-diện-AI.JPG`: AI body analysis của Member;
-- `Giao-diện-member.JPG`, `Giao-diện-PT.JPG`: dashboard Member/PT;
-- `setting.JPG`: setting mở từ ảnh profile.
+- Member/PT mutation booking;
+- duplicate Trial phone hoặc double consume/quota âm;
+- booking overlap dưới concurrency;
+- raw AI video xuất hiện trong network payload;
+- Owner/PT xem AI result Member;
+- PII/secret xuất hiện trong standard logs;
+- RBAC chỉ nằm ở frontend.
 
-UI phải có loading, empty, error, success và permission state phù hợp; màu không phải nguồn thông tin duy nhất. Owner AI là chatbot trợ lý vận hành dạng đọc/tóm tắt, không để UI tự tính lại dữ liệu, tự thay đổi nghiệp vụ hoặc làm AI chẩn đoán. Kiểm tra quyền cuối cùng luôn nằm ở server/service boundary.
+Nếu không chạy được test, nêu chính xác lệnh, nguyên nhân và rủi ro còn lại; không trình bày task như đã verify hoàn toàn.
+
+## 9. Cập nhật SOT
+
+- Thay đổi product/requirement/business: cập nhật SOT business/`docs/02-product-requirements-sot.md` và `docs/CHANGELOG.md`.
+- Thay đổi architecture: cập nhật `docs/03-technical-architecture-sot.md` và `docs/CHANGELOG.md`.
+- Thay đổi stack/provider: cập nhật `docs/04-tech-stack-sot.md` và `docs/CHANGELOG.md`.
+- Thay đổi UI/UX: cập nhật `docs/05-design-system-sot.md`; nếu đổi tên/thư mục ảnh, cập nhật `docs/README.md`, `AGENTS.md` và `docs/CHANGELOG.md`.
+- `AGENTS.md` chỉ hướng dẫn cách làm việc, không thay thế SOT canonical.

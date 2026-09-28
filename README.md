@@ -1,89 +1,24 @@
 # FITNESS-MANAGE
 
-FITNESS-MANAGE là ứng dụng quản lý vận hành cho phòng gym cá nhân có mô hình PT 1-1. Ứng dụng tập trung vào quản lý Member, PT assignment, lịch tập, check-in/đối soát, khách tập thử và phân tích cơ thể hỗ trợ fitness bằng AI.
+Ứng dụng Expo mobile/web, NestJS + Prisma MongoDB và FastAPI theo [SOT](docs/README.md). Ba role đăng nhập: OWNER, PT, MEMBER. Tiến độ và giới hạn kiểm chứng nằm trong [file 19](docs/19-Agent-task-splitting-sot.md).
 
-> Trạng thái: MVP đang phát triển.
+## Chức năng
 
-## Tính năng chính
+Owner quản lý Trial 3 buổi, conversion giữ lịch sử, gói thời gian/số buổi, hồ sơ/PT assignment, booking, check-in, External PT Pass và cảnh báo bán hàng. PT xem lịch/member được assign và tự check-in độc lập. Member xem gói/lịch, QR, xác nhận PT ngoài và AI kiểm tra độ sâu squat.
 
-- Quản lý ba role đăng nhập: `Owner/Admin`, `PT`, `Member`.
-- Quản lý Member, PT và lịch sử assignment Member–PT.
-- Quản lý lịch tập, check-in và đối soát attendance.
-- Ghi nhận khách tập thử và hỗ trợ chuyển đổi thành Member.
-- Phân tích video cơ thể theo pipeline CV/Pose trước khi tạo gợi ý tập luyện.
+Booking chỉ Owner mutation. Quota/check-in/overlap được bảo vệ bằng transaction và idempotency server. Video AI giữ trên thiết bị; SQLite lưu phiên, File System/OPFS lưu video, MediaPipe xử lý local. FastAPI chỉ nhận JSON chỉ số tối thiểu. Không có workout plan hoặc endpoint cho Owner/PT xem AI.
 
-## Kiến trúc tổng quan
+## Cài đặt
 
-```text
-React Native + Expo + React Native Web
-              |
-              v
-       NestJS REST API
-              |
-        Prisma + PostgreSQL
-              |
-     Supabase Storage (private media)
+Cần Node.js 22.16 trở lên, pnpm theo package.json, Python và MongoDB replica set/Atlas (không dùng standalone).
 
-NestJS REST API --> FastAPI AI Service
-                    OpenCV
-                    MediaPipe Pose
-                    OpenAI API
-```
-
-Các thành phần chính:
-
-| Thành phần | Thư mục | Công nghệ | Cổng mặc định |
-|---|---|---|---:|
-| Client | [`apps/app`](apps/app) | React Native, Expo, TypeScript, Expo Router | Expo mặc định |
-| Core API | [`apps/api`](apps/api) | NestJS, REST, Prisma | `3000` |
-| AI service | [`services/ai`](services/ai) | Python, FastAPI, OpenCV, MediaPipe Pose | `8000` |
-| Database/storage | Supabase | PostgreSQL và Supabase Storage | Theo cấu hình |
-
-NestJS là authority cho authentication, RBAC, nghiệp vụ và quyền truy cập media. Client không truy cập database trực tiếp.
-
-## Yêu cầu môi trường
-
-- Node.js.
-- pnpm `10.34.4` hoặc phiên bản tương thích với `packageManager` trong [`package.json`](package.json).
-- Python và pip để chạy AI service.
-- PostgreSQL local hoặc một project Supabase.
-- OpenAI API key nếu chạy chức năng sinh kế hoạch/gợi ý AI.
-
-## Cài đặt lần đầu
-
-### 1. Cài dependency JavaScript
-
-```bash
+```sh
 pnpm install
+pnpm --filter @fitness/api prisma:generate
+pnpm prepare:pose
 ```
 
-### 2. Tạo file môi trường
-
-PowerShell:
-
-```powershell
-Copy-Item apps/api/.env.example apps/api/.env
-Copy-Item apps/app/.env.example apps/app/.env
-Copy-Item services/ai/.env.example services/ai/.env
-```
-
-Linux/macOS:
-
-```bash
-cp apps/api/.env.example apps/api/.env
-cp apps/app/.env.example apps/app/.env
-cp services/ai/.env.example services/ai/.env
-```
-
-Điền các giá trị bắt buộc trong ba file `.env`, tối thiểu gồm:
-
-- API: `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, thông tin Supabase và `AI_SERVICE_TOKEN`.
-- App: `EXPO_PUBLIC_API_URL`.
-- AI: `AI_SERVICE_TOKEN`, `OPENAI_API_KEY`, `OPENAI_MODEL` và các threshold chất lượng đã được Owner quyết định.
-
-Không commit file `.env`, secret hoặc raw body video vào repository.
-
-### 3. Tạo Python virtual environment cho AI
+prepare:pose tải model MediaPipe có kiểm tra SHA-256 và chép WASM/ESM từ dependency vào assets web/native. Không gửi dữ liệu người dùng. Chạy prisma:generate khi API/test đã dừng để tránh khóa DLL trên Windows.
 
 Windows:
 
@@ -92,127 +27,52 @@ py -m venv services/ai/.venv
 services/ai/.venv/Scripts/python.exe -m pip install -r services/ai/requirements.txt
 ```
 
-Linux/macOS:
+Linux/macOS dùng python3 và services/ai/.venv/bin/python.
 
-```bash
-python3 -m venv services/ai/.venv
-services/ai/.venv/bin/python -m pip install -r services/ai/requirements.txt
-```
+Cấu hình theo apps/api/.env.example, apps/app/.env.example, services/ai/.env.example; không ghi đè .env cá nhân. Backend cần MongoDB URI và ba JWT secret khác nhau, mỗi secret ít nhất 32 ký tự. AI_SERVICE_TOKEN ở NestJS/FastAPI phải giống nhau. EXPO_PUBLIC_API_URL của client trỏ API với prefix /api; điện thoại dùng địa chỉ LAN.
 
-### 4. Khởi tạo database
+Sau khi kiểm tra DATABASE_URL đúng database phát triển:
 
-```bash
-pnpm --filter @fitness/api prisma:generate
-pnpm --filter @fitness/api prisma:migrate
-```
-
-Tạo dữ liệu local/test mẫu nếu cần:
-
-```bash
+```sh
+pnpm --filter @fitness/api db:push
+pnpm --filter @fitness/api db:indexes
 pnpm --filter @fitness/api prisma:seed
-```
-
-## Chạy dự án
-
-### Chạy toàn bộ stack
-
-Sau khi cài JavaScript dependencies và Python dependencies:
-
-```bash
 pnpm dev
 ```
 
-Lệnh này khởi động đồng thời API, AI service và Expo app. Nhấn `Ctrl+C` để dừng toàn bộ service.
+Seed chỉ tạo Owner từ SEED_OWNER_PHONE/PASSWORD/NAME, không có mật khẩu mặc định và không ghi đè account cũ. MongoDB dùng db push và indexes riêng, không dùng SQL migration. Chưa có công cụ chuyển dữ liệu PostgreSQL cũ. Có thể chạy riêng pnpm dev:api, dev:app, dev:ai; AI runner đọc .env của service.
 
-### Chạy từng service
+## Web và native
 
-```bash
-pnpm dev:api
-pnpm dev:ai
-pnpm dev:app
+```sh
+pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web
 ```
 
-`pnpm dev:ai` dùng đường dẫn virtual environment kiểu Windows theo script hiện tại. Trên Linux/macOS, dùng lệnh `uvicorn` ở phần bên dưới hoặc chạy `pnpm dev` để script tự chọn đường dẫn theo platform.
+Host web cần HTTPS (localhost được hỗ trợ), SPA fallback, Cross-Origin-Opener-Policy: same-origin và Cross-Origin-Embedder-Policy: require-corp cho SQLite WASM. Phục vụ .wasm với application/wasm và .mjs với JavaScript MIME. MediaPipe assets cùng origin, không dùng CDN runtime.
 
-Nếu muốn chạy Expo trên web:
+Native AI cần development build chứa module fitness-pose, không có trong Expo Go. Sau prepare:pose, dùng Expo prebuild/run Android hoặc iOS. iOS cần macOS/Xcode. Expo push cần project ID và thiết bị cấp quyền.
 
-```bash
-pnpm --filter @fitness/app web
+## Kiểm tra
+
+pnpm check chạy TypeScript lint (unused symbols), build NestJS, typecheck Expo và unit test API/app/FastAPI. Lint hiện không bao gồm ESLint style rules.
+
+Integration cần database test riêng; runner từ chối tên không bắt đầu fitness_test_ và xóa database test khi kết thúc:
+
+```powershell
+$env:TEST_DATABASE_URL='mongodb://127.0.0.1:27027/fitness_test_sot_rebuild?replicaSet=rs0&directConnection=true'
+pnpm --filter @fitness/api test:integration
 ```
 
-AI service có thể chạy trực tiếp:
+Browser smoke cần MongoDB replica set loopback port 27027, Edge và bản web export; tự tạo/xóa database riêng, không dùng account trong .env:
 
-```bash
-uvicorn app.main:app --app-dir services/ai --host 0.0.0.0 --port 8000
+```sh
+pnpm --package=@playwright/test dlx -c "node scripts/browser-smoke.cjs"
 ```
 
-## Tài khoản seed
+Kiểm tra QR độc lập trên Windows:
 
-Sau khi chạy `prisma:seed`, môi trường local có các tài khoản mẫu:
-
-| Role | Email |
-|---|---|
-| Owner/Admin | `owner@example.test` |
-| PT | `pt@example.test` |
-| Member | `member@example.test` |
-
-Mật khẩu mặc định: `ChangeMe123!`. Chỉ sử dụng các tài khoản này trong local/test; không dùng trong môi trường thật.
-
-## Kiểm tra chất lượng
-
-```bash
-pnpm build
-pnpm test
+```powershell
+node scripts/verify-qr.cjs | services/ai/.venv/Scripts/python.exe scripts/verify-qr.py
 ```
 
-- `pnpm build`: build NestJS API và typecheck Expo app.
-- `pnpm test`: chạy test của API và app.
-
-Có thể chạy riêng:
-
-```bash
-pnpm --filter @fitness/api test
-pnpm --filter @fitness/app test
-pnpm --filter @fitness/api build
-pnpm --filter @fitness/app typecheck
-```
-
-## Quy tắc AI và dữ liệu nhạy cảm
-
-Pipeline AI bắt buộc:
-
-```text
-raw video -> OpenCV/MediaPipe Pose -> structured JSON -> OpenAI API -> validated result
-```
-
-- Không gửi raw body video trực tiếp tới OpenAI API.
-- Raw video phải nằm trong private Supabase Storage.
-- Backend kiểm soát quyền truy cập media và kết quả phân tích.
-- AI chỉ hỗ trợ fitness, không phải công cụ chẩn đoán bệnh hoặc chấn thương.
-
-## Cấu trúc repository
-
-```text
-.
-├── apps/
-│   ├── api/                 # NestJS API, Prisma schema/migrations và test
-│   └── app/                 # Expo app cho mobile và web
-├── services/
-│   └── ai/                  # FastAPI AI service và test
-├── docs/                    # Product, requirements, architecture, stack và UI/UX SOT
-├── screenshots/             # Ảnh tham chiếu giao diện
-├── scripts/                 # Script chạy development
-├── package.json             # Workspace scripts
-└── pnpm-workspace.yaml
-```
-
-## Tài liệu dự án
-
-- [Product brief](docs/01-product-brief-sot.md)
-- [Product requirements](docs/02-product-requirements-sot.md)
-- [Technical architecture](docs/03-technical-architecture-sot.md)
-- [Technology stack](docs/04-tech-stack-sot.md)
-- [SOT index và quy tắc ưu tiên](docs/README.md)
-- [AI service README](services/ai/README.md)
-
-Khi thay đổi behavior, architecture hoặc technology decision, phải cập nhật SOT tương ứng và `docs/CHANGELOG.md` theo quy tắc trong [`docs/README.md`](docs/README.md).
+Test tự động không thay thế thử camera, push delivery, pose trên người thật và bản iOS. Lượt rebuild không migration/seed dữ liệu thật.

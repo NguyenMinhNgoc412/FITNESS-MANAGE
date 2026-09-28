@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/adaptive-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#126B5B"
+      "backgroundColor": "#F7F9FC"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,7 +20,7 @@
       "package": "com.fitnessmanage.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#126B5B"
+        "backgroundColor": "#F7F9FC"
       }
     },
     "web": {
@@ -29,13 +29,18 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      ["expo-camera", { "cameraPermission": "Cho phép FITNESS-MANAGE quét QR check-in.", "recordAudioAndroid": false }],
+      "expo-notifications",
       "@react-native-community/datetimepicker",
       [
         "expo-image-picker",
         {
-          "photosPermission": "Cho phép FITNESS-MANAGE truy cập Thư viện ảnh để chọn ảnh đại diện."
+          "photosPermission": "Cho phép chọn video bài tập để phân tích ngay trên thiết bị.",
+          "cameraPermission": "Cho phép quay video bài tập lưu trên thiết bị.",
+          "microphonePermission": false
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true

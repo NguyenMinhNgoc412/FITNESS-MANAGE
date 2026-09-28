@@ -2,10 +2,9 @@ import { spawn } from 'node:child_process';
 
 const isWindows = process.platform === 'win32';
 const pnpm = isWindows ? 'pnpm.cmd' : 'pnpm';
-const python = isWindows ? 'services\\ai\\.venv\\Scripts\\python.exe' : 'services/ai/.venv/bin/python';
 const services = [
   { name: 'API', command: pnpm, args: ['dev:api'] },
-  { name: 'AI', command: python, args: ['-m', 'uvicorn', 'app.main:app', '--app-dir', 'services/ai', '--host', '0.0.0.0', '--port', '8000'] },
+  { name: 'AI', command: process.execPath, args: ['scripts/ai.mjs', 'dev'] },
   { name: 'EXPO', command: pnpm, args: ['dev:app'] },
 ];
 
