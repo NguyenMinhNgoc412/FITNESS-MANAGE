@@ -141,6 +141,25 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     expect((await request('/pt/' + pt.id + '/attendance', member.accessToken)).status).toBe(403);
   });
 
+  it('links Owner internal PT check-in to a booking while PT attendance remains separate', async () => {
+    const member = await createPerson('MEMBER'), pt = await createPerson('PT'), membership = await packageFor(member.id, 2);
+    await request('/members/' + member.id + '/pt-assignment', owner.accessToken, 'POST', { ptId: pt.id, reason: 'Test assignment' });
+    const booking = await request('/bookings', owner.accessToken, 'POST', { memberId: member.id, ptId: pt.id, startAt: '2027-02-01T08:00:00Z', endAt: '2027-02-01T09:00:00Z' });
+    expect(booking.status).toBe(201);
+    const body = { memberId: member.id, membershipId: membership.id, context: 'WITH_INTERNAL_PT', method: 'PHONE' };
+    expect((await request('/checkins/member', owner.accessToken, 'POST', body)).status).toBe(409);
+    expect((await request('/checkins/member', member.accessToken, 'POST', { ...body, bookingId: booking.data.id })).status).toBe(403);
+    expect((await request('/checkins/member', pt.accessToken, 'POST', { ...body, bookingId: booking.data.id })).status).toBe(403);
+    const checkedIn = await request('/checkins/member', owner.accessToken, 'POST', { ...body, bookingId: booking.data.id });
+    expect(checkedIn.status).toBe(201);
+    expect(checkedIn.data.bookingId).toBe(booking.data.id);
+    expect((await prisma.membership.findUniqueOrThrow({ where: { id: membership.id } })).usedSessions).toBe(1);
+    expect((await prisma.ptAttendanceLog.count({ where: { ptId: pt.id } }))).toBe(0);
+    expect((await request('/members/me/checkins', member.accessToken)).data.some((log: { id: string }) => log.id === checkedIn.data.id)).toBe(true);
+    expect((await request('/pt/me/checkin', pt.accessToken, 'POST', {})).status).toBe(201);
+    expect((await prisma.ptAttendanceLog.count({ where: { ptId: pt.id } }))).toBe(1);
+  });
+
   it('external confirmation consumes package/pass once; fallback is audited', async () => {
     const member = await createPerson('MEMBER'), membership = await packageFor(member.id);
     const pass = await request('/members/' + member.id + '/external-pt-passes', owner.accessToken, 'POST', { totalUses: 2 });

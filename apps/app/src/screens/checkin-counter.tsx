@@ -1,12 +1,17 @@
-import { useState } from 'react';
-import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { CameraView, scanFromURLAsync, useCameraPermissions } from 'expo-camera';
+import { ActivityIndicator, Platform, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { api } from '../api';
 import { Booking, Customer, ExternalRequest, Membership, Pass } from '../models';
 import { Badge, Button, Card, Choices, Form, Label, LoadState, Page, dateTime, errorMessage, mutation, styles, useLoad } from '../ui';
 import { colors as c } from '../design-system/theme';
 export default function Counter() {
   const [phone, setPhone] = useState(''), [phoneInput, setPhoneInput] = useState(''), [member, setMember] = useState<{ id: string; name: string } | null>(null), [token, setToken] = useState(''), [scanning, setScanning] = useState(false), [scanError, setScanError] = useState(''), [showPending, setShowPending] = useState(false);
+  const [resolving, setResolving] = useState(false), [checkingFrame, setCheckingFrame] = useState(false), [cameraReady, setCameraReady] = useState(false), [scanSuccess, setScanSuccess] = useState('');
+  const scanLocked = useRef(false);
+  const camera = useRef<CameraView>(null);
+  const { width } = useWindowDimensions();
+  const scanFrame = Math.min(260, width - 96);
   const [permission, requestPermission] = useCameraPermissions();
   const customer = useLoad<Customer[]>(phone ? '/customers/search?phone=' + encodeURIComponent(phone) : null);
   const [context, setContext] = useState('SELF_TRAINING');
@@ -14,15 +19,44 @@ export default function Counter() {
   const packages = useLoad<Membership[]>(current ? '/members/' + current.id + '/memberships' : null), passes = useLoad<Pass[]>(current ? '/members/' + current.id + '/external-pt-passes' : null);
   const bookings = useLoad<Booking[]>(current ? '/bookings' : null), requests = useLoad<ExternalRequest[]>('/external-pt/requests');
   const resolve = async (data: string) => {
-    setScanning(false); setScanError('');
-    try { const response = await api.post('/checkins/resolve-qr', { token: data }); setToken(data); setPhone(''); setMember({ id: response.data.member.id, name: response.data.member.profile.fullName }); }
-    catch (e) { setScanError(errorMessage(e)); }
+    if (scanLocked.current) return;
+    scanLocked.current = true; setResolving(true); setScanError(''); setScanSuccess('');
+    try {
+      const response = await api.post('/checkins/resolve-qr', { token: data });
+      const name = response.data.member.profile.fullName;
+      setToken(data); setPhone(''); setMember({ id: response.data.member.id, name });
+      setScanSuccess('Đã quét và xác thực QR của ' + name + '. Chọn hình thức tập rồi xác nhận vào tập bên dưới.');
+      setScanning(false);
+    } catch (e) { setScanError(errorMessage(e) + ' Hãy làm mới QR trên máy Member rồi mở camera để quét lại.'); setScanning(false); }
+    finally { scanLocked.current = false; setResolving(false); }
+  };
+  const checkFrame = async () => {
+    if (scanLocked.current || checkingFrame) return;
+    setCheckingFrame(true); setScanError('');
+    try {
+      const photo = await camera.current?.takePictureAsync();
+      if (!photo?.uri) throw new Error('Camera chưa có hình để kiểm tra.');
+      const results = await scanFromURLAsync(photo.uri, ['qr']);
+      if (results[0]?.data) await resolve(results[0].data);
+      else setScanError('Camera đã chụp được hình nhưng chưa đọc được QR. Đưa điện thoại cách webcam khoảng 30–50 cm, giữ mã lớn và nét trong khung, tránh phản chiếu ánh sáng rồi thử lại.');
+    } catch { setScanError('Không kiểm tra được bộ giải mã QR trên trình duyệt này. Hãy thử Chrome/Edge mới nhất hoặc dùng SĐT để tra cứu.'); }
+    finally { setCheckingFrame(false); }
   };
   return <Page title="Quầy check-in" subtitle="Quét QR của Member hoặc tra cứu SĐT tại quầy.">
-    <Card title="Quét QR"><Button secondary label="Mở máy quét" onPress={() => { void (async () => { const p = permission?.granted ? permission : await requestPermission(); if (p.granted) setScanning(true); else setScanError('Chưa có quyền camera. Bạn có thể dùng SĐT để tra cứu.'); })(); }} />
-      {scanning && <><CameraView style={{ height: 260 }} barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={({ data }) => { void resolve(data); }} /><Button secondary label="Đóng camera" onPress={() => setScanning(false)} /></>}
-      {scanError ? <Text style={styles.error}>{scanError}</Text> : null}
-    </Card><Card title="Tra cứu bằng SĐT"><Label muted>Dùng khi Member không mở được QR.</Label><TextInput accessibilityLabel="Số điện thoại" keyboardType="phone-pad" placeholder="Nhập số điện thoại" placeholderTextColor={c.textMuted} style={styles.input} value={phoneInput} onChangeText={setPhoneInput} /><Button label="Tra cứu" onPress={() => { setMember(null); setToken(''); setPhone(phoneInput.trim()); }} /></Card><LoadState state={customer} empty={!!phone && !customer.data?.length} emptyText="Không tìm thấy khách hàng với số điện thoại này." />
+    <Card title="Quét QR"><Button secondary label={scanning ? 'Camera đang mở' : 'Mở máy quét'} disabled={scanning} onPress={() => { void (async () => { setScanError(''); setScanSuccess(''); setCameraReady(false); const p = permission?.granted ? permission : await requestPermission(); if (p.granted) setScanning(true); else setScanError('Chưa có quyền camera. Bạn có thể dùng SĐT để tra cứu.'); })(); }} />
+      {scanning ? <>
+        <View style={{ height: 360, minHeight: 320, overflow: 'hidden', borderRadius: 12, backgroundColor: '#17212F' }}>
+          <CameraView ref={camera} style={{ flex: 1 }} facing="back" barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onCameraReady={() => setCameraReady(true)} onMountError={() => { setScanning(false); setScanError('Không mở được camera. Kiểm tra quyền camera trong trình duyệt hoặc dùng SĐT để tra cứu.'); }} onBarcodeScanned={resolving ? undefined : ({ data }) => { void resolve(data); }} />
+          <View style={{ pointerEvents: 'none', position: 'absolute', alignSelf: 'center', top: 38, width: scanFrame, height: scanFrame, borderWidth: 3, borderColor: c.onPrimary, borderRadius: 16 }} />
+          <View style={{ pointerEvents: 'none', position: 'absolute', bottom: 12, alignSelf: 'center', backgroundColor: c.text, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}><Text style={{ color: c.onPrimary, textAlign: 'center' }}>Đưa toàn bộ mã QR vào giữa khung</Text></View>
+        </View>
+        {resolving ? <View style={styles.row}><ActivityIndicator color={c.primary} /><Label>Đã nhận QR, đang xác thực...</Label></View> : <Label muted>{cameraReady ? 'Camera sẵn sàng. ' : 'Đang mở camera. '}Giữ điện thoại Member cách webcam khoảng 30–50 cm, tăng sáng màn hình nếu khó quét. Mã QR tự làm mới trước khi hết hạn.</Label>}
+        {Platform.OS === 'web' ? <Button secondary label="Kiểm tra QR trong khung hình" pending={checkingFrame} disabled={!cameraReady || resolving} onPress={() => void checkFrame()} /> : null}
+        <Button secondary label="Đóng camera" onPress={() => setScanning(false)} />
+      </> : null}
+      {scanError ? <Text accessibilityLiveRegion="polite" style={styles.error}>{scanError}</Text> : null}
+      {scanSuccess ? <Text accessibilityLiveRegion="polite" style={styles.success}>{scanSuccess}</Text> : null}
+    </Card><Card title="Tra cứu bằng SĐT"><Label muted>Dùng khi Member không mở được QR.</Label><TextInput accessibilityLabel="Số điện thoại" keyboardType="phone-pad" placeholder="Nhập số điện thoại" placeholderTextColor={c.textMuted} style={styles.input} value={phoneInput} onChangeText={setPhoneInput} /><Button label="Tra cứu" onPress={() => { setMember(null); setToken(''); setScanSuccess(''); setPhone(phoneInput.trim()); }} /></Card><LoadState state={customer} empty={!!phone && !customer.data?.length} emptyText="Không tìm thấy khách hàng với số điện thoại này." />
     {customer.data?.[0]?.status === 'TRIAL' && <Card title={customer.data[0].fullName}><Badge value="TRIAL" /><Form fields={[]} label="Check-in Trial" submit={(_, k) => mutation('/customers/' + customer.data![0].id + '/trial-checkin', {}, k)} onSuccess={() => void customer.reload()} /></Card>}
     {current && <Card title={'Xác nhận cho ' + current.name}><View style={[styles.row, { justifyContent: 'space-between' }]}><Badge value={token ? 'QR' : 'PHONE'} /><Label muted>{token ? 'Đã xác thực bằng QR' : 'Đã tra cứu bằng SĐT'}</Label></View><LoadState state={packages} /><Label>Hình thức tập</Label><Choices value={context} onChange={setContext} options={[{ value: 'SELF_TRAINING', label: 'Tự tập' }, { value: 'WITH_INTERNAL_PT', label: 'PT nội bộ' }, { value: 'WITH_EXTERNAL_PT', label: 'PT ngoài' }]} />
       {context !== 'WITH_EXTERNAL_PT' ? <Form key={current.id + context + token} fields={[{ name: 'membershipId', label: 'Gói đang dùng', options: (packages.data ?? []).filter(p => p.effectiveStatus === 'ACTIVE').map(p => ({ value: p.id, label: p.name + (p.remainingSessions != null ? ' · ' + p.remainingSessions + ' lượt' : '') })) }, ...(context === 'WITH_INTERNAL_PT' ? [{ name: 'bookingId', label: 'Booking', options: (bookings.data ?? []).filter(b => b.memberId === current.id && b.status !== 'CANCELLED').map(b => ({ value: b.id, label: dateTime(b.startAt) })) }] : [])]} label="Xác nhận vào tập" submit={(v, k) => mutation('/checkins/member', { ...v, memberId: current.id, context, method: token ? 'QR' : 'PHONE', ...(token ? { qrToken: token } : {}) }, k)} onSuccess={() => void packages.reload()} /> : <>

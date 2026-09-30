@@ -49,3 +49,14 @@ Mọi thay đổi quyết định sản phẩm/nghiệp vụ/architecture/stack/
 - Chi tiết implementation trong SOT 04/15/16/17/18; trạng thái verification và giới hạn trong 19/20. Không chuyển dữ liệu thật hoặc sửa .env cá nhân.
 - Chuẩn hóa design pattern theo SOT 05: Owner mobile drawer, KPI hierarchy, Customer CRM master/detail, record picker có tìm kiếm, check-in progressive disclosure, empty state theo ngữ cảnh và AI step flow có xác nhận xóa.
 - Hoàn thiện mobile/web CRM: token-driven components, semantic badges, web focus/hover, drawer backdrop, bottom tabs một hàng, customer mobile detail và đủ section CRM, booking nhóm theo ngày.
+
+## [UI navigation] — 2026-09-29
+
+- Thanh điều hướng dưới của PT/Member hiển thị icon và nhãn cho mục đang mở, chỉ icon cho mục còn lại; giữ tên đầy đủ cho trợ năng và vùng chạm 48px.
+
+- Hoàn thiện icon mobile dễ nhận biết; form sửa booking điền sẵn lịch hiện tại; CRM Owner đọc nhật ký audit theo hồ sơ qua API Owner-only, không trả snapshot nhạy cảm.
+
+## [Membership samples] — 2026-09-29
+
+- Bổ sung 6 gói hội viên mẫu 15/30/45 buổi và 3/6/12 tháng với giá VNĐ gợi ý tham khảo thị trường; Owner có thể sửa giá trước khi cấp gói.
+- Membership lưu `priceVnd` tùy chọn để giữ lịch sử giá, không thêm payment status/gateway; bản ghi cũ giữ nguyên. Cập nhật Prisma schema và cần chạy `prisma db push` cho database đích khi triển khai.

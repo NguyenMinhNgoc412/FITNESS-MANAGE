@@ -32,6 +32,8 @@ export class OwnerController {
   }
   @Get('customers/:id')
   customer(@CurrentUser() a: Actor, @Param('id') value: string) { return this.customers.detail(a, parse(id, value)); }
+  @Get('customers/:id/history')
+  customerHistory(@CurrentUser() a: Actor, @Param('id') value: string, @Query('page') n?: string) { return this.customers.history(a, parse(id, value), n); }
   @Post('customers/:id/trial-checkin')
   trialCheckin(@CurrentUser() a: Actor, @Param('id') value: string, @Headers('idempotency-key') k?: string) { return this.customers.checkin(a, parse(id, value), k); }
   @Post('customers/:id/convert-to-member')

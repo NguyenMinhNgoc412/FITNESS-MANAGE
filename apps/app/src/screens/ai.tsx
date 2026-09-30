@@ -54,7 +54,7 @@ export default function Ai() {
     {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}{stage ? <Card title="3. Đang phân tích"><Label>{stage}</Label><Button secondary label="Hủy phân tích" onPress={() => controller.current?.abort()} /></Card> : null}
     {!sessions.length && <Label muted>Chưa có phiên phân tích. Chọn hoặc quay video để bắt đầu.</Label>}
     {sessions.map(session => <Card key={session.id} title={'Squat · ' + dateTime(session.created_at)}><Label muted>{session.status === 'COMPLETED' ? 'Đã phân tích' : session.status === 'FAILED' ? 'Phân tích chưa hoàn tất' : 'Sẵn sàng phân tích'}</Label>
-      {session.analysis_json && <Result result={JSON.parse(session.analysis_json)} />}
+      {!!session.analysis_json && <Result result={JSON.parse(session.analysis_json)} />}
       <Button label="Phân tích trên thiết bị" disabled={busy} onPress={() => void analyze(session)} />
       <Button danger label="Xóa phiên và video local" disabled={busy} onPress={() => void remove(session)} />
     </Card>)}

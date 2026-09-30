@@ -13,6 +13,7 @@ export const membershipInput = z.object({
   mode: z.enum(['TIME_BASED', 'SESSION_BASED']), name: text,
   startAt: z.string().datetime(), endAt: z.string().datetime().optional(),
   totalSessions: z.number().int().positive().max(10000).optional(),
+  priceVnd: z.number().int().positive().max(1000000000).optional(),
 }).strict().superRefine((value, ctx) => {
   if (value.mode === 'TIME_BASED' && (!value.endAt || Date.parse(value.endAt) <= Date.parse(value.startAt) || value.totalSessions !== undefined))
     ctx.addIssue({ code: 'custom', message: 'Time package requires endAt after startAt and no quota.' });

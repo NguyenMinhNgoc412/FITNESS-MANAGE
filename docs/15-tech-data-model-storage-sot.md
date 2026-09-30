@@ -77,6 +77,7 @@ Trial tồn tại bằng `customers` mà chưa cần `users`. Khi conversion, t�
 - `end_at` nullable
 - `total_sessions` nullable
 - `used_sessions` nullable
+- `price_vnd` nullable: giá gói ghi nhận tại thời điểm cấp/gia hạn; không biểu thị trạng thái thanh toán
 - `status`
 - timestamps
 

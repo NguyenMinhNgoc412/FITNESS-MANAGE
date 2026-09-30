@@ -103,3 +103,20 @@ Nếu không có package hợp lệ:
 4. Expired package không xóa Member.
 5. Owner thấy renewal alert đúng ngưỡng.
 6. Member chỉ xem, không tự gia hạn/mutation package.
+
+## 8. Gói hội viên mẫu và giá tham khảo — 2026-09-29
+
+| Gói | Mode | Giá gợi ý |
+|---|---|---:|
+| 15 buổi | SESSION_BASED | 1.200.000 VNĐ |
+| 30 buổi | SESSION_BASED | 2.100.000 VNĐ |
+| 45 buổi | SESSION_BASED | 2.700.000 VNĐ |
+| 3 tháng | TIME_BASED | 1.800.000 VNĐ |
+| 6 tháng | TIME_BASED | 3.000.000 VNĐ |
+| 12 tháng | TIME_BASED | 5.400.000 VNĐ |
+
+Đây là mẫu cho **quyền vào tập gym**, không phải gói PT 1:1. Giá là đề xuất để Owner sửa khi cấp/gia hạn/chuyển Trial, không phải bảng giá bắt buộc và không ghi nhận thanh toán. Giá đã chọn được lưu trên từng membership để giữ lịch sử; bản ghi cũ có thể không có giá. Khi Owner chọn mẫu theo tháng, form tính sẵn ngày kết thúc sau số tháng lịch tương ứng; ngày cuối tháng được chặn ở ngày cuối của tháng đích. API vẫn kiểm tra `endAt > startAt` và Owner có thể tạo gói tùy chỉnh.
+
+Danh sách mẫu là cấu hình giao diện, không tự tạo membership hoặc quota cho bất kỳ Member nào. MongoDB chỉ lưu gói thực sự được Owner cấp.
+
+Mức gợi ý được suy ra từ bảng giá công khai của [Space Fitness](https://spacefitness.vn/hoi-vien/) (vé ngày 100.000 VNĐ; gói 3 tháng 1,5 triệu VNĐ dành HSSV; gói 6 tháng tiêu chuẩn 2,82 triệu VNĐ). Bảng giá tham khảo không đồng nhất quyền lợi/địa điểm với FITNESS-MANAGE, nên Owner cần quyết định giá thực tế trước khi áp dụng.

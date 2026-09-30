@@ -25,11 +25,11 @@ export function Button({ label, onPress, pending = false, disabled = false, seco
   </Pressable>;
 }
 export function Card({ title, children }: { title?: string; children: ReactNode }) {
-  return <View style={styles.card}>{title && <Text style={styles.heading}>{title}</Text>}{children}</View>;
+  return <View style={styles.card}>{title ? <Text style={styles.heading}>{title}</Text> : null}{children}</View>;
 }
 export function Page({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const { width } = useWindowDimensions();
-  return <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1, backgroundColor: c.background }} contentContainerStyle={[styles.page, width < 600 && { padding: spacing.lg, gap: spacing.lg }]}><Text style={styles.title}>{title}</Text>{subtitle && <Text style={styles.muted}>{subtitle}</Text>}{children}</ScrollView>;
+  return <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1, backgroundColor: c.background }} contentContainerStyle={[styles.page, width < 600 && { padding: spacing.lg, gap: spacing.lg }]}><Text style={styles.title}>{title}</Text>{subtitle ? <Text style={styles.muted}>{subtitle}</Text> : null}{children}</ScrollView>;
 }
 export function Label({ children, muted = false }: { children: ReactNode; muted?: boolean }) { return <Text style={muted ? styles.muted : styles.text}>{children}</Text>; }
 export function Kpi({ label, value, hint }: { label: string; value: string | number; hint?: string }) {

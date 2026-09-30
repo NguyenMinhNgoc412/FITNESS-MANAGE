@@ -34,6 +34,7 @@ Không expose role mutation cho Member/PT.
 - `POST /customers/trials` — Owner
 - `GET /customers/search?phone=` — Owner
 - `GET /customers/:id` — Owner
+- `GET /customers/:id/history?page=` — Owner; nhật ký audit theo customer và các resource liên quan, trả action/reason/time/actorName đã lược bỏ snapshot nhạy cảm, phân trang 30 bản ghi.
 - `POST /customers/:id/trial-checkin` — Owner
 - `POST /customers/:id/convert-to-member` — Owner
 
@@ -42,6 +43,8 @@ Trial check-in phải idempotent.
 ---
 
 ## 4. Membership
+
+Payload tạo/gia hạn và membership trong conversion nhận `priceVnd` là số nguyên VNĐ dương, tùy chọn để đọc/ghi tương thích bản ghi cũ. Giá không phải trạng thái thanh toán.
 
 - `POST /members/:memberId/memberships` — Owner
 - `GET /members/:memberId/memberships` — Owner / same Member limited

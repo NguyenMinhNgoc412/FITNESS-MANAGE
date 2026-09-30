@@ -222,6 +222,24 @@ AI hiện cung cấp một bài được hỗ trợ là Squat; chọn/quay video
 ## Mobile app và Web CRM — 2026-09-24
 
 - Token trong `theme.ts` là nguồn duy nhất cho màu, spacing, radius và typography dùng lại; trạng thái success/warning/danger có badge semantic kèm text.
-- Button web có hover/focus; drawer Owner compact có scrim, đóng bằng backdrop và khai báo modal accessibility. Bottom tabs PT/Member luôn một hàng, chia đều touch target.
+- Button web có hover/focus; drawer Owner compact có scrim, đóng bằng backdrop và khai báo modal accessibility. Bottom tabs PT/Member luôn một hàng, vùng chạm tối thiểu 48px; tab đang mở rộng hơn để chứa nhãn.
 - Trên mobile, chọn customer chuyển sang surface hồ sơ riêng với CTA quay lại; trên web giữ master/detail hai cột. Customer detail gồm Hồ sơ, Gói tập, PT, Booking, Check-in, Trial và Nhật ký.
 - Lịch được nhóm theo ngày trên mọi role để quét nhanh; mutation vẫn chỉ xuất hiện cho Owner.
+
+## Điều hướng dưới — 2026-09-29
+
+- PT/Member: mục đang mở hiển thị icon kèm nhãn; các mục còn lại chỉ hiển thị icon trên cùng một hàng.
+- Mọi mục vẫn có tên đầy đủ cho trợ năng, vùng chạm tối thiểu 48px và trạng thái chọn thể hiện bằng nền cùng nhãn, không chỉ bằng màu.
+- Owner tiếp tục dùng sidebar hoặc menu có nhãn đầy đủ.
+
+## Hoàn thiện mobile và CRM — 2026-09-29
+
+- Icon Member/Tài khoản/Check-in trên thanh dưới dùng hình phân biệt rõ, giữ nhãn khi chọn và tên trợ năng ở mọi trạng thái.
+- Form sửa booking điền sẵn Member, PT và thời gian hiện tại để Owner chỉ sửa phần cần đổi.
+- Hồ sơ CRM hiển thị nhật ký thao tác riêng của khách, có phân trang, thời gian và lý do khi có.
+- CRM dùng hai cột khi viewport từ 1100px để danh sách và chi tiết có đủ chỗ; dưới ngưỡng này mở hồ sơ trên một surface riêng.
+
+## Gói hội viên mẫu — 2026-09-29
+
+- Owner thấy 6 gói mẫu cùng giá gợi ý ở trang Gói tập, và có thể chọn mẫu trong tạo gói, gia hạn, chuyển Trial.
+- Form mẫu chỉ yêu cầu ngày bắt đầu và giá có thể sửa; quota hoặc ngày kết thúc được tính từ mẫu. Thành viên chỉ xem giá đã ghi trên gói của mình nếu có.

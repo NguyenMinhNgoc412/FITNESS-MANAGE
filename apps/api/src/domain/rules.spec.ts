@@ -25,6 +25,12 @@ describe('SOT business boundaries', () => {
   it('rejects ambiguous quota/time packages', () => {
     expect(membershipInput.safeParse({ name: 'Test', mode: 'SESSION_BASED', startAt: now.toISOString(), totalSessions: 5, endAt: now.toISOString() }).success).toBe(false);
   });
+  it('accepts a quoted package price but rejects negative or fractional VND', () => {
+    const input = { name: '15 buổi', mode: 'SESSION_BASED', startAt: now.toISOString(), totalSessions: 15 };
+    expect(membershipInput.safeParse({ ...input, priceVnd: 1200000 }).success).toBe(true);
+    expect(membershipInput.safeParse({ ...input, priceVnd: -1 }).success).toBe(false);
+    expect(membershipInput.safeParse({ ...input, priceVnd: 1200000.5 }).success).toBe(false);
+  });
   it.each([Role.PT, Role.MEMBER])('enforces Owner mutation at service boundary: %s', role => {
     expect(() => requireRole({ sub: 'self', role, sessionId: 'session' }, Role.OWNER)).toThrow();
   });

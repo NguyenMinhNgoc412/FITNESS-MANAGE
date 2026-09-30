@@ -94,6 +94,7 @@ model Membership {
   startAt       DateTime
   endAt         DateTime?
   totalSessions Int?
+  priceVnd      Int?
   usedSessions  Int         @default(0)
   status        String      @default("ACTIVE")
   createdBy     String      @db.ObjectId

@@ -64,6 +64,9 @@ Member xem được trạng thái package, ngày hết hạn hoặc lượt còn
 ### FR-PKG-006
 Hệ thống tạo cảnh báo khi Member sắp hết package theo ngưỡng cấu hình/default đã duyệt.
 
+### FR-PKG-007
+Owner có 6 gói hội viên mẫu: 15/30/45 buổi và 3/6/12 tháng, kèm giá VNĐ tham khảo có thể sửa trước khi kích hoạt, gia hạn hoặc chuyển Trial. Giá ghi trên gói không đồng nghĩa đã thanh toán.
+
 Chi tiết: `08-business-membership-package-sot.md`.
 
 ---
