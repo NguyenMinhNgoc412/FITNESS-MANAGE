@@ -10,7 +10,7 @@ FITNESS-MANAGE là ứng dụng quản lý phòng gym quy mô nhỏ cho **Owner*
 | PT | Xem lịch và Member được phân công; ghi nhận PT check-in độc lập. |
 | Member | Xem gói tập, lịch, mã QR check-in, xác nhận yêu cầu dùng PT ngoài và kiểm tra form squat bằng AI. |
 
-Chỉ Owner được tạo, sửa hoặc hủy booking và thay đổi PT assignment. AI hiện chỉ đánh giá độ sâu squat đã được hỗ trợ; video gốc ở lại thiết bị. Dịch vụ AI chỉ nhận JSON chỉ số tối thiểu, không nhận video và không tạo giáo án tập.
+Chỉ Owner được tạo, sửa hoặc hủy booking và thay đổi PT assignment. AI trên mobile/web nhận diện heuristic Squat/chống đẩy/lunge từ video, không cần chọn bài; đo góc từng lần và tự lấy nhận xét từ JSON chỉ số. Bài chưa rõ/ngoài phạm vi trả UNKNOWN. Ngưỡng là mục tiêu app chưa được kiểm chứng trên video người thật; thân/tay thiếu tiêu chí thì chỉ báo số đo. Video gốc ở lại thiết bị. FastAPI dùng OpenAI với OPENAI_API_KEY/OPENAI_MODEL server-only, giữ phản hồi local khi dịch vụ lỗi; không tạo giáo án hay chẩn đoán. Xem services/ai/README.md để cấu hình.
 
 ## Cấu trúc dự án
 
@@ -29,6 +29,7 @@ Chỉ Owner được tạo, sửa hoặc hủy booking và thay đổi PT assign
 - MongoDB Atlas hoặc MongoDB local chạy **replica set**; MongoDB standalone không hỗ trợ transaction mà API cần.
 - Kết nối mạng khi chạy `pnpm prepare:pose` lần đầu để tải model MediaPipe chính thức.
 - AI native cần development build Android/iOS có module `fitness-pose`; Expo Go không chứa module này. Build iOS cần macOS/Xcode.
+- Báo cáo góc mobile cần module `FitnessPose` bridge v2. Khi nâng cấp từ binary cũ, phải build và cài lại (`pnpm --filter @fitness/app exec expo run:android` hoặc `expo run:ios` trên macOS); tải lại JavaScript không cập nhật module native. Kết quả cũ vẫn xem được, phân tích lại video để có góc mới.
 
 ## Cài đặt từ bản clone mới
 
@@ -113,6 +114,10 @@ pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot
 ```
 
 Web host cần HTTPS (localhost được hỗ trợ), SPA fallback, header `Cross-Origin-Opener-Policy: same-origin` và `Cross-Origin-Embedder-Policy: require-corp` để SQLite WASM hoạt động. Phục vụ `.wasm` với MIME `application/wasm` và `.mjs` với JavaScript MIME. MediaPipe assets phải cùng origin. Native AI cần development build sau khi chạy `pnpm prepare:pose`.
+
+Nếu web dev chọn video nhưng nút bị mờ và không có phiên mới, restart Expo sau khi sửa `metro.config.js`, rồi mở trực tiếp `http://localhost:8081/login` và đăng nhập lại. Metro có entry worker SQLite trong workspace để tránh URL 404 khi pnpm store nằm ngoài repository. Chọn video chỉ lưu local; sau thông báo thành công, bấm **Phân tích trên thiết bị**. Khởi tạo SQLite lỗi/quá 15 giây phải có thông báo, không chờ vô hạn.
+
+Kiểm tra hồi quy UI trên dev server bằng PowerShell: `$env:UI_TEST_URL="http://localhost:8081"` rồi `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`. Runner dùng API mock, identity/video sinh lúc chạy; không dùng tài khoản hoặc video thật.
 
 Integration test cần MongoDB replica set và database test **riêng**; runner chỉ chấp nhận tên bắt đầu bằng `fitness_test_` và xóa database test khi kết thúc:
 

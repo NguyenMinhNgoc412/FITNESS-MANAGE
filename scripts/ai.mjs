@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -12,7 +13,7 @@ const python = fileURLToPath(new URL(
 ));
 const mode = process.argv[2];
 const commands = {
-  dev: ['-m', 'uvicorn', 'app.main:app', '--app-dir', service, '--host', '0.0.0.0', '--port', '8000'],
+  dev: ['-m', 'uvicorn', 'app.main:app', '--app-dir', service, '--host', '0.0.0.0', '--port', '8000', '--reload', '--reload-dir', service + 'app'],
   test: ['-m', 'unittest', 'discover', '-s', 'tests', '-v'],
 };
 
@@ -23,11 +24,19 @@ if (!Object.hasOwn(commands, mode)) {
   console.error('Thiếu services/ai/.venv. Tạo Python virtual environment và cài services/ai/requirements.txt theo README.md.');
   process.exitCode = 1;
 } else {
+  const childEnv = { ...process.env };
+  if (mode === 'dev') {
+    const localEnv = existsSync(service + '.env') ? parseEnv(readFileSync(service + '.env', 'utf8')) : {};
+    const apiEnv = existsSync(root + 'apps/api/.env') ? parseEnv(readFileSync(root + 'apps/api/.env', 'utf8')) : {};
+    // Share the existing gateway credential when AI has no explicit credential; never print secrets.
+    if (!childEnv.AI_SERVICE_TOKEN && !localEnv.AI_SERVICE_TOKEN && apiEnv.AI_SERVICE_TOKEN) childEnv.AI_SERVICE_TOKEN = apiEnv.AI_SERVICE_TOKEN;
+  }
   if (mode === 'dev' && existsSync(service + '.env')) commands.dev.push('--env-file', service + '.env');
   const child = spawn(python, commands[mode], {
     cwd: mode === 'test' ? service : root,
     stdio: 'inherit',
     shell: false,
+    env: childEnv,
   });
   child.on('error', () => {
     console.error('Không thể chạy Python trong services/ai/.venv. Kiểm tra lại virtual environment.');

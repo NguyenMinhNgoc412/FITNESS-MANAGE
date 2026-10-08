@@ -20,7 +20,7 @@ export default function Bookings() {
   const fields: Field[] = [
     { name: 'memberId', label: 'Member', picker: true, options: memberOptions },
     { name: 'ptId', label: 'PT chính', picker: true, options: ptOptions },
-    { name: 'startAt', label: 'Bắt đầu (YYYY-MM-DD HH:mm)' }, { name: 'endAt', label: 'Kết thúc (YYYY-MM-DD HH:mm)' },
+    { name: 'startAt', label: 'Ngày giờ bắt đầu', dateTime: true }, { name: 'endAt', label: 'Ngày giờ kết thúc', dateTime: true },
   ];
   return <Page title="Lịch tập" subtitle={owner ? 'Mỗi lịch là một buổi cụ thể với PT chính. Hệ thống kiểm tra trùng giờ trước khi lưu.' : 'Lịch do chủ phòng tập quản lý. Liên hệ chủ phòng tập khi cần thay đổi.'}>
     {owner && <Card title="Danh sách để chọn"><Label>Trang Member</Label><Pager page={memberPage} setPage={setMemberPage} more={members.data?.length === 30} /><Label>Trang PT</Label><Pager page={ptPage} setPage={setPtPage} more={pts.data?.length === 30} /></Card>}

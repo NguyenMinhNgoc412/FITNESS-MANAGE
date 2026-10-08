@@ -2,6 +2,34 @@
 
 Mọi thay đổi quyết định sản phẩm/nghiệp vụ/architecture/stack/UI quan trọng phải ghi ở đây.
 
+## 2026-10-08 — PT & Member, date gói và hiển thị gói sở hữu
+
+- Theo yêu cầu Owner, đổi nhãn nav PT thành PT & Member; không thay route/role/RBAC.
+- Form package/conversion/gia hạn dùng date-only picker, mẫu tháng vẫn tự tính hạn; booking datetime giữ nguyên. Mở rộng control date/time existing, không thêm dependency.
+- Thêm read-only package summary trong Member detail và hồ sơ customer mặc định; dùng memberUserId/user id và endpoint memberships hiện hành, trạng thái/quota do server trả. Ưu tiên ACTIVE và giữ gói lịch sử. Tab quản lý gói hiển thị các gói đã cấp trước form mới.
+- Cập nhật SOT 05; cover FR-PKG-004/005/007 và FR-UI-001/004. Kiểm tra thực tế tại SOT 20.
+
+## 2026-10-08 — Gọn trang Gói tập và bộ chọn datetime lịch tập
+
+- Theo yêu cầu Owner, bỏ card danh sách “6 gói hội viên mẫu” đầu trang; giữ lựa chọn gói kèm giá và quyền sửa giá trước khi lưu theo FR-PKG-007.
+- Form tạo/sửa booking dùng datetime control web/native, có prefill/confirm/cancel/pending. Giữ local-time → ISO, Owner-only mutation, reason/history và server overlap theo FR-BOOK-001/002/004/005/006.
+- Dùng datetimepicker native đã có trong package/lockfile, không cài thêm dependency; cập nhật SOT 04/05. Verification thực tế ghi tại SOT 20.
+
+## 2026-10-08 — Sửa FastAPI dev trả 422 do code cũ
+
+- Xác minh OpenAPI của tiến trình 8000 chỉ có FormRequest v1 dù source đã hỗ trợ v2; request mới bị từ chối vì service chưa reload.
+- Bật Uvicorn reload giới hạn services/ai/app trong scripts/ai.mjs, không đổi schema/privacy/stack. Restart đúng một phiên dev, giữ token gateway trong môi trường và không log secret.
+- pnpm test:ai pass 12 tests; sau restart OpenAPI có AutoFormRequest, POST v2 với chỉ số pose-failure giả lập tới service thật trả 200. Nhận xét OpenAI live vẫn chưa được xác minh do HTTP 429 ở lần thử trước.
+
+## 2026-10-08 — AI tự nhận diện bài, nhận xét từ số đo trên web/mobile
+
+- Theo yêu cầu Owner, bỏ chọn bài trước; FR-AI-008 bổ sung nhận diện on-device heuristic SQUAT/PUSH_UP/LUNGE với UNKNOWN khi thiếu bằng chứng. Không mặc định biến thể Squat hai tay đưa trước; tay/thân chưa có tiêu chí thì chỉ báo góc.
+- Shared domain web/native tính motion, đếm joint cycles, lưu báo cáo góc từng lần và tự gọi JSON contract v2. Raw video/landmarks/identity không gửi cloud; tối đa mười perRep, server diễn giải sáu bằng chứng ưu tiên lỗi mục tiêu.
+- FastAPI thêm prompt hướng dẫn form tiếng Việt và Responses structured output, giữ OPENAI_MODEL đã cấu hình, store=false. Server giữ số đo/target/verdict cố định; timeout/refusal/429/rewrite sai bằng chứng fallback LOCAL với nguồn hiển thị rõ. Không đổi stack/provider baseline, không tạo giáo án/chẩn đoán.
+- SQLite user_version=2 thêm history local_ai_results, migrate kết quả cũ và append kết quả trong transaction; thất bại/hủy phân tích lại không xóa kết quả trước. Xóa phiên theo Member xóa cả history/video.
+- Dev AI runner kế thừa gateway token từ API env khi chưa cấu hình riêng, không ghi/log secret. Cập nhật SOT 02/03/05/14/15/16/18/20, hướng dẫn README và flow trong AGENTS.md; phiên/binary cũ giữ boundary tương thích.
+- Kiểm thử app/API/AI, web browser và export ba platform ghi tại SOT 20. OpenAI thật với cấu hình hiện có trả HTTP 429; không tuyên bố đã nhận diễn giải live hoặc kiểm chứng nhận diện/góc trên video người thật/native device.
+
 ---
 
 ## [1.0.0] — 2026-09-23
@@ -60,3 +88,29 @@ Mọi thay đổi quyết định sản phẩm/nghiệp vụ/architecture/stack/
 
 - Bổ sung 6 gói hội viên mẫu 15/30/45 buổi và 3/6/12 tháng với giá VNĐ gợi ý tham khảo thị trường; Owner có thể sửa giá trước khi cấp gói.
 - Membership lưu `priceVnd` tùy chọn để giữ lịch sử giá, không thêm payment status/gateway; bản ghi cũ giữ nguyên. Cập nhật Prisma schema và cần chạy `prisma db push` cho database đích khi triển khai.
+
+## [UI regression fixes] — 2026-10-07
+
+- Giữ dữ liệu identity khi đổi mẫu gói conversion; khóa lựa chọn khi form pending.
+- Sửa stepper AI theo phiên hiện tại và chống thao tác xóa lặp/cạnh tranh với import, phân tích.
+- Thêm dấu chọn record picker, shortcut Home có vùng chạm 48px và chuẩn hóa token dùng lại ở UI/shell.
+- Giữ nguyên API, quyền và business rules; bổ sung kiểm tra hồi quy workflow AI và UI.
+
+## [AI web import feedback] — 2026-10-08
+
+- Tái hiện video local lưu xong nhưng SQLite dev worker 404 với pnpm store ngoài workspace; thêm entry/rewrite worker nội bộ và khắc phục document `/` thiếu isolation trước đăng nhập.
+- Thêm loading stage, thông báo lưu video thành công/hướng dẫn phân tích, kiểm tra môi trường local storage và timeout khởi tạo SQLite cùng cleanup connection tới muộn.
+- Test hồi quy dev web và static export cho lưu video local, MediaPipe pose failure, thiếu headers, pending/cancel/delete; không đổi pipeline raw-video local-only.
+
+## [AI angle comparison] — 2026-10-08
+
+- Owner yêu cầu so sánh góc từ video, chọn Squat không tạ hai tay đưa trước. Thêm FR-AI-007 và báo cáo góc gối/thân/khuỷu/tay tại điểm thấp nhất từng lần trên web.
+- Phân biệt mục tiêu tham chiếu app với tiêu chuẩn đã kiểm chứng; thân không có ngưỡng chung, cho nhập mục tiêu tùy chọn theo hướng dẫn PT. Điểm thiếu không kết luận đúng/sai.
+- JSON local có detail v2, phiên cũ/native vẫn đọc kết quả độ sâu. Payload giải thích vẫn allowlist v1; không thay stack/provider hoặc gửi video/landmarks lên cloud.
+
+## [AI mobile/web parity] — 2026-10-08
+
+- Owner yêu cầu mở rộng báo cáo góc cho mobile và web. FR-AI-007 nay bao gồm Android/iOS Development Build.
+- Native MediaPipe trả landmarks tối thiểu qua bridge local v2; JS/web dùng chung phép đo góc, chọn gối đủ rõ và thuật toán so sánh. Không gửi face landmarks/frame/video và không lưu raw landmarks trong kết quả.
+- Guard binary native cũ/Expo Go, validate frame bridge và bỏ kết quả tới muộn sau cancel. Giao diện cùng report/input tham chiếu trên mobile/web; dữ liệu cũ không tự bịa góc.
+- Cần rebuild/cài lại app native; SQLite/API/cloud contract không đổi, không thêm dependency/provider.

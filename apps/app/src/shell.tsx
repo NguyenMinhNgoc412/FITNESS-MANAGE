@@ -4,9 +4,9 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Role } from './features/auth/types';
 import { useRoleGuard, GuardFallback } from './use-role-guard';
-import { colors as c } from './design-system/theme';
+import { colors as c, controlSize, radius, spacing, typography } from './design-system/theme';
 const menus: Record<Role, [string, string][]> = {
-  OWNER: [['/owner', 'Tổng quan'], ['/owner/customers', 'Khách hàng'], ['/owner/packages', 'Gói tập'], ['/owner/bookings', 'Lịch tập'], ['/owner/checkins', 'Check-in'], ['/owner/pt', 'PT'], ['/owner/alerts', 'Sales / Cảnh báo'], ['/owner/logs', 'Logs / Báo cáo'], ['/owner/settings', 'Cài đặt']],
+  OWNER: [['/owner', 'Tổng quan'], ['/owner/customers', 'Khách hàng'], ['/owner/packages', 'Gói tập'], ['/owner/bookings', 'Lịch tập'], ['/owner/checkins', 'Check-in'], ['/owner/pt', 'PT & Member'], ['/owner/alerts', 'Sales / Cảnh báo'], ['/owner/logs', 'Logs / Báo cáo'], ['/owner/settings', 'Cài đặt']],
   PT: [['/pt', 'Hôm nay'], ['/pt/schedule', 'Lịch'], ['/pt/members', 'Member'], ['/pt/account', 'Tài khoản']],
   MEMBER: [['/member', 'Trang chủ'], ['/member/schedule', 'Lịch'], ['/member/checkin', 'Check-in'], ['/member/ai', 'AI'], ['/member/account', 'Tài khoản']],
 };
@@ -38,15 +38,15 @@ export function Shell({ role }: { role: Role }) {
 }
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.surface }, body: { flex: 1 },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderBottomWidth: 1, borderColor: c.border },
-  logo: { color: c.onPrimary, backgroundColor: c.primary, fontSize: 26, fontWeight: '700', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 },
-  brandText: { fontSize: 16, fontWeight: '700', color: c.primary }, subtitle: { color: c.textMuted, fontSize: 12, marginTop: 4 },
-  nav: { padding: 8, gap: 4, backgroundColor: c.surface }, sidebar: { width: 208, borderRightWidth: 1, borderColor: c.border },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderBottomWidth: 1, borderColor: c.border },
+  logo: { color: c.onPrimary, backgroundColor: c.primary, ...typography.logo, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.sm },
+  brandText: { ...typography.brand, color: c.primary }, subtitle: { color: c.textMuted, ...typography.small, marginTop: spacing.xs },
+  nav: { padding: spacing.sm, gap: spacing.xs, backgroundColor: c.surface }, sidebar: { width: 208, borderRightWidth: 1, borderColor: c.border },
   bottom: { flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', borderTopWidth: 1, borderColor: c.border },
-  link: { minHeight: 48, padding: 12, color: c.textMuted, borderRadius: 8, fontSize: 14, overflow: 'hidden' },
-  bottomLink: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: 8, paddingHorizontal: 2 },
+  link: { minHeight: controlSize.touch, padding: spacing.md, color: c.textMuted, borderRadius: radius.sm, ...typography.caption, overflow: 'hidden' },
+  bottomLink: { flex: 1, minHeight: controlSize.touch, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, borderRadius: radius.sm, paddingHorizontal: spacing.xs },
   bottomActive: { flex: 1.8, backgroundColor: c.surfaceMuted },
-  icon: { color: c.textMuted, fontSize: 22, lineHeight: 28, textAlign: 'center' },
+  icon: { color: c.textMuted, ...typography.icon, textAlign: 'center' },
   iconFrame: { width: 28, height: 28, position: 'relative' },
   personHead: { position: 'absolute', top: 3, left: 10, width: 8, height: 8, borderRadius: 4 },
   personBody: { position: 'absolute', bottom: 3, left: 5, width: 18, height: 9, borderTopLeftRadius: 9, borderTopRightRadius: 9, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
@@ -54,10 +54,10 @@ const s = StyleSheet.create({
   groupBody: { position: 'absolute', bottom: 3, left: 2, width: 24, height: 9, borderTopLeftRadius: 10, borderTopRightRadius: 10, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
   qrCell: { position: 'absolute', width: 9, height: 9, borderWidth: 2, borderRadius: 2 },
   activeText: { color: c.primary },
-  activeLabel: { color: c.primary, fontSize: 12, fontWeight: '600' },
+  activeLabel: { color: c.primary, ...typography.activeTab },
   active: { color: c.primary, backgroundColor: c.surfaceMuted, fontWeight: '600' },
-  menuButton: { minHeight: 44, minWidth: 64, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', borderRadius: 8, backgroundColor: c.surfaceMuted },
-  menuText: { color: c.primary, fontWeight: '600' },
+  menuButton: { minHeight: controlSize.touch, minWidth: controlSize.menuWidth, paddingHorizontal: spacing.lg, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm, backgroundColor: c.surfaceMuted },
+  menuText: { color: c.primary, ...typography.label },
   drawerLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10, elevation: 8, flexDirection: 'row' },
   backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: c.scrim },
   drawer: { width: 240, height: '100%', zIndex: 11, backgroundColor: c.surface, borderRightWidth: 1, borderColor: c.border },

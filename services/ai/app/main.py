@@ -1,7 +1,8 @@
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from .models import FormRequest, FormResponse
+from .models import AutoFormRequest, AutoFormResponse, FormRequest, FormResponse
+from .feedback import automatic_feedback
 from .security import require_internal_token
 
 app = FastAPI(title="FITNESS-MANAGE Form Feedback", version="2.0.0")
@@ -34,8 +35,10 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/ai/form-analysis", response_model=FormResponse, dependencies=[Depends(require_internal_token)])
-def form_analysis(request: FormRequest):
+@app.post("/ai/form-analysis", response_model=FormResponse | AutoFormResponse, dependencies=[Depends(require_internal_token)])
+def form_analysis(request: FormRequest | AutoFormRequest):
+    if isinstance(request, AutoFormRequest):
+        return automatic_feedback(request)
     if request.status == "POSE_NOT_DETECTED":
         feedback = ["Chưa nhận diện đủ tư thế. Quay lại toàn thân, đủ sáng và đặt máy ngang bên hông."]
     elif request.status == "INSUFFICIENT_REPS":

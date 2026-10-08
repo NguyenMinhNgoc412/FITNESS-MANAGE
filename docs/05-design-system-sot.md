@@ -96,7 +96,7 @@ Tránh:
 - Gói tập
 - Lịch tập
 - Check-in
-- PT
+- PT & Member
 - Sales/Cảnh báo
 - Logs/Báo cáo
 - Cài đặt
@@ -192,7 +192,7 @@ Schedule là read-only.
 
 Check-in hiển thị QR lớn, đơn giản.
 
-AI dùng flow từng bước: chọn bài → quay/chọn video → phân tích → kết quả.
+AI dùng flow từng bước: quay/chọn video → tự nhận diện và phân tích → nhận xét. Không có bước chọn bài.
 
 Profile hiển thị CCCD nhưng không cho sửa trực tiếp nếu Owner là data owner.
 
@@ -209,7 +209,7 @@ Profile hiển thị CCCD nhưng không cho sửa trực tiếp nếu Owner là 
 
 Expo Router tách owner/pt/member; Owner có sidebar ở màn rộng và menu wrap trên màn hẹp, PT/Member có navigation dưới. Dashboard tập trung KPI/queue; CRUD ở trang chức năng. Form dùng RHF, validation tại API, pending guard và Idempotency-Key; danh sách có loading/error/empty và refresh. Nút chọn Member/PT có phân trang, không giới hạn thao tác ở 30 hồ sơ đầu.
 
-AI hiện cung cấp một bài được hỗ trợ là Squat; chọn/quay video → lưu local → phân tích có progress/cancel → kết quả hoặc failure → xóa phiên/video. Nêu rõ chỉ đánh giá độ sâu và không thay PT. Owner/PT không có màn AI.
+AI nhận diện heuristic Squat/chống đẩy/lunge; chọn/quay video → lưu local → nhận diện/phân tích có progress/cancel → nhận xét tự động hoặc failure → xóa phiên/video. UNKNOWN có thông báo riêng. Nêu rõ giới hạn số đo, ngưỡng app và không thay PT. Owner/PT không có màn AI.
 
 ## Design pattern implementation — 2026-09-24
 
@@ -241,5 +241,36 @@ AI hiện cung cấp một bài được hỗ trợ là Squat; chọn/quay video
 
 ## Gói hội viên mẫu — 2026-09-29
 
-- Owner thấy 6 gói mẫu cùng giá gợi ý ở trang Gói tập, và có thể chọn mẫu trong tạo gói, gia hạn, chuyển Trial.
+- Trang Gói tập không có card liệt kê “6 gói hội viên mẫu” riêng; tên/giá hiển thị ngay trong lựa chọn khi tạo gói, gia hạn, chuyển Trial để tránh trùng thông tin.
 - Form mẫu chỉ yêu cầu ngày bắt đầu và giá có thể sửa; quota hoặc ngày kết thúc được tính từ mẫu. Thành viên chỉ xem giá đã ghi trên gói của mình nếu có.
+
+## Member packages và ngày gói — 2026-10-08
+
+- Mục Owner `/owner/pt` đổi nhãn “PT & Member”; route và quyền giữ nguyên, chứa hai lựa chọn Huấn luyện viên/Hội viên.
+- Khi Owner chọn Member ở màn này hoặc mở hồ sơ khách hàng đã liên kết Member, hiển thị gói đã cấp ngay trong hồ sơ: tên, trạng thái server, số lượt còn/tổng hoặc hạn hết, giá nếu có. Gói ACTIVE ưu tiên trước; lịch sử vẫn có nhãn trạng thái, không coi gói hết hạn/hủy là đang dùng. Có loading/error/retry/empty; chuyển Member không giữ gói của Member trước.
+- Tab quản lý Gói tập đưa gói đã cấp lên trước form thêm gói/pass. Dùng memberUserId trong hồ sơ customer để gọi endpoint existing memberships; không dùng customerId thay Member id hoặc đoán từ SĐT.
+- Ngày bắt đầu/kết thúc package dùng date-only picker trên web/native; gói thời gian tùy chỉnh chọn cả hai ngày, mẫu theo tháng tự tính hạn theo SOT 08. Conversion/gia hạn dùng cùng trường ngày. Booking vẫn dùng datetime. Không thay đổi tính trạng thái, quota, giá hay quyền mutation ở server.
+
+## Chọn thời gian lịch tập — 2026-10-08
+
+Owner tạo/sửa booking chọn ngày giờ bắt đầu và kết thúc bằng control datetime, không nhập chuỗi định dạng thủ công. Web dùng datetime-local và chặn nhập/paste trực tiếp, hỗ trợ mở picker bằng click/Enter/Space. Native dùng picker có sẵn trong repository: Android chọn ngày rồi giờ, iOS xác nhận hoặc hủy trong dialog; hủy không đổi giá trị. Các control khóa khi gửi, chỉnh sửa điền sẵn thời gian hiện tại. Giá trị local được chuyển ISO trước gọi API; server vẫn kiểm tra khoảng giờ, overlap và quyền Owner. PT/Member giữ lịch read-only.
+
+## Sửa hồi quy design system — 2026-10-07
+
+- Đổi mẫu gói trong conversion giữ CCCD/mật khẩu đã nhập; chỉ reset trường gói theo mẫu mới. Không đổi mẫu hoặc lựa chọn trong form khi đang gửi.
+- Stepper AI theo phiên đang thao tác; video mới ở bước Video dù lịch sử đã có kết quả. Import/phân tích/xóa dùng chung khóa; xóa giữ pending cả khi chờ xác nhận và thao tác local.
+- Record picker có dấu chọn hiển thị cùng trạng thái trợ năng; shortcut trên Home dùng liên kết có vùng chạm tối thiểu 48px và hover/focus.
+- Typography, spacing, radius và kích thước control dùng lại trong UI/shell lấy từ `theme.ts`; kích thước hình học riêng của icon/layout không phải token spacing dùng lại.
+
+## Phản hồi chọn video AI trên web — 2026-10-08
+
+- Khi chọn/lưu/ghi phiên video, hiển thị stage và spinner ở nút đã bấm; khóa thao tác cạnh tranh. Lưu thành công phải có thông báo hướng dẫn bấm “Phân tích trên thiết bị”, không ngầm coi việc chọn video là đã phân tích.
+- Môi trường web không hỗ trợ bộ nhớ AI phải báo lỗi rõ và trả nút về trạng thái thao tác được, không để chỉ mờ nút mà thiếu phản hồi.
+
+## So sánh góc AI — 2026-10-08
+
+- Bài được nhận diện hiển thị sau phân tích, không mặc định Squat/hai tay đưa trước cho phiên mới. Trước phân tích có input tùy chọn mục tiêu độ nghiêng thân theo hướng dẫn PT; input khóa khi pending.
+
+Nhận xét được gọi tự động sau khi đo và hiển thị từng đoạn; ghi rõ OPENAI hoặc thuật toán local. Dịch vụ lỗi vẫn hiển thị kết quả local và cho phân tích lại. Stepper ba bước dùng chung web/mobile; lịch sử v1 vẫn đọc được. Các trường thiếu dữ liệu/thiếu tiêu chí không được biểu thị là đạt kỹ thuật.
+- Kết quả hiển thị độ phủ nhận diện, CTA mở/ẩn chi tiết từng lần; mỗi lần có timestamp điểm thấp nhất và các hàng số đo/tiêu chí/kết luận/gợi ý. Layout xếp dọc trên mobile, trạng thái dùng chữ, không chỉ màu.
+- Ghi rõ góc 2D, giới hạn cột sống/hướng tay/knee valgus, ngưỡng app chưa được kiểm chứng. Kết quả cũ thiếu detail hướng dẫn phân tích lại trên mobile/web; mobile báo cần Development Build mới nếu binary cũ/Expo Go. Nút dịch vụ ghi rõ chỉ giải thích độ sâu.

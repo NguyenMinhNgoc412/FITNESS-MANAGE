@@ -162,3 +162,7 @@ UI action
 ## 9. Deployment posture
 
 MVP ưu tiên local/free tier. Không thêm Kafka, Redis cluster, Kubernetes, event bus hoặc microservice infrastructure trừ khi SOT thay đổi.
+
+## AI automatic flow — 2026-10-08
+
+App web/native dùng chung domain pose metrics → nhận diện heuristic bài → cycles/góc/so sánh → SQLite. Với kết quả hoàn chỉnh, app tự gửi JSON allowlist v2 qua gateway MEMBER đến FastAPI; OpenAI chỉ diễn giải bằng chứng do app đo, server ghép lại số đo/mục tiêu/verdict. Provider LOCAL fallback khi không thể lấy diễn giải. Pipeline raw video local → on-device metrics → JSON → FastAPI → OpenAI nếu cấu hình → structured feedback giữ nguyên provider/stack baseline. Chi tiết scope/heuristic/privacy tại SOT 14/18.

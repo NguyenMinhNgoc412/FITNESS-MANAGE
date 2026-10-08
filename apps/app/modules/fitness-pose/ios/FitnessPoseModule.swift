@@ -10,8 +10,9 @@ public class FitnessPoseModule: Module {
   private func isCancelled() -> Bool { lock.lock(); defer { lock.unlock() }; return cancelled }
   public func definition() -> ModuleDefinition {
     Name("FitnessPose")
+    Function("getAnalysisVersion") { 2 }
     Function("cancel") { self.setCancelled(true) }
-    AsyncFunction("analyze") { (uri: String) -> [[String: Double]] in
+    AsyncFunction("analyze") { (uri: String) -> [[String: Any]] in
       self.setCancelled(false)
       guard let url = URL(string: uri), url.isFileURL,
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
@@ -37,12 +38,12 @@ public class FitnessPoseModule: Module {
       generator.requestedTimeToleranceBefore = .zero
       generator.requestedTimeToleranceAfter = .zero
       defer { generator.cancelAllCGImageGeneration() }
-      var samples: [[String: Double]] = []
+      var samples: [[String: Any]] = []
       for timestamp in stride(from: 100, to: Int(duration * 1000), by: 100) {
         if self.isCancelled() {
           throw NSError(domain: "FitnessPose", code: 3, userInfo: [NSLocalizedDescriptionKey: "Analysis cancelled"])
         }
-        let sample: [String: Double] = try autoreleasepool {
+        let sample: [String: Any] = try autoreleasepool {
           let cg = try generator.copyCGImage(at: CMTime(value: Int64(timestamp), timescale: 1000), actualTime: nil)
           let image = try MPImage(uiImage: UIImage(cgImage: cg))
           let result = try detector.detect(videoFrame: image, timestampInMilliseconds: timestamp)
@@ -58,7 +59,16 @@ public class FitnessPoseModule: Module {
             let denominator = hypot(ux, uy) * hypot(vx, vy)
             if denominator > 0 { angle = acos(max(-1, min(1, (ux * vx + uy * vy) / denominator))) * 180 / .pi }
           }
-          return ["timeMs": Double(timestamp), "kneeAngle": angle, "visibility": visibility]
+          // Minimized local bridge data; omit face landmarks and never return video frames.
+          let landmarks: [[String: Double]] = (0...28).map { index in
+            guard (11...16).contains(index) || (23...28).contains(index),
+              let pose = result.landmarks.first, index < pose.count else {
+              return ["x": 0, "y": 0, "visibility": 0]
+            }
+            let point = pose[index]
+            return ["x": Double(point.x), "y": Double(point.y), "visibility": point.visibility?.doubleValue ?? 0]
+          }
+          return ["timeMs": Double(timestamp), "kneeAngle": angle, "visibility": visibility, "frameWidth": cg.width, "frameHeight": cg.height, "landmarks": landmarks]
         }
         samples.append(sample)
       }

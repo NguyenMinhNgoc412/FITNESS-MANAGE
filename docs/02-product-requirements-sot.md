@@ -185,7 +185,7 @@ Chi tiết: `13-business-sales-trigger-notification-sot.md`.
 AI là feature bổ trợ cho Member tự kiểm tra form bài tập tại nhà.
 
 ### FR-AI-002
-Input là video bài tập được quay/chọn trên thiết bị.
+Input là video bài tập được quay/chọn trên thiết bị; không bắt Member chọn bài trước. App nhận diện bài từ pose/chuyển động local trong phạm vi được hỗ trợ.
 
 ### FR-AI-003
 AI có thể trả rep count, form status, lỗi form được hỗ trợ và gợi ý sửa.
@@ -199,7 +199,13 @@ Chỉ Member xem result AI của chính mình.
 ### FR-AI-006
 Raw AI video không upload lên server/cloud trong flow chuẩn.
 
+### FR-AI-007
+Member trên mobile (Android/iOS Development Build) và web có thể phân tích Squat không tạ, hai tay đưa trước và xem số đo góc tại điểm thấp nhất của từng lần hoàn chỉnh: gối trái/phải, độ nghiêng thân vai–hông, khuỷu tay và độ nghiêng tay. Kết quả so sánh phải nêu tiêu chí tham chiếu, phân biệt mục tiêu app với tiêu chuẩn đã kiểm chứng; điểm thiếu dữ liệu không được kết luận đúng. Mục tiêu độ nghiêng thân tùy chọn do Member nhập theo hướng dẫn PT; không có mục tiêu thì không chấm đúng/sai thân. Phiên cũ vẫn đọc được; cần phân tích lại để có báo cáo góc. Bản native cũ phải báo cần build/cài lại, không ngầm trả kết quả thiếu góc.
+
 Chi tiết: `14-business-ai-form-analysis-sot.md`.
+
+### FR-AI-008
+Web và mobile dùng flow video → tự nhận diện và phân tích → nhận xét. Bản hiện hành nhận diện heuristic SQUAT/PUSH_UP/LUNGE; bài không rõ/ngoài phạm vi hoặc video trộn bài trả UNKNOWN, không ép thành Squat. Kết quả tự lấy nhận xét tiếng Việt từ chỉ số, so sánh số đo với mục tiêu tham chiếu và đưa gợi ý ngắn theo phong cách hướng dẫn kỹ thuật của PT. Không suy ra biến thể/tạ hoặc đánh giá tay đúng/sai khi thiếu tiêu chí phù hợp. OpenAI chỉ diễn giải bằng chứng đã đo; khi offline/lỗi dịch vụ vẫn giữ nhận xét local và ghi rõ nguồn. FR-AI-007 còn áp dụng cho phiên cũ; phiên tự nhận diện không mặc định mẫu Squat hai tay đưa trước.
 
 ---
 

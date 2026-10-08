@@ -1,5 +1,6 @@
 import type { PoseLandmarker } from '@mediapipe/tasks-vision';
 import { Sample } from './algorithm';
+import { sampleFromPose } from './pose-sample';
 type Vision = typeof import('@mediapipe/tasks-vision');
 let visionPromise: Promise<Vision> | undefined;
 function loadVision(): Promise<Vision> {
@@ -46,16 +47,7 @@ export async function extractPose(uri: string, signal: AbortSignal, progress: (s
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const result = landmarker.detectForVideo(canvas, Math.round(time * 1000));
       const landmarks = result.landmarks[0];
-      let angle = 0, visibility = 0;
-      if (landmarks) {
-        const side = ([23, 25, 27].reduce((sum, i) => sum + landmarks[i].visibility, 0) >= [24, 26, 28].reduce((sum, i) => sum + landmarks[i].visibility, 0)) ? [23, 25, 27] : [24, 26, 28];
-        const [a, b, c] = side.map(i => landmarks[i]);
-        visibility = Math.min(a.visibility, b.visibility, c.visibility);
-        const ux = (a.x - b.x) * canvas.width, uy = (a.y - b.y) * canvas.height, vx = (c.x - b.x) * canvas.width, vy = (c.y - b.y) * canvas.height;
-        const denominator = Math.hypot(ux, uy) * Math.hypot(vx, vy);
-        angle = denominator ? Math.acos(Math.max(-1, Math.min(1, (ux * vx + uy * vy) / denominator))) * 180 / Math.PI : 0;
-      }
-      samples.push({ timeMs: Math.round(time * 1000), kneeAngle: angle, visibility });
+      samples.push(sampleFromPose({ timeMs: Math.round(time * 1000), frameWidth: canvas.width, frameHeight: canvas.height, landmarks: landmarks ?? [] }));
       progress('Đang phân tích: ' + Math.round(time / video.duration * 100) + '%');
       await new Promise(resolve => setTimeout(resolve, 0));
     }

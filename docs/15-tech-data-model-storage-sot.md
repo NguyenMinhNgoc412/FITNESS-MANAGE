@@ -227,3 +227,7 @@ Không lưu access token plaintext trong SQLite nếu có secure storage phù h�
 Prisma MongoDB dùng ObjectId. Các model nghiệp vụ kèm Session, Command (idempotency), WriteLock (serialization), DeviceToken, Notification và ExternalPtRequest. db:push tạo schema indexes; db:indexes bổ sung partial unique CCCD, customer.memberUserId và primary assignment active. Phải chạy cả hai khi dựng database.
 
 Mutation nhạy cảm cập nhật một WriteLock trong cùng MongoDB transaction trước khi đọc/ghi nghiệp vụ; mọi API instance dùng cùng lock. Retry write conflict có giới hạn. Cách này ưu tiên tính đúng cho gym MVP, giới hạn throughput khi nhiều mutation đồng thời. Không có migration tự động từ PostgreSQL; database thật chưa được chuyển đổi.
+
+## AI local schema v2 — 2026-10-08
+
+Phiên mới có exercise_type=AUTO khi PENDING; kết quả nhận diện cập nhật SQUAT/PUSH_UP/LUNGE/UNKNOWN. analysis_json đọc được envelope v1 và v2. SQLite user_version=2 tạo local_ai_results (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id, member_id, analysis_json, created_at); migration giữ kết quả cũ, append kết quả và update latest trong cùng transaction. Reanalysis lỗi/hủy không xóa kết quả đã có; UI ghi rõ đó là kết quả trước nếu lần mới thất bại. User xóa phiên xóa results cùng session theo member scope. Không có thay đổi Prisma/MongoDB; raw video và history chỉ local.

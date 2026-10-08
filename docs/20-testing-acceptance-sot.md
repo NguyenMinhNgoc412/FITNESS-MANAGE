@@ -1,5 +1,40 @@
 # FITNESS-MANAGE SOT 20 — Testing & Acceptance
 
+## PT & Member, date-only package and owned package summaries — 2026-10-08
+
+- `pnpm --filter @fitness/app lint`: pass; `pnpm test:app`: pass 10 suites / 41 tests.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass; export Android/iOS sang dist-sot-native: pass bundle Hermes, không phải native device/Xcode acceptance.
+- Browser regression Edge với API mock xác minh nhãn Owner PT & Member, customer dùng memberUserId khác customerId để hiển thị gói, Member detail hiển thị tên gói/23 trên 30 lượt/giá 2.100.000; đổi sang Member khác có empty state và không giữ gói của người trước.
+- Custom TIME_BASED có input date ở ngày bắt đầu/kết thúc; mẫu 3 tháng dùng ngày bắt đầu date và vẫn tính hạn theo tháng. Booking datetime và các regression CRM/AI trước đó giữ nguyên. Không thêm request quyền ngoài endpoint memberships hiện hành, không sửa API/schema/quota.
+- Cover FR-PKG-004/005/007, FR-UI-001/004 và privacy/Owner boundaries SOT 06/08/09. Chưa xác minh trực tiếp database/điện thoại thật trong task này; fixture không chứng minh dữ liệu Member thực tế đã có liên kết hay gói.
+
+## Package catalog cleanup and booking datetime UI — 2026-10-08
+
+- `pnpm --filter @fitness/app lint`: pass TypeScript/unused checks; `pnpm test:app`: pass 10 suites / 41 tests.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass.
+- `pnpm --filter @fitness/app exec expo export --platform android --platform ios --output-dir dist-sot-native`: pass bundle Hermes sau sửa cuối; không phải native device/Xcode acceptance.
+- `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass Edge headless với API mock. Xác minh không còn card “6 gói hội viên mẫu”, lựa chọn gói còn giá 1.200.000; form tạo/sửa lịch có datetime-local, chặn gõ trực tiếp, ngày 10/10/2026 10:15 Asia/Bangkok gửi ISO 03:15Z, kết thúc đúng 04:15Z, khóa khi gửi/mở lại khi lỗi. Sửa lịch prefill 07:00/08:00 từ fixture UTC 00:00/01:00 và giữ trường lý do. Member không có nút tạo/sửa. Các regression CRM/AI trước đó vẫn pass.
+- Không thay đổi API/quy tắc booking hoặc package; cover FR-PKG-004/007, FR-BOOK-001/002/003/004 và FR-UI-001. Overlap/assignment/RBAC tại server giữ nguyên; browser mock không chứng minh tích hợp nghiệp vụ database.
+- Native đã triển khai picker Android ngày → giờ và iOS xác nhận/hủy, dùng dependency có sẵn. Chưa thao tác picker trên thiết bị thật hoặc build iOS/Xcode; binary cũ thiếu module cần Development Build mới. Không gọi export JS là device acceptance.
+
+## FastAPI stale dev process / 422 — 2026-10-08
+
+- Runtime trước sửa: GET http://127.0.0.1:8000/openapi.json chỉ có FormRequest, không có AutoFormRequest; xác nhận tiến trình chưa nạp contract v2.
+- scripts/ai.mjs bật reload giới hạn thư mục app; restart phiên dev hiện có, không mở thêm instance trên cổng đang dùng.
+- `pnpm test:ai`: pass 12 tests. Probe bằng Python urllib sau restart: OpenAPI có AutoFormRequest, POST schemaVersion=2.0 với metrics pose-failure giả lập và token gateway đọc riêng từ env trả HTTP 200 / provider LOCAL. Không log token/payload người thật, không gọi OpenAI cho probe này. Cover FR-AI-008 contract runtime; không tuyên bố xác minh nhận xét LLM hoặc video người thật.
+
+## Automatic exercise analysis — 2026-10-08
+
+- `pnpm build`: pass NestJS build và Expo TypeScript; `pnpm lint`: pass API/app, chạy lại sau thay đổi storage/screen.
+- `pnpm test:app`: pass 10 suites / 41 tests. Ba bài nhận diện/chu kỳ bằng dữ liệu pose giả, video tĩnh/trộn bài/thiếu dữ liệu → UNKNOWN hoặc failure; push-up dùng joint khuỷu; reference snapshot, tay thiếu tiêu chí, allowlist/cap 10 reports, SQLite history migration/transaction và retry/cancel.
+- `pnpm test:api`: pass 3 suites / 24 tests. Strict v2 evidence/privacy, Member guards/roles, response sai exercise bị từ chối; payload media/identity không tới fetch. Existing domain regressions vẫn pass.
+- `pnpm test:ai`: pass 12 tests. FastAPI token/body/schema, v1 tương thích, v2 ba bài/unknown, số đo-target-verdict canonical, mock OpenAI giữ configured model/store=false; refusal/timeout/extra số liệu fallback LOCAL. Starlette có cảnh báo deprecation httpx; không đổi dependency ngoài baseline.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass; `pnpm --filter @fitness/app exec expo export --platform android --platform ios --output-dir dist-sot-native`: pass sau thay đổi cuối. Native export là bundle Hermes, không phải iOS/Xcode compile hoặc acceptance thiết bị.
+- `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass Edge headless trên static export, chạy lại sau SQLite v2. Kiểm tra bỏ bước chọn bài, upload local/nút phân tích, MediaPipe thật với video đen → pose failure, pose Squat giả → tự request JSON v2/nhận xét/góc cụ thể, storage transaction/reanalysis/delete/cancel và privacy. API/OpenAI response được mock; viewport Member 390x844, Owner 1440x1000. Không dùng video/account người thật, không tuyên bố độ chính xác từ fixture.
+- Live SDK thử bằng synthetic metrics, đọc cấu hình server-only mà không log secret: provider LOCAL, SDK RateLimitError HTTP 429. Không có diễn giải OPENAI live được xác minh; hệ thống vẫn giữ phản hồi local. Không suy diễn 429 chắc chắn do hết quota hay tốc độ khi chưa xác minh account.
+- Cover FR-AI-002/003/005/006/007/008 và SOT 05/14/18. Chưa kiểm chứng bài gần giống/biến thể, góc quay thực tế, ngưỡng app hay native device/Swift build. Cần restart FastAPI dev hiện có để nạp code/env mới; không khởi động thêm server vào cổng đã dùng.
+- Kiểm tra runtime: thử API ở port tạm không listen trong window 15 giây, đã dừng/cleanup tiến trình; không tính là startup pass. API watch hiện có sau rebuild đã listen lại ở 3000 và request AI không token trả 401. Các listener 3000/8000/8081 là phiên dev hiện có; không để thêm server kiểm thử chạy nền. Không dùng runtime này để tuyên bố flow live OpenAI v2 đã qua vì FastAPI cũ vẫn cần restart và call thật bị 429.
+
 ## 1. Test layers
 
 - Unit: domain/service/rules.
@@ -125,3 +160,42 @@ git diff --check với apps/scripts/services/README/package/lock/.gitignore pass
 Sau khi chuẩn hóa UI theo SOT 05: `pnpm check` pass 13 API + 15 app + 7 AI tests; MongoDB integration pass 7 scenarios; Expo web export pass. Browser E2E pass Owner Trial/master-detail, Owner menu ở viewport 390x844, PT attendance/read-only và Member QR/AI local/xác nhận xóa. Network interception không thấy raw video hoặc request ngoài origin cho phép. Ảnh kiểm tra local gồm `owner-sot.png`, `owner-customers-sot.png`, `owner-mobile-menu-sot.png`, `pt-sot.png`, `member-sot.png`; thư mục `.local` bị ignore và không phải artifact release.
 
 Regression mobile/web CRM xác minh thêm: Customer tabs đầy đủ và booking filter theo Member giữ Owner scope; PT/Member vẫn không được mở rộng dữ liệu. Drawer compact có backdrop, bottom tabs một hàng và booking day-group được kiểm tra trong web export/browser screenshots. Kiểm tra focus bằng bàn phím thực tế và screen reader trên thiết bị vẫn là release gate thủ công.
+
+### UI regression fixes — 2026-10-07
+
+- `pnpm lint`: pass API/app; sau sửa cuối, `pnpm --filter @fitness/app lint` pass lại.
+- `pnpm build`: pass NestJS build và Expo typecheck.
+- `pnpm test:app`: pass 6 suites / 21 tests; bổ sung workflow AI cho video mới sau kết quả cũ, khóa thao tác cạnh tranh và mở khóa sau hủy/lỗi storage.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass.
+- `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass trên Edge headless, Owner 1440x1000 và Member 390x844. Xác minh conversion giữ CCCD/mật khẩu giả khi đổi mẫu, áp dụng giá mẫu mới, khóa lựa chọn/input khi pending, dấu chọn và `aria-checked`, shortcut 48px/focus, video local qua OPFS/SQLite và pending/cancel/delete.
+- Browser regression dùng API mock và identity sinh lúc chạy, không dùng database/credential thật. Đây không phải xác minh tích hợp nghiệp vụ hoặc độ chính xác pose. Chưa chạy lại native device/screen reader hoặc toàn bộ responsive matrix.
+
+### AI web import failure — 2026-10-08
+
+- Tái hiện trên Expo dev ở cổng 8081: video tới OPFS nhưng lưu phiên chờ vô hạn; SQLite worker URL ngoài workspace trả 404/`importScripts` NetworkError. Document `/` thiếu COOP/COEP; `/login` và `/member/ai` có headers.
+- Sau sửa, `pnpm --filter @fitness/app lint` pass; `pnpm test:app` pass 7 suites / 22 tests, gồm timeout worker, đóng connection tới muộn và retry.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web` pass.
+- `$env:UI_TEST_URL="http://localhost:8082"` rồi `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass trên Expo dev server mới. Cùng runner không đặt `UI_TEST_URL` pass trên static export.
+- Browser kiểm tra root document isolation recovery, progress khi lưu OPFS, thông báo lưu thành công, phiên SQLite, MediaPipe với video đen tạo POSE_NOT_DETECTED, cancel/delete/pending và lỗi môi trường thiếu headers. API dùng mock; chỉ video giả và identity sinh tại runtime, không raw-video HTTP payload.
+- Cover FR-AI-002/003/006, failure UX SOT 14/18 và loading/error/success SOT 05. Chưa xác minh pose accuracy với người thật, video/codec cụ thể của Owner hoặc native device. Expo đang chạy phải restart để nhận rewrite trong `metro.config.js`.
+- Kiểm tra lại cổng 8081: tiến trình cũ chưa nạp cấu hình. Đã restart bằng pnpm dev; UI_TEST_URL=http://localhost:8081 cùng browser runner pass chọn video, lưu local, hiện nút phân tích và phản hồi MediaPipe. Lần đầu server chưa sẵn sàng trả connection refused; chạy lại sau khi Metro sẵn sàng đã pass. API mock, chưa xác minh video cụ thể của Owner.
+
+### Detailed squat angle report — 2026-10-08
+
+- `pnpm --filter @fitness/app lint`: pass.
+- `pnpm test:app`: pass 8 suites / 27 tests. Bổ sung geometry/aspect ratio, vector suy biến/điểm bị che, giới hạn mục tiêu, snapshot mục tiêu, bottom từng rep, chu kỳ bị che và allowlist cloud.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass.
+- `$env:UI_TEST_URL="http://localhost:8081"` + `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass. MediaPipe thật với video đen vẫn báo pose failure; sau đó mock pose riêng để xác minh UI gối 80°, khuỷu 180°, thân 0°, mục tiêu thân 40°, mở/ẩn báo cáo cùng các kiểm tra pending/privacy trước đó.
+- Cùng browser runner không đặt `UI_TEST_URL`: pass bản static export; ảnh báo cáo với pose giả ở `.local/ai-angle-comparison.png` (ignored, không phải dữ liệu người thật hoặc artifact release).
+- Cover FR-AI-003/005/006/007 và SOT 05/14/18. Không suy ra độ chính xác trên người thật từ pose mock; native chỉ có v1, ngưỡng tham chiếu app chưa được kiểm chứng, chưa hỗ trợ knee valgus/độ cong cột sống/hướng tay trước-sau.
+
+### Mobile/web angle parity — 2026-10-08
+
+- `pnpm --filter @fitness/app lint`: pass.
+- `pnpm test:app`: pass 9 suites / 32 tests. Native bridge mock xác minh report từng lần/góc cụ thể, parity với helper web, điểm bị che, malformed frame, module cũ/Expo Go, cancel/kết quả tới muộn và bỏ raw landmarks khỏi result/payload.
+- `gradlew.bat :fitness-pose:compileDebugKotlin --console=plain` (JDK 17, Android SDK local): BUILD SUCCESSFUL. Module autolink đúng và bridge v2 compile.
+- `gradlew.bat :app:assembleDebug -PreactNativeArchitectures=arm64-v8a --console=plain`: lần đầu fail ở Gesture Handler CMake/Ninja do đường dẫn vượt 260 ký tự trên Windows, không phải lỗi compile module AI. Chạy lại với `--init-script ../../../.local/android-ai-short-path.gradle` cấu hình `buildStagingDirectory = C:/f-cxx/fitness-ai-20261008`: BUILD SUCCESSFUL (3m14s). Init script/cache chỉ local, không sửa vendor/stack; APK ARM64 debug ở `apps/app/android/app/build/outputs/apk/debug/app-debug.apk`, cần dev server, chưa cài lên thiết bị.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass.
+- `pnpm --filter @fitness/app exec expo export --platform android --platform ios --output-dir dist-sot-native`: pass bundle Hermes Android/iOS. Đây không phải native iOS/Xcode build.
+- `UI_TEST_URL=http://localhost:8081` + `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass; cùng runner trên static export cũng pass. Video đen chạy MediaPipe thật kiểm tra pose failure; report góc dùng pose giả. API mock, không raw video HTTP payload.
+- `adb devices`: không có thiết bị kết nối. Không có Xcode trên Windows; chưa compile native iOS hoặc test trực tiếp thiết bị/camera/pose người thật. Cover implementation FR-AI-003/005/006/007, nhưng không tuyên bố hoàn tất native device acceptance hoặc kiểm chứng ngưỡng.

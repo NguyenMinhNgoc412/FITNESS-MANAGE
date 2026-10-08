@@ -121,3 +121,5 @@ Các package hiện thực hóa stack đã duyệt: expo-sqlite, expo-file-syste
 
 Web dùng OPFS cho video và SQLite WASM cho sessions; static hosting cần COOP/COEP. Native cần development build chứa module pose. Playwright chạy tạm bằng pnpm dlx để kiểm tra browser, không là runtime dependency.
 
+Date/time UI dùng `@react-native-community/datetimepicker` 9.1.0 đã có trong package/lockfile cho native, datetime-local của browser cho web. Không thêm dependency/provider trong task ngày 2026-10-08. Native binary cần chứa module picker; binary cũ thiếu module hiển thị hướng dẫn cài Development Build mới.
+

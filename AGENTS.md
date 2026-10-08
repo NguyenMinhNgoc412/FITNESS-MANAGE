@@ -104,7 +104,7 @@ Mọi flow phù hợp phải có loading, empty, error, success và permission s
 
 - Owner: Dashboard, Khách hàng, Gói tập, Lịch tập, Check-in, PT, Sales/Cảnh báo, Logs/Báo cáo, Cài đặt. Dashboard ưu tiên KPI/queue, không biến thành nơi làm mọi CRUD.
 - PT: Hôm nay, Lịch, Member, Tài khoản; chỉ xem lịch của mình/member được assign và thực hiện PT check-in; không có create/edit/delete booking, sales hoặc doanh thu.
-- Member: Trang chủ, Lịch, Check-in, AI, Tài khoản; package/booking read-only, QR rõ ràng, AI theo flow chọn bài → video local → phân tích → kết quả.
+- Member: Trang chủ, Lịch, Check-in, AI, Tài khoản; package/booking read-only, QR rõ ràng, AI theo flow video local → tự nhận diện và phân tích → nhận xét, theo phạm vi SOT 14/18.
 
 ## 7. Ảnh tham chiếu UI hiện hành
 

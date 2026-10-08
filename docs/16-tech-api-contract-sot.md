@@ -148,3 +148,9 @@ API prefix /api. Mutation nghiệp vụ dùng Idempotency-Key; cùng key/actor/a
 Endpoint bổ sung cho UI: GET/POST /people, PATCH /people/:id; GET /members/me/qr; GET /members/me/checkins; GET /members/me/pt; GET /pt/me/members; GET /pt/me/attendance; POST /pt/me/checkin; GET /dashboard, /audit, /external-pt/requests; POST/DELETE /notifications/device-token.
 
 POST /ai/form-analysis chỉ Member, payload schemaVersion/exercise/status/reps/metrics/issues. Không có URL video hay endpoint upload. FastAPI nội bộ nhận cùng JSON với X-Service-Token; response feedback có schema strict.
+
+## AI automatic contract v2 — 2026-10-08
+
+POST /api/ai/form-analysis vẫn chỉ MEMBER. Gateway chấp nhận v1 tương thích và strict v2: schemaVersion=2.0, exercise SQUAT/PUSH_UP/LUNGE/UNKNOWN, status COMPLETED/POSE_NOT_DETECTED/INSUFFICIENT_REPS/UNRECOGNIZED_EXERCISE, recognitionScore [0,1], reps [0,500], metrics {detectedRatio,minJointAngle}, reference {trunkMax:null hoặc [0,90]}, perRep tối đa mười {index,timeSeconds [0,120],angles {kneeLeft,kneeRight,trunk,elbowLeft,elbowRight,armLeft,armRight},bodyLine}. Góc thiếu là null, không phải zero.
+
+COMPLETED cần bài xác định, reps>0, score≥0.7, coverage≥0.6, minJointAngle có dữ liệu và đúng min(reps,10) báo cáo chỉ số tuần tự. Failure không có reps/perRep; UNRECOGNIZED_EXERCISE cần UNKNOWN. Extra fields bị từ chối ở mọi object. FastAPI body ≤8192 bytes và X-Service-Token bắt buộc. V2 response strict {schemaVersion,exercise,status,provider:OPENAI|LOCAL,feedback:1..8 đoạn tối đa 600 ký tự}; gateway kiểm tra cùng exercise/status/version với request. Upstream timeout 25 giây; lỗi trả thông báo generic, không lộ SDK/input/secret.

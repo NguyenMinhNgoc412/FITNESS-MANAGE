@@ -14,12 +14,12 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.acos
 import kotlin.math.hypot
-import kotlin.math.max
 
 class FitnessPoseModule : Module() {
   private val cancelled = AtomicBoolean(false)
   override fun definition() = ModuleDefinition {
     Name("FitnessPose")
+    Function("getAnalysisVersion") { 2 }
     Function("cancel") { cancelled.set(true) }
     AsyncFunction("analyze") { uri: String ->
       cancelled.set(false)
@@ -38,13 +38,13 @@ class FitnessPoseModule : Module() {
           .setRunningMode(RunningMode.VIDEO).setNumPoses(1)
           .setMinPoseDetectionConfidence(0.6f).setMinPosePresenceConfidence(0.6f).build()
         detector = PoseLandmarker.createFromOptions(context, options)
-        val samples = mutableListOf<Map<String, Double>>()
+        val samples = mutableListOf<Map<String, Any>>()
         var time = 100L
         while (time < duration) {
           if (cancelled.get()) error("Analysis cancelled")
           val decoded = retriever.getScaledFrameAtTime(time * 1000, MediaMetadataRetriever.OPTION_CLOSEST, 640, 640)
           if (decoded == null) {
-            samples.add(mapOf("timeMs" to time.toDouble(), "kneeAngle" to 0.0, "visibility" to 0.0))
+            samples.add(mapOf("timeMs" to time.toDouble(), "kneeAngle" to 0.0, "visibility" to 0.0, "frameWidth" to 1, "frameHeight" to 1, "landmarks" to emptyList<Map<String, Double>>()))
             time += 100; continue
           }
           var frame: Bitmap = decoded
@@ -64,7 +64,12 @@ class FitnessPoseModule : Module() {
                 val denominator = hypot(ux, uy) * hypot(vx, vy)
                 if (denominator > 0) angle = acos(((ux * vx + uy * vy) / denominator).coerceIn(-1.0, 1.0)) * 180 / Math.PI
               }
-              samples.add(mapOf("timeMs" to time.toDouble(), "kneeAngle" to angle, "visibility" to visibility))
+              // Only shoulders/arms/hips/legs cross the local bridge; no face landmarks or video frames.
+              val landmarks = (0..28).map { index ->
+                val point = pose?.getOrNull(index)?.takeIf { index in 11..16 || index in 23..28 }
+                mapOf("x" to (point?.x()?.toDouble() ?: 0.0), "y" to (point?.y()?.toDouble() ?: 0.0), "visibility" to (point?.visibility()?.orElse(0f)?.toDouble() ?: 0.0))
+              }
+              samples.add(mapOf("timeMs" to time.toDouble(), "kneeAngle" to angle, "visibility" to visibility, "frameWidth" to frame.width, "frameHeight" to frame.height, "landmarks" to landmarks))
             } finally { image.close() }
           } finally { if (frame !== decoded) frame.recycle(); decoded.recycle() }
           time += 100
