@@ -8,6 +8,7 @@ import { audit, TransactionService } from '../common/transaction.service';
 import { PrismaService } from '../prisma.service';
 import { uniqueIdentity } from './data';
 import { MembershipsService } from './memberships.service';
+import { assertNoDailyCheckin } from './checkin-day';
 @Injectable()
 export class CustomersService {
   constructor(private readonly prisma: PrismaService, private readonly tx: TransactionService, private readonly memberships: MembershipsService) {}
@@ -75,12 +76,12 @@ export class CustomersService {
     return this.tx.command(actor, 'trial.checkin', key, { customerId }, async (db, commandId) => {
       const customer = await db.customer.findUnique({ where: { id: customerId } });
       const trial = await db.trialEntitlement.findUnique({ where: { customerId } });
+      const checkedInAt = new Date();
+      if (customer) await assertNoDailyCheckin(db, { customerId, memberId: customer.memberUserId ?? undefined }, checkedInAt);
       if (!customer || customer.status !== 'TRIAL' || !trial || trial.usedSessions >= 3 || trial.status !== 'ACTIVE') fail('TRIAL_EXHAUSTED', 'Khách không còn lượt Trial hợp lệ.');
-      const recent = await db.memberCheckin.findFirst({ where: { customerId, checkedInAt: { gt: new Date(Date.now() - 30000) } } });
-      if (recent) return recent;
       const usedSessions = trial.usedSessions + 1;
       await db.trialEntitlement.update({ where: { id: trial.id }, data: { usedSessions, status: usedSessions === 3 ? 'EXHAUSTED' : 'ACTIVE' } });
-      const log = await db.memberCheckin.create({ data: { customerId, subjectType: 'TRIAL', context: 'TRIAL', method: 'PHONE', operatorId: actor.sub, idempotencyKey: commandId } });
+      const log = await db.memberCheckin.create({ data: { customerId, subjectType: 'TRIAL', context: 'TRIAL', method: 'PHONE', operatorId: actor.sub, idempotencyKey: commandId, checkedInAt } });
       if (usedSessions === 3) await db.salesAlert.upsert({ where: { sourceKey: 'trial:' + customerId }, update: {}, create: { sourceKey: 'trial:' + customerId, customerId, type: 'TRIAL_FINAL' } });
       await audit(db, actor, 'TRIAL_PHONE_CHECKIN', 'checkin', log.id);
       return log;

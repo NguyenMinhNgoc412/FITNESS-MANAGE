@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma.service';
 import { ApiExceptionFilter } from '../src/common/errors';
 import { ensureIndexes } from '../prisma/indexes';
+import { checkinDayRange } from '../src/domain/checkin-day';
 
 // All fixtures are generated test identities. Never use a real database/account.
 const url = process.env.TEST_DATABASE_URL;
@@ -70,8 +71,8 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     const duplicate = await request('/customers/trials', owner.accessToken, 'POST', { fullName: 'Trial fixture', phone: '+84' + fields.phone.slice(1) });
     expect(duplicate.status).toBe(409);
     for (let visit = 1; visit <= 3; visit++) {
-      // Advance previous log beyond the documented duplicate scan window.
-      await prisma.memberCheckin.updateMany({ where: { customerId }, data: { checkedInAt: new Date(Date.now() - 60000) } });
+      // Simulate a new local day using only generated test records.
+      await prisma.memberCheckin.updateMany({ where: { customerId }, data: { checkedInAt: new Date(Date.now() - 86400000) } });
       const key = randomUUID();
       const attempts = await Promise.all([request('/customers/' + customerId + '/trial-checkin', owner.accessToken, 'POST', {}, key), request('/customers/' + customerId + '/trial-checkin', owner.accessToken, 'POST', {}, key)]);
       expect(attempts.map(r => r.status)).toEqual([201, 201]);
@@ -141,6 +142,28 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     expect((await request('/pt/' + pt.id + '/attendance', member.accessToken)).status).toBe(403);
   });
 
+  it('different command keys and QR/phone races consume only one daily session', async () => {
+    const member = await createPerson('MEMBER'), membership = await packageFor(member.id, 5);
+    const qr = await request('/members/me/qr', member.accessToken);
+    const body = { memberId: member.id, membershipId: membership.id, context: 'SELF_TRAINING' };
+    const results = await Promise.all([
+      request('/checkins/member', owner.accessToken, 'POST', { ...body, method: 'QR', qrToken: qr.data.token }),
+      request('/checkins/member', owner.accessToken, 'POST', { ...body, method: 'PHONE' }),
+    ]);
+    expect(results.map(result => result.status).sort()).toEqual([201, 409]);
+    expect(results.find(result => result.status === 409)!.data.code).toBe('ALREADY_CHECKED_IN_TODAY');
+    await prisma.memberCheckin.updateMany({ where: { memberId: member.id }, data: { checkedInAt: checkinDayRange(new Date()).gte } });
+    const secondPackage = await packageFor(member.id, 5);
+    const repeated = await request('/checkins/member', owner.accessToken, 'POST', { ...body, membershipId: secondPackage.id, method: 'PHONE' });
+    expect(repeated.status).toBe(409);
+    expect((await prisma.membership.findUniqueOrThrow({ where: { id: secondPackage.id } })).usedSessions).toBe(0);
+    expect((await prisma.membership.findUniqueOrThrow({ where: { id: membership.id } })).usedSessions).toBe(1);
+    expect(await prisma.memberCheckin.count({ where: { memberId: member.id } })).toBe(1);
+    await prisma.memberCheckin.updateMany({ where: { memberId: member.id }, data: { checkedInAt: new Date(Date.now() - 86400000) } });
+    expect((await request('/checkins/member', owner.accessToken, 'POST', { ...body, method: 'PHONE' })).status).toBe(201);
+    expect((await prisma.membership.findUniqueOrThrow({ where: { id: membership.id } })).usedSessions).toBe(2);
+  });
+
   it('links Owner internal PT check-in to a booking while PT attendance remains separate', async () => {
     const member = await createPerson('MEMBER'), pt = await createPerson('PT'), membership = await packageFor(member.id, 2);
     await request('/members/' + member.id + '/pt-assignment', owner.accessToken, 'POST', { ptId: pt.id, reason: 'Test assignment' });
@@ -171,7 +194,11 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     const confirmations = await Promise.all([request('/external-pt/checkin/' + initiated.data.id + '/confirm', member.accessToken, 'POST', {}), request('/external-pt/checkin/' + initiated.data.id + '/confirm', member.accessToken, 'POST', {})]);
     expect(confirmations.map(r => r.status)).toEqual([201, 201]);
     expect((await prisma.externalPtPass.findUniqueOrThrow({ where: { id: pass.data.id } })).usedUses).toBe(1);
-    await prisma.memberCheckin.updateMany({ where: { memberId: member.id }, data: { checkedInAt: new Date(Date.now() - 60000) } });
+    const sameDay = await request('/checkins/member', owner.accessToken, 'POST', { memberId: member.id, membershipId: membership.id, context: 'SELF_TRAINING', method: 'PHONE' });
+    expect(sameDay.status).toBe(409);
+    expect(sameDay.data.code).toBe('ALREADY_CHECKED_IN_TODAY');
+    expect((await prisma.externalPtPass.findUniqueOrThrow({ where: { id: pass.data.id } })).usedUses).toBe(1);
+    await prisma.memberCheckin.updateMany({ where: { memberId: member.id }, data: { checkedInAt: new Date(Date.now() - 86400000) } });
     const next = await request('/external-pt/checkin/initiate', owner.accessToken, 'POST', { phone: member.phone, membershipId: membership.id, passId: pass.data.id });
     expect((await request('/external-pt/checkin/' + next.data.id + '/owner-fallback-confirm', owner.accessToken, 'POST', { reason: 'Confirmed at counter; no device', confirmedAtCounter: true, pushUnavailable: true })).status).toBe(201);
     expect(await prisma.auditLog.count({ where: { action: 'EXTERNAL_PT_FALLBACK', resourceId: next.data.id } })).toBe(1);

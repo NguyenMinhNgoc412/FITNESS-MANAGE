@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { Card, Form, Label, Choices, LoadState, Page, RecordPicker, useLoad, mutation, Field, iso, Badge, dateTime, Pager } from '../ui';
 import { Membership, Pass, Person } from '../models';
 import { endAfterMonths, membershipPresets } from '../features/membership-presets';
+import { localDateValue } from '../features/conversion-input';
+import { PackageStatistics } from './statistics';
 const customPackageFields: Field[] = [
   { name: 'name', label: 'Tên gói' },
   { name: 'mode', label: 'Loại gói', defaultValue: 'SESSION_BASED', options: [{ value: 'SESSION_BASED', label: 'Theo số lượt' }, { value: 'TIME_BASED', label: 'Theo thời gian' }] },
-  { name: 'startAt', date: true, label: 'Ngày bắt đầu', defaultValue: new Date().toLocaleDateString('en-CA') },
+  { name: 'startAt', date: true, label: 'Ngày bắt đầu', defaultValue: localDateValue() },
   { name: 'endAt', date: true, label: 'Ngày kết thúc (gói thời gian)' },
   { name: 'totalSessions', label: 'Số lượt (chỉ gói số lượt)', numeric: true },
   { name: 'priceVnd', label: 'Giá gói (VNĐ, nếu có)', numeric: true },
@@ -15,7 +17,7 @@ const money = (value: number) => new Intl.NumberFormat('vi-VN').format(value) + 
 export function packageFieldsFor(presetId: string): Field[] {
   const preset = membershipPresets.find(item => item.id === presetId);
   return preset ? [
-    { name: 'startAt', date: true, label: 'Ngày bắt đầu', defaultValue: new Date().toLocaleDateString('en-CA') },
+    { name: 'startAt', date: true, label: 'Ngày bắt đầu', defaultValue: localDateValue() },
     { name: 'priceVnd', label: 'Giá gói (VNĐ, có thể sửa)', numeric: true, defaultValue: String(preset.priceVnd) },
   ] : customPackageFields;
 }
@@ -26,12 +28,19 @@ export function PackagePresetPicker({ value, onChange, disabled = false }: { val
 export function packageBody(v: Record<string, string>, presetId = '') {
   const preset = membershipPresets.find(item => item.id === presetId);
   const startAt = iso(v.startAt);
-  const priceVnd = preset ? z.number().int().positive().parse(Number(v.priceVnd))
-    : v.priceVnd?.trim() ? z.number().int().positive().parse(Number(v.priceVnd)) : undefined;
+  const price = z.number({ invalid_type_error: 'Giá gói phải là số nguyên VNĐ, không dùng dấu phân cách.' }).int('Giá gói phải là số nguyên VNĐ.').positive('Giá gói phải lớn hơn 0.').max(1000000000, 'Giá gói không được quá 1 tỷ VNĐ.');
+  const priceVnd = preset ? price.parse(Number(v.priceVnd))
+    : v.priceVnd?.trim() ? price.parse(Number(v.priceVnd)) : undefined;
   if (preset) return { name: preset.name, mode: preset.mode, startAt, priceVnd,
     ...(preset.mode === 'TIME_BASED' ? { endAt: endAfterMonths(startAt, preset.months!) } : { totalSessions: preset.totalSessions! }) };
-  const name = z.string().trim().min(1).parse(v.name);
-  return { name, mode: v.mode, startAt, priceVnd, ...(v.mode === 'TIME_BASED' ? { endAt: iso(v.endAt) } : { totalSessions: z.number().int().positive().parse(Number(v.totalSessions)) }) };
+  const name = z.string().trim().min(1, 'Nhập tên gói tập.').max(200, 'Tên gói không được quá 200 ký tự.').parse(v.name);
+  const mode = z.enum(['TIME_BASED', 'SESSION_BASED'], { errorMap: () => ({ message: 'Chọn loại gói tập.' }) }).parse(v.mode);
+  if (mode === 'TIME_BASED') {
+    const endAt = iso(v.endAt);
+    if (Date.parse(endAt) <= Date.parse(startAt)) throw new z.ZodError([{ code: 'custom', path: ['endAt'], message: 'Ngày kết thúc phải sau ngày bắt đầu.' }]);
+    return { name, mode, startAt, priceVnd, endAt };
+  }
+  return { name, mode, startAt, priceVnd, totalSessions: z.number({ invalid_type_error: 'Số lượt phải là số nguyên dương.' }).int('Số lượt phải là số nguyên.').positive('Số lượt phải lớn hơn 0.').max(10000, 'Số lượt không được quá 10.000.').parse(Number(v.totalSessions)) };
 }
 export function PackageCard({ item }: { item: Membership }) {
   return <Card title={item.name}><Badge value={item.effectiveStatus} /><Label>{item.mode === 'TIME_BASED' ? 'Hết hạn: ' + dateTime(item.endAt!) : 'Còn ' + item.remainingSessions + ' / ' + item.totalSessions + ' lượt'}</Label>{item.priceVnd != null && <Label muted>Giá ghi nhận: {money(item.priceVnd)}</Label>}</Card>;
@@ -51,6 +60,7 @@ function PresetPackageForm({ label, submit, onSuccess }: { label: string; submit
 export default function Packages() {
   const [page, setPage] = useState(1), people = useLoad<Person[]>('/people?role=MEMBER&page=' + page), [memberId, setMember] = useState('');
   return <Page title="Gói tập" subtitle="Kích hoạt và gia hạn; lịch sử gói luôn được giữ."><LoadState state={people} empty={!people.data?.length} emptyText="Chưa có Member để quản lý gói." />
+    <PackageStatistics />
     <RecordPicker label="Chọn Member" value={memberId} onChange={setMember} options={(people.data ?? []).map(p => ({ value: p.id, label: p.profile.fullName, meta: p.phone }))} /><Pager page={page} setPage={setPage} more={people.data?.length === 30} />
     {memberId ? <MemberPackages key={memberId} memberId={memberId} /> : null}
   </Page>;

@@ -8,6 +8,7 @@ import { activeUser } from './data';
 import { assertMembership } from './rules';
 import { CheckinsService } from './checkins.service';
 import { NotificationsService } from './notifications.service';
+import { assertNoDailyCheckin } from './checkin-day';
 @Injectable()
 export class ExternalPtService {
   constructor(private readonly prisma: PrismaService, private readonly tx: TransactionService, private readonly checkins: CheckinsService, private readonly notifications: NotificationsService) {}
@@ -34,6 +35,8 @@ export class ExternalPtService {
       const member = await db.user.findUnique({ where: { phone: input.phone } });
       if (!member) fail('MEMBER_NOT_FOUND', 'Không tìm thấy Member.', 404);
       await activeUser(db, member.id, Role.MEMBER);
+      const customer = await db.customer.findFirst({ where: { memberUserId: member.id } });
+      await assertNoDailyCheckin(db, { memberId: member.id, customerId: customer?.id }, new Date());
       assertMembership(await db.membership.findUnique({ where: { id: input.membershipId } }), member.id);
       const pass = await db.externalPtPass.findUnique({ where: { id: input.passId } });
       if (!pass || pass.memberId !== member.id || pass.status !== 'ACTIVE' || pass.usedUses >= pass.totalUses) fail('PASS_INVALID', 'External PT Pass không còn hiệu lực.');

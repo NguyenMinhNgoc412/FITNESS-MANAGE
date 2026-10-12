@@ -1,5 +1,41 @@
 # FITNESS-MANAGE SOT 20 — Testing & Acceptance
 
+## One check-in per UTC+7 day — 2026-10-09
+
+- `pnpm --filter @fitness/api lint`: pass TypeScript/unused checks.
+- `pnpm --filter @fitness/api build`: pass NestJS build.
+- `pnpm test:api`: 7 suites / 51 tests pass. New cases cover daily guard, nửa đêm UTC+7/year rollover, đổi gói/context/method, customer identity sau conversion, Trial lượt cuối, PT độc lập, timestamp guard/log đồng nhất và pending external confirmation không trừ thêm package/pass.
+- `git diff --check` cho service check-in/customer/external và integration test: pass.
+- `pnpm --filter @fitness/api test:integration`: không chạy được (0 tests), thiếu TEST_DATABASE_URL tới isolated fitness_test_ database. Đã cập nhật fixtures cho ngày mới và thêm QR/SĐT race khác key, đổi gói cùng ngày và ngày sau; chưa xác minh MongoDB concurrency thực tế trong task này.
+- Cover FR-CHECKIN-008/FR-AUDIT-002 và quota integrity. Không đổi UI/schema/stack; không tự hoàn số buổi đã trừ hoặc xóa duplicate logs quá khứ. Chưa quét camera/thiết bị thật.
+
+## Owner package/check-in reports — 2026-10-09
+
+- `pnpm lint`: pass API/app TypeScript và unused checks.
+- `pnpm build`: pass NestJS build và Expo app typecheck.
+- `pnpm test:api`: 6 suites / 41 tests pass. Report tests cover unique Member qua gia hạn, phân biệt mode cùng tên, dữ liệu rỗng, UTC+7/leap year/year rollover, 12 tháng/zero fill và PT/Member bị chặn trước database read.
+- `pnpm test:app`: 12 suites / 51 tests pass (regression existing).
+- `git diff --check` trên các file code liên quan: pass.
+- Cover FR-PKG-008/FR-CHECKIN-007; chỉ read-only, không đổi schema/quota/history. Chưa kiểm thử báo cáo trên browser/native device hoặc tích hợp MongoDB thật; không suy ra số liệu thực tế từ mocked service tests.
+
+## Counter check-in missing selection — 2026-10-08
+
+- `pnpm lint` and `pnpm build`: pass API/app checks.
+- `pnpm test:app`: pass 12 suites / 51 tests. QR confirmation requires package/internal booking, self-training omits stale booking, phone fallback omits token, external context cannot bypass dedicated flow.
+- `pnpm test:api`: pass 5 suites / 36 tests. Valid QR/phone bodies accepted; missing IDs return safe field-specific errors; strict schema preserved.
+- `node scripts/verify-qr.cjs | services/ai/.venv/Scripts/python.exe scripts/verify-qr.py`: 3 payload sizes round-trip decoded by OpenCV.
+- Expo web export pass; browser UI regression pass with mocked API. Counter phone lookup uses the same form as QR-resolved identity: missing package sends zero requests, selecting package produces valid actual memberCheckinInput payload, missing internal booking adds zero requests. Synthetic 409 prevents consuming any quota.
+- Cover FR-CHECKIN-001/003 and validation UX. Existing Owner guards, QR signature/expiry and transactional quota/idempotency service unchanged. No physical camera/device check-in, live database quota test or verification of Owner's exact selections in this task.
+
+## Conversion validation feedback — 2026-10-08
+
+- `pnpm lint`: pass API/app. `pnpm build`: pass NestJS build/app typecheck.
+- `pnpm test:app`: pass 11 suites / 46 tests; identity checks before package builder, leading zeros/password preserved, safe field messages, date defaults independent of locale.
+- `pnpm test:api`: pass 4 suites / 32 tests; strict conversion schema, valid session/time bodies, safe error messages for CCCD/password/date/price/quota/range and unknown fields rejected.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass.
+- `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass static export. Actual form submissions for custom session, preset 15-session and preset 3-month packages are validated against the real API conversionInput schema inside the mock route before synthetic 409 response. Existing identity preservation/pending and CRM/AI regressions also pass.
+- Cover validation/error UX for FR-TRIAL-006, FR-PKG-004/007 and SOT 05/16/17; no change to service transaction/history/Owner boundary. No real Member created, no device test or reproduction of Owner's exact invalid data; cannot identify that specific field from a generic error alone.
+
 ## PT & Member, date-only package and owned package summaries — 2026-10-08
 
 - `pnpm --filter @fitness/app lint`: pass; `pnpm test:app`: pass 10 suites / 41 tests.

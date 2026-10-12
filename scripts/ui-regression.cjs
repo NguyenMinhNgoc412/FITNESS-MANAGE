@@ -8,6 +8,8 @@ const assert = require('node:assert/strict');
 const { createRequire } = require('node:module');
 const { randomBytes, randomInt } = require('node:crypto');
 const { execFileSync } = require('node:child_process');
+require('../apps/api/node_modules/ts-node').register({ transpileOnly: true, compilerOptions: { module: 'CommonJS', moduleResolution: 'node' } });
+const { conversionInput, memberCheckinInput } = require('../apps/api/src/common/input.ts');
 const root = path.resolve(__dirname, '..');
 const toolBin = process.env.PATH.split(path.delimiter).find(p => fs.existsSync(path.resolve(p, '../@playwright/test/package.json')));
 if (!toolBin) throw new Error('Run through the documented pnpm dlx command.');
@@ -48,9 +50,9 @@ async function main() {
     const ownedPackage = { id: randomBytes(12).toString('hex'), memberId: member.id, name: 'Owned membership fixture', mode: 'SESSION_BASED', startAt: '2026-10-01T00:00:00.000Z', effectiveStatus: 'ACTIVE', totalSessions: 30, usedSessions: 7, remainingSessions: 23, priceVnd: 2100000 };
     const pt = { ...member, id: randomBytes(12).toString('hex'), role: 'PT', profile: { fullName: 'PT UI fixture' } };
     const booking = { id: randomBytes(12).toString('hex'), memberId: member.id, ptId: pt.id, memberName: member.profile.fullName, ptName: pt.profile.fullName, startAt: '2026-10-10T00:00:00.000Z', endAt: '2026-10-10T01:00:00.000Z', status: 'SCHEDULED' };
-    let bookingBody, packageBodyCaptured, releaseBooking, markBookingStarted;
+    let bookingBody, packageBodyCaptured, releaseBooking, markBookingStarted, checkinCount = 0;
     const bookingStarted = new Promise(resolve => { markBookingStarted = resolve; });
-    let releaseConversion, markConversionStarted;
+    let releaseConversion, markConversionStarted, holdConversion = false;
     const conversionStarted = new Promise(resolve => { markConversionStarted = resolve; });
     await page.route('**/*', async route => {
       const url = new URL(route.request().url());
@@ -67,7 +69,12 @@ async function main() {
         let body = [];
         if (url.pathname === '/api/auth/login') body = { accessToken: randomBytes(32).toString('hex'), refreshToken: randomBytes(32).toString('hex'), user: { id, role } };
         else if (url.pathname === '/api/dashboard') body = { checkins: 0, trials: 1, alerts: 0, trialFinal: 0, membershipExpiring: 0, bookingsToday: 0, ptsToday: 0, bookings: [] };
-        else if (url.pathname === '/api/customers/search') body = [customer, memberCustomer];
+        else if (url.pathname === '/api/customers/search') body = url.searchParams.get('phone') === member.phone ? [memberCustomer] : [customer, memberCustomer];
+        else if (url.pathname === '/api/checkins/member') {
+          checkinCount++;
+          assert(memberCheckinInput.safeParse(request.postDataJSON()).success, 'Counter check-in violates real API contract');
+          return route.fulfill({ status: 409, json: { message: 'Check-in UI fixture; không trừ lượt.' } });
+        }
         else if (url.pathname === '/api/customers/' + customer.id) body = customer;
         else if (url.pathname === '/api/customers/' + memberCustomer.id) body = memberCustomer;
         else if (url.pathname === '/api/people') body = url.searchParams.get('role') === 'PT' ? [pt] : [member, otherMember];
@@ -87,6 +94,8 @@ async function main() {
           body = [booking];
         }
         else if (url.pathname.endsWith('/convert-to-member')) {
+          assert(conversionInput.safeParse(request.postDataJSON()).success, 'Conversion payload violates the real API contract');
+          if (!holdConversion) return route.fulfill({ status: 409, json: { message: 'Phản hồi kiểm tra UI; không ghi dữ liệu.' } });
           markConversionStarted();
           await new Promise(resolve => { releaseConversion = resolve; });
           return route.fulfill({ status: 409, json: { message: 'Phản hồi kiểm tra UI; không ghi dữ liệu.' } });
@@ -122,13 +131,25 @@ async function main() {
       const password = randomBytes(16).toString('hex');
       await page.getByLabel('CCCD', { exact: true }).fill(cccd);
       await page.getByLabel('Mật khẩu cấp cho Member (ít nhất 10 ký tự)', { exact: true }).fill(password);
+      stage = 'custom conversion payload satisfies real API schema';
+      await page.getByLabel('Tên gói', { exact: true }).fill('Synthetic custom package');
+      await page.getByLabel('Số lượt (chỉ gói số lượt)', { exact: true }).fill('15');
+      const customResponse = page.waitForResponse(response => response.url().endsWith('/convert-to-member'));
+      await page.getByRole('button', { name: 'Tạo Member và kích hoạt gói', exact: true }).click();
+      await customResponse;
+      await page.getByText('Phản hồi kiểm tra UI; không ghi dữ liệu.', { exact: true }).waitFor();
       for (const [name, price] of [[/Hội viên 15 buổi/, '1200000'], [/Hội viên 3 tháng/, '1800000']]) {
         await page.getByRole('radio', { name }).click();
         assert(await page.getByLabel('CCCD', { exact: true }).inputValue() === cccd, 'Identity field was reset');
         assert(await page.getByLabel('Mật khẩu cấp cho Member (ít nhất 10 ký tự)', { exact: true }).inputValue() === password, 'Credential field was reset');
         assert(await page.getByLabel('Giá gói (VNĐ, có thể sửa)', { exact: true }).inputValue() === price, 'New preset price not applied');
+        const presetResponse = page.waitForResponse(response => response.url().endsWith('/convert-to-member'));
+        await page.getByRole('button', { name: 'Tạo Member và kích hoạt gói', exact: true }).click();
+        await presetResponse;
+        await page.getByText('Phản hồi kiểm tra UI; không ghi dữ liệu.', { exact: true }).waitFor();
       }
       stage = 'conversion locks preset and form while submitting';
+      holdConversion = true;
       await page.getByRole('button', { name: 'Tạo Member và kích hoạt gói', exact: true }).click();
       await Promise.race([conversionStarted, new Promise((_, reject) => setTimeout(() => reject(new Error('Conversion request missing')), 10000))]);
       assert(await page.getByRole('radio', { name: /Hội viên 15 buổi/ }).isDisabled(), 'Preset remains interactive during submit');
@@ -193,6 +214,23 @@ async function main() {
       assert.equal(await end.inputValue(), '2026-10-10T08:00');
       await page.getByLabel('Lý do chỉnh sửa', { exact: true }).waitFor();
       await page.screenshot({ path: path.join(root, '.local/booking-datetime.png'), fullPage: true });
+      stage = 'counter missing choices are rejected locally and selected package satisfies API';
+      await page.getByRole('link', { name: 'Check-in', exact: true }).click();
+      await page.getByLabel('Số điện thoại', { exact: true }).fill(member.phone);
+      await page.getByRole('button', { name: 'Tra cứu', exact: true }).click();
+      await page.getByRole('radio', { name: /Owned membership fixture/ }).waitFor();
+      await page.getByRole('button', { name: 'Xác nhận vào tập', exact: true }).click();
+      await page.getByText('Chọn gói tập đang hoạt động trước khi xác nhận vào tập.', { exact: true }).waitFor();
+      assert.equal(checkinCount, 0, 'Missing package submitted to API');
+      await page.getByRole('radio', { name: /Owned membership fixture/ }).click();
+      await page.getByRole('button', { name: 'Xác nhận vào tập', exact: true }).click();
+      await page.getByText('Check-in UI fixture; không trừ lượt.', { exact: true }).waitFor();
+      assert.equal(checkinCount, 1);
+      await page.getByRole('radio', { name: /PT nội bộ/ }).click();
+      await page.getByRole('radio', { name: /Owned membership fixture/ }).click();
+      await page.getByRole('button', { name: 'Xác nhận vào tập', exact: true }).click();
+      await page.getByText('Chọn booking của Member khi tập với PT nội bộ.', { exact: true }).waitFor();
+      assert.equal(checkinCount, 1, 'Missing booking submitted to API');
     } else {
       stage = 'mobile shortcuts have touch target and keyboard focus';
       for (const name of ['Mở mã QR check-in →', 'Xem lịch tập', 'Kiểm tra form →']) {

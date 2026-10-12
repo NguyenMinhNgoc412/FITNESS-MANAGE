@@ -100,11 +100,14 @@ Nếu không có package hợp lệ:
 1. Time-based package hết đúng theo end date.
 2. Session-based không âm quota.
 3. Double check-in không double-consume.
+   FR-CHECKIN-008 giới hạn một lượt/customer hoặc Member/ngày UTC+7 trên mọi gói/context/QR/SĐT; đổi/gia hạn gói không reset giới hạn.
 4. Expired package không xóa Member.
 5. Owner thấy renewal alert đúng ngưỡng.
 6. Member chỉ xem, không tự gia hạn/mutation package.
 
 ## 8. Gói hội viên mẫu và giá tham khảo — 2026-09-29
+
+Thống kê Owner (FR-PKG-008) nhóm membership theo tên chính xác và mode, đếm memberId duy nhất trên toàn bộ lịch sử (kể cả hết hạn/hủy), kèm số bản ghi cấp/gia hạn. Không nhóm theo giá hoặc số lượt còn lại; tên khác nhau là nhóm khác nhau. Gia hạn tạo bản ghi mới nhưng không tăng số người nếu Member đã có cùng nhóm.
 
 | Gói | Mode | Giá gợi ý |
 |---|---|---:|

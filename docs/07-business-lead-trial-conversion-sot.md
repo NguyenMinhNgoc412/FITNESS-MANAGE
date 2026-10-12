@@ -64,6 +64,8 @@ Khách đọc SĐT
 
 Operation phải idempotent/chống double-click.
 
+Theo FR-CHECKIN-008, chỉ một lượt/customer/ngày UTC+7. Điểm danh lại bị chặn, không giảm thêm Trial; conversion cùng ngày không tạo quyền check-in lần hai dưới Member identity.
+
 ---
 
 ## 6. Sales trigger

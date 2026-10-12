@@ -1,10 +1,22 @@
 # FITNESS-MANAGE SOT 05 — Design System & Role UI
 
+## Counter check-in validation — 2026-10-08
+
+Sau resolve QR hoặc tra cứu SĐT, Owner phải chọn gói đang hoạt động trước xác nhận; PT nội bộ còn cần booking. Thiếu lựa chọn phải báo rõ tại form và không gửi request. Quét mã mới xóa Member/token của mã cũ trước resolve để lỗi quét không giữ identity cũ.
+
+## Conversion validation — 2026-10-08
+
+Form chuyển Trial thành Member báo rõ lỗi CCCD, độ dài mật khẩu và trường gói không hợp lệ thay vì chỉ báo chung. Không hiển thị giá trị CCCD/mật khẩu trong lỗi. Ngày mặc định của gói dùng chuỗi ngày local YYYY-MM-DD độc lập locale cho web/native.
+
 **Trạng thái:** Canonical UI/UX baseline
 
 ---
 
 ## 1. Direction
+
+### Owner statistics — 2026-10-09
+
+Trang Gói tập có thống kê người đăng ký từng nhóm gói, ghi rõ toàn lịch sử và số lần cấp/gia hạn. Logs/Báo cáo có báo cáo check-in 12 tháng, chọn năm trước/sau, Member/Trial và PT attendance tách rõ; tháng rỗng hiện 0. Cả hai panel có loading/error/retry; gói chưa có dữ liệu có empty state. Chỉ Owner nhìn thấy; không thêm báo cáo doanh thu.
 
 UI phải:
 

@@ -218,6 +218,8 @@ Không lưu access token plaintext trong SQLite nếu có secure storage phù h�
 
 ## 6. Data retention/privacy
 
+FR-CHECKIN-008 daily guard sử dụng timestamp + memberId/customerId và ptId indexes hiện có trong transaction có WriteLock. Không thêm field/index nên không cần migration/db push; đọc được logs cũ. Không tự xóa duplicate lịch sử hoặc hoàn quota khi chưa có đối soát riêng.
+
 - Raw AI video không có collection server.
 - Không lưu CCCD vào log message.
 - Audit chỉ lưu dữ liệu cần thiết, tránh snapshot toàn bộ PII nếu không cần.

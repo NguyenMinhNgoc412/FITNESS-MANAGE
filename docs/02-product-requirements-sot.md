@@ -67,6 +67,9 @@ Hệ thống tạo cảnh báo khi Member sắp hết package theo ngưỡng c�
 ### FR-PKG-007
 Owner có 6 gói hội viên mẫu: 15/30/45 buổi và 3/6/12 tháng, kèm giá VNĐ tham khảo có thể sửa trước khi kích hoạt, gia hạn hoặc chuyển Trial. Giá ghi trên gói không đồng nghĩa đã thanh toán.
 
+### FR-PKG-008
+Owner xem số Member duy nhất đã đăng ký từng nhóm tên + loại gói và số lần cấp/gia hạn trong toàn bộ lịch sử. Gia hạn cùng nhóm không đếm thêm người; giữ cả gói hết hạn/hủy. Nhóm chưa từng được cấp không xuất hiện. PT/Member không truy cập thống kê toàn gym.
+
 Chi tiết: `08-business-membership-package-sot.md`.
 
 ---
@@ -138,6 +141,12 @@ Hệ thống không tự match Member log với PT log để kết luận PT v�
 
 ### FR-CHECKIN-006
 Owner có thể xem booking + Member check-in log + PT check-in log để đối chiếu thủ công.
+
+### FR-CHECKIN-007
+Owner xem lượt check-in theo 12 tháng của năm được chọn, theo UTC+7; tháng không có lượt hiển thị 0. Tổng lượt vào tập gồm Member + Trial, PT attendance hiển thị riêng. Đếm log đã ghi thành công, không suy ra số người duy nhất hoặc attendance cho booking. Không bổ sung báo cáo doanh thu trong yêu cầu này.
+
+### FR-CHECKIN-008
+Một customer/Member chỉ có một lượt vào tập trong mỗi ngày UTC+7, bất kể QR/SĐT, gói hay context. Trial chuyển Member cùng ngày vẫn là cùng identity. PT chỉ có một attendance log/ngày độc lập. Request mới sau điểm danh bị chặn và không consume quota/pass; replay cùng Idempotency-Key giữ kết quả cũ. Sang ngày mới được điểm danh nếu quyền/gói hợp lệ.
 
 Chi tiết: `11-business-checkin-attendance-sot.md`.
 

@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma.service';
 import { activeUser } from './data';
 import { assertMembership } from './rules';
 import { MembershipsService } from './memberships.service';
+import { assertNoDailyCheckin, checkinDayRange } from './checkin-day';
 export type CheckinInput = { memberId: string; membershipId: string; context: 'SELF_TRAINING' | 'WITH_INTERNAL_PT'; bookingId?: string; method: 'PHONE' | 'QR'; qrToken?: string };
 @Injectable()
 export class CheckinsService {
@@ -39,14 +40,11 @@ export class CheckinsService {
   }
   async consumeIn(db: Db, actor: Actor, input: Omit<CheckinInput, 'context'> & { context: string; externalPtPassId?: string }, commandId: string) {
     await activeUser(db, input.memberId, Role.MEMBER);
-    const membership = await db.membership.findUnique({ where: { id: input.membershipId } });
-    assertMembership(membership, input.memberId);
+    const checkedInAt = new Date();
     const customer = await db.customer.findFirst({ where: { memberUserId: input.memberId } });
-    const recent = await db.memberCheckin.findFirst({ where: { memberId: input.memberId, checkedInAt: { gt: new Date(Date.now() - 30000) } } });
-    if (recent) {
-      if (recent.context === input.context && recent.membershipId === input.membershipId && !input.externalPtPassId) return recent;
-      fail('RECENT_CHECKIN', 'Member vừa check-in. Kiểm tra log trước khi tiếp tục.');
-    }
+    await assertNoDailyCheckin(db, { memberId: input.memberId, customerId: customer?.id }, checkedInAt);
+    const membership = await db.membership.findUnique({ where: { id: input.membershipId } });
+    assertMembership(membership, input.memberId, checkedInAt);
     if (input.context === 'WITH_INTERNAL_PT') {
       const booking = input.bookingId ? await db.booking.findUnique({ where: { id: input.bookingId } }) : null;
       if (!booking || booking.memberId !== input.memberId || booking.status === 'CANCELLED') fail('BOOKING_REQUIRED', 'Cần booking PT hợp lệ của Member.');
@@ -56,7 +54,7 @@ export class CheckinsService {
     const log = await db.memberCheckin.create({ data: {
       subjectType: 'MEMBER', customerId: customer?.id, memberId: input.memberId, membershipId: membership.id,
       context: input.context, bookingId: input.bookingId, externalPtPassId: input.externalPtPassId,
-      method: input.method, operatorId: actor.sub, idempotencyKey: commandId,
+      method: input.method, operatorId: actor.sub, idempotencyKey: commandId, checkedInAt,
     } });
     await audit(db, actor, input.method === 'PHONE' ? 'MEMBER_PHONE_CHECKIN' : 'MEMBER_QR_CHECKIN', 'checkin', log.id);
     await this.memberships.alert(db, membership.id);
@@ -66,9 +64,10 @@ export class CheckinsService {
     requireRole(actor, Role.PT);
     return this.tx.command(actor, 'pt.checkin', key, {}, async (db, commandId) => {
       await activeUser(db, actor.sub, Role.PT);
-      const recent = await db.ptAttendanceLog.findFirst({ where: { ptId: actor.sub, checkedInAt: { gt: new Date(Date.now() - 30000) } } });
-      if (recent) return recent;
-      return db.ptAttendanceLog.create({ data: { ptId: actor.sub, idempotencyKey: commandId } });
+      const checkedInAt = new Date();
+      const existing = await db.ptAttendanceLog.findFirst({ where: { ptId: actor.sub, checkedInAt: checkinDayRange(checkedInAt) } });
+      if (existing) fail('ALREADY_CHECKED_IN_TODAY', 'PT đã điểm danh hôm nay. Không tạo thêm lượt điểm danh.');
+      return db.ptAttendanceLog.create({ data: { ptId: actor.sub, idempotencyKey: commandId, checkedInAt } });
     });
   }
   logs(actor: Actor, pageNumber?: string) {

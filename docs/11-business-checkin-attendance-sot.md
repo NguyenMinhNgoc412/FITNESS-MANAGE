@@ -105,9 +105,13 @@ Không được double log/consume vì:
 
 Có thể dùng idempotency key hoặc duplicate-window rule ở service/API; implementation chi tiết nằm technical files.
 
+Quyết định Owner 2026-10-09 (FR-CHECKIN-008): thay cửa sổ 30 giây bằng một lượt/customer hoặc Member mỗi ngày UTC+7, từ 00:00 gồm đến 00:00 ngày sau không gồm. QR/SĐT, gói, context và conversion không reset giới hạn. PT attendance cũng tối đa một log/PT/ngày, vẫn độc lập. Request với key mới bị từ chối ALREADY_CHECKED_IN_TODAY/409, không ghi log hoặc consume thêm; retry cùng key replay kết quả. Kiểm tra và consume trong transaction có shared business write lock. Không tự xóa log/hoàn quota quá khứ.
+
 ---
 
 ## 10. Acceptance
+
+Báo cáo FR-CHECKIN-007 chỉ Owner: chọn năm 1900–2199, trả đủ 12 tháng theo UTC+7 với khoảng [đầu tháng, đầu tháng sau). Đếm Member/Trial từ member_checkins.checked_in_at và PT riêng từ pt_attendance_logs.checked_in_at. Retry đã được idempotency chặn không tạo log nên không tăng lượt báo cáo; không auto-match booking.
 
 1. QR resolve đúng Member.
 2. SĐT fallback hoạt động.

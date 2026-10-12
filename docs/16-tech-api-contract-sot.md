@@ -1,5 +1,13 @@
 # FITNESS-MANAGE SOT 16 — REST API Contract
 
+## Member check-in validation feedback — 2026-10-08
+
+POST checkins/member giữ strict schema và INVALID_INPUT/400; thiếu/không hợp lệ membershipId hoặc bookingId trả message cố định hướng dẫn chọn gói/booking, không echo id/token. Client tạo payload allowlist: SELF_TRAINING không gửi bookingId; WITH_INTERNAL_PT gửi booking đã chọn. QR signature/expiry/member matching, gói/quota, role và idempotency vẫn do service kiểm tra.
+
+## Conversion validation feedback — 2026-10-08
+
+Endpoint convert-to-member giữ strict schema và INVALID_INPUT/400; message chỉ rõ trường lỗi bằng thông báo cố định, không echo dữ liệu: CCCD đúng 12 chữ số, mật khẩu 10–72 ký tự; tên gói 1–200 ký tự, số lượt 1–10.000, giá VNĐ nguyên dương tối đa 1 tỷ khi có. Gói thời gian cần endAt sau startAt. Các giới hạn này là contract đã triển khai, không thay nghiệp vụ/history/RBAC.
+
 ## 1. Convention
 
 Base ví dụ: `/api/v1`.
@@ -110,6 +118,11 @@ Không có endpoint `match-booking-attendance` trong MVP.
 
 ## 10. Sales alerts
 
+### Owner reports — 2026-10-09
+
+- `GET /reports/packages`: Owner-only; array `{name,mode,memberCount,registrations}` cho toàn lịch sử cấp gói, nhóm tên + mode, memberCount unique theo memberId.
+- `GET /reports/checkins?year=YYYY`: Owner-only; year bắt buộc 1900–2199, sai trả INVALID_INPUT/400. Response `{year,timezone: "Asia/Bangkok",months:[{month,member,trial,total,pt}]}` đủ 12 tháng; total=member+trial, PT riêng. Khoảng tháng UTC+7, đầu bao gồm/cuối loại trừ. Không trả identity/PII hoặc đọc AI data. Không đổi schema/consume logic.
+
 - `GET /sales-alerts` — Owner
 - `PATCH /sales-alerts/:id` — Owner
 
@@ -128,6 +141,8 @@ Payload **không chứa video/base64/file URL raw video**.
 ---
 
 ## 12. Idempotency
+
+FR-CHECKIN-008 (2026-10-09): Trial/Member/PT check-in và external initiate/confirm bị từ chối `ALREADY_CHECKED_IN_TODAY`/409 nếu identity đã điểm danh trong ngày UTC+7 (PT log độc lập). Message tiếng Việt nêu đã điểm danh, không consume thêm. Cùng key hợp lệ vẫn replay command cũ; không đổi payload/schema hoặc QR validation. Daily guard chạy trong transaction, không chỉ ở UI.
 
 Endpoint consume quota/check-in nên nhận `Idempotency-Key` hoặc command id.
 

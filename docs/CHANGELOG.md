@@ -1,5 +1,31 @@
 # FITNESS-MANAGE SOT — CHANGELOG
 
+## 2026-10-09 — Chặn điểm danh nhiều lần cùng ngày
+
+- Owner báo QR quét lần hai trừ thêm buổi; code cũ chỉ chống lặp 30 giây.
+- FR-CHECKIN-008 khóa một lượt vào tập/customer hoặc Member/ngày UTC+7, không reset bởi method/gói/context/conversion; PT một attendance log/ngày độc lập.
+- Daily guard đặt trong transaction có shared write lock trước consume; request mới bị chặn 409 và không consume gói/Trial/pass. Same-key replay giữ nguyên. Chốt timestamp cùng guard để tránh race qua nửa đêm.
+- Cập nhật SOT 02/07/08/11/12/15/16/17 và integration fixtures cho ngày mới; không đổi schema/stack hoặc tự hoàn quota lịch sử. Verification tại SOT 20.
+
+## 2026-10-09 — Người đăng ký gói và check-in theo tháng
+
+- Owner yêu cầu thêm hai thống kê; sau làm rõ đã bỏ yêu cầu doanh thu.
+- FR-PKG-008 đếm Member duy nhất theo tên + mode trong lịch sử và số lần cấp/gia hạn, gồm hết hạn/hủy.
+- FR-CHECKIN-007 báo cáo đủ 12 tháng theo năm/UTC+7; Member + Trial là tổng lượt vào tập, PT attendance riêng. Hai API read-only enforce Owner tại guard và service; không đổi schema/quota/history/stack.
+- Cập nhật SOT 02/05/08/11/16; verification ghi tại SOT 20.
+
+## 2026-10-08 — Lỗi dữ liệu khi xác nhận check-in sau quét QR
+
+- Owner xác nhận lỗi xuất hiện sau nút Xác nhận vào tập. Form gửi id gói/booking rỗng khi chưa chọn; schema API từ chối với lỗi chung.
+- Thêm client check-in payload helper kiểm tra lựa chọn, chỉ gửi booking trong context PT nội bộ; API trả lỗi trường cụ thể. Xóa identity/token cũ khi bắt đầu quét mới.
+- Giữ cơ chế QR ký/hết hạn và quota/idempotency/Owner boundary hiện hành; không auto-select gói/booking và không đổi stack. Cập nhật SOT 05/16/20 cho FR-CHECKIN-001/003 và FR-AUDIT-002.
+
+## 2026-10-08 — Làm rõ lỗi chuyển Trial thành Member
+
+- Owner báo nhập đủ vẫn bị lỗi ở cả gói mẫu/tự nhập. Xác minh thông báo generic phía client/server che trường sai; chưa có dữ liệu lỗi thực tế để kết luận trường cụ thể của Owner.
+- Conversion kiểm tra CCCD/mật khẩu trước gửi, giữ leading zeros/mật khẩu nguyên bản; lỗi package/date được diễn giải. Chuẩn hóa ngày mặc định độc lập locale, đồng bộ giới hạn giá/quota/tên/ngày với API existing.
+- API giữ strict validation/400, bổ sung thông báo theo trường không echo PII; không đổi role/conversion transaction/history/quota. Cập nhật SOT 05/16/20 và regression cả mẫu/tự nhập.
+
 Mọi thay đổi quyết định sản phẩm/nghiệp vụ/architecture/stack/UI quan trọng phải ghi ở đây.
 
 ## 2026-10-08 — PT & Member, date gói và hiển thị gói sở hữu

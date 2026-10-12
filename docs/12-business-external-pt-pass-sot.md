@@ -62,6 +62,8 @@ Chỉ consume pass sau khi confirmation/fallback hợp lệ.
 
 Double-submit/retry không được consume hai lần.
 
+FR-CHECKIN-008 áp dụng chung: Member đã vào tập hôm nay không được initiate/confirm lượt mới để consume thêm gói/pass, kể cả đã tạo pending request trước lượt vào tập khác. Confirm request đã CONFIRMED chỉ trả lại checkinId cũ; daily guard tại consumeIn chạy trong cùng transaction trước cập nhật pass.
+
 ---
 
 ## 6. Acceptance

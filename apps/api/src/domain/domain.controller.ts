@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, UseG
 import { Role } from '@prisma/client';
 import { z } from 'zod';
 import { Actor, CurrentUser, Roles } from '../common/access';
-import { bookingInput, cccd, id, membershipInput, parse, password, phone, reason, text } from '../common/input';
+import { bookingInput, cccd, id, membershipInput, parse, parseConversion, parseMemberCheckin, password, phone, reason, text } from '../common/input';
 import { JwtAuthGuard, RolesGuard } from '../auth/guards';
 import { CustomersService } from './customers.service';
 import { MembershipsService } from './memberships.service';
@@ -38,7 +38,7 @@ export class OwnerController {
   trialCheckin(@CurrentUser() a: Actor, @Param('id') value: string, @Headers('idempotency-key') k?: string) { return this.customers.checkin(a, parse(id, value), k); }
   @Post('customers/:id/convert-to-member')
   convert(@CurrentUser() a: Actor, @Param('id') value: string, @Body() b: unknown, @Headers('idempotency-key') k?: string) {
-    return this.customers.convert(a, parse(id, value), parse(z.object({ cccd, password, membership: membershipInput }).strict(), b), k);
+    return this.customers.convert(a, parse(id, value), parseConversion(b), k);
   }
   @Get('people')
   peopleList(@CurrentUser() a: Actor, @Query('role') role: string, @Query('page') n?: string) { return this.people.list(a, parse(z.enum(['PT', 'MEMBER']), role), n); }
@@ -82,7 +82,7 @@ export class OwnerController {
   resolve(@CurrentUser() a: Actor, @Body() b: unknown) { return this.checkins.resolve(a, parse(z.object({ token: z.string().min(1).max(2000) }).strict(), b).token); }
   @Post('checkins/member')
   memberCheckin(@CurrentUser() a: Actor, @Body() b: unknown, @Headers('idempotency-key') k?: string) {
-    return this.checkins.member(a, parse(z.object({ memberId: id, membershipId: id, context: z.enum(['SELF_TRAINING', 'WITH_INTERNAL_PT']), bookingId: id.optional(), method: z.enum(['PHONE', 'QR']), qrToken: z.string().max(2000).optional() }).strict(), b), k);
+    return this.checkins.member(a, parseMemberCheckin(b), k);
   }
   @Get('checkins')
   logs(@CurrentUser() a: Actor, @Query('page') n?: string) { return this.checkins.logs(a, n); }
@@ -110,6 +110,12 @@ export class OwnerController {
   audit(@CurrentUser() a: Actor, @Query('page') n?: string) { return this.operations.logs(a, n); }
   @Get('dashboard')
   dashboard(@CurrentUser() a: Actor) { return this.operations.dashboard(a); }
+  @Get('reports/packages')
+  packageStatistics(@CurrentUser() a: Actor) { return this.operations.packageStatistics(a); }
+  @Get('reports/checkins')
+  monthlyCheckins(@CurrentUser() a: Actor, @Query('year') year: string) {
+    return this.operations.monthlyCheckins(a, Number(parse(z.string().regex(/^(19|20|21)\d{2}$/), year)));
+  }
 }
 
 @Controller()
