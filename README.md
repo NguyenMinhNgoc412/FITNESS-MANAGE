@@ -2,15 +2,50 @@
 
 FITNESS-MANAGE là ứng dụng quản lý phòng gym quy mô nhỏ cho **Owner**, **PT nội bộ** và **Member**. Ứng dụng Expo chạy trên mobile và web, NestJS cung cấp REST API với MongoDB, còn FastAPI hỗ trợ phản hồi AI từ các chỉ số tư thế đã xử lý trên thiết bị. Quyết định sản phẩm và nghiệp vụ nằm trong [bộ Source of Truth](docs/README.md).
 
+Repository đang phát triển theo phạm vi MVP. Hướng dẫn dưới đây dành cho môi trường development; các điều kiện nghiệm thu và giới hạn kiểm chứng được ghi trong [Testing & Acceptance](docs/20-testing-acceptance-sot.md).
+
 ## Giới thiệu ứng dụng
 
 | Người dùng | Chức năng chính |
 |---|---|
 | Owner | Tiếp nhận Trial 3 buổi, chuyển Trial thành Member, quản lý gói tập, PT, booking từng buổi, check-in, External PT Pass và cảnh báo chăm sóc khách hàng. |
 | PT | Xem lịch và Member được phân công; ghi nhận PT check-in độc lập. |
-| Member | Xem gói tập, lịch, mã QR check-in, xác nhận yêu cầu dùng PT ngoài và kiểm tra form squat bằng AI. |
+| Member | Xem gói tập, lịch, mã QR check-in, xác nhận yêu cầu dùng PT ngoài và kiểm tra form bài tập bằng AI. |
 
-Chỉ Owner được tạo, sửa hoặc hủy booking và thay đổi PT assignment. AI trên mobile/web nhận diện heuristic Squat/chống đẩy/lunge từ video, không cần chọn bài; đo góc từng lần và tự lấy nhận xét từ JSON chỉ số. Bài chưa rõ/ngoài phạm vi trả UNKNOWN. Ngưỡng là mục tiêu app chưa được kiểm chứng trên video người thật; thân/tay thiếu tiêu chí thì chỉ báo số đo. Video gốc ở lại thiết bị. FastAPI dùng OpenAI với OPENAI_API_KEY/OPENAI_MODEL server-only, giữ phản hồi local khi dịch vụ lỗi; không tạo giáo án hay chẩn đoán. Xem services/ai/README.md để cấu hình.
+### Quy tắc nghiệp vụ chính
+
+- Chỉ có ba role đăng nhập: `OWNER`, `PT`, `MEMBER`. Lead/Trial và PT ngoài không có role đăng nhập.
+- Trial có đúng **3 buổi**, mỗi số điện thoại chỉ được hưởng một lần; chuyển thành Member giữ nguyên identity và lịch sử.
+- Gói tập hỗ trợ `TIME_BASED` và `SESSION_BASED`; Owner quản lý kích hoạt, gia hạn và PT assignment.
+- Chỉ Owner tạo, sửa hoặc hủy booking; lịch phải chống trùng cho cả PT và Member.
+- Member/Trial có một lượt vào tập mỗi ngày UTC+7. PT attendance là log độc lập, không tự ghép với Member check-in để kết luận attendance của booking.
+- Owner có báo cáo người đăng ký gói và lượt check-in theo tháng; số liệu này không phải báo cáo doanh thu.
+
+### AI kiểm tra form và quyền riêng tư
+
+AI trên mobile/web tự nhận diện heuristic **Squat, chống đẩy và Lunge** từ video, đo chỉ số/góc theo phạm vi hỗ trợ và lấy nhận xét từ JSON chỉ số. Bài chưa rõ hoặc ngoài phạm vi trả `UNKNOWN`. Ngưỡng so sánh là mục tiêu của app chưa được kiểm chứng trên video người thật; thân/tay thiếu tiêu chí thì chỉ báo số đo.
+
+```text
+Video local → MediaPipe trên thiết bị → structured JSON/metrics
+           → NestJS gateway (MEMBER) → FastAPI → OpenAI nếu cấu hình
+           → structured feedback
+```
+
+**Video gốc ở lại thiết bị.** Chỉ Member xem kết quả AI của mình. FastAPI dùng `OPENAI_API_KEY` và `OPENAI_MODEL` phía server, giữ nhận xét local khi thiếu cấu hình hoặc dịch vụ lỗi. AI không tạo giáo án, không chẩn đoán y khoa và không thay PT. Xem [hướng dẫn AI service](services/ai/README.md) để cấu hình.
+
+## Công nghệ
+
+| Thành phần | Công nghệ |
+|---|---|
+| Client mobile/web | React Native, Expo, TypeScript, React Native Web, Expo Router |
+| State, form và REST client | Zustand, React Hook Form, Zod, Axios |
+| Backend và xác thực | NestJS, REST API, JWT Access Token + Refresh Token, Prisma |
+| Dữ liệu nghiệp vụ | MongoDB, ưu tiên MongoDB Atlas |
+| Dữ liệu AI local | SQLite qua `expo-sqlite`, `expo-file-system`; OPFS trên web |
+| AI | MediaPipe Pose trên thiết bị, Python/FastAPI, OpenAI cho diễn giải metrics |
+| Thông báo và storage | Expo Push Notifications; Supabase Storage chỉ cho file cloud-safe như avatar |
+
+Sau mutation, client refresh/re-fetch qua REST. Chi tiết baseline xem [Tech Stack SOT](docs/04-tech-stack-sot.md).
 
 ## Cấu trúc dự án
 
@@ -21,6 +56,16 @@ Chỉ Owner được tạo, sửa hoặc hủy booking và thay đổi PT assign
 | `services/ai` | FastAPI nhận chỉ số tư thế và trả phản hồi có cấu trúc. |
 | `scripts` | Chạy các service, chuẩn bị MediaPipe và kiểm tra bổ trợ. |
 | `docs` | Source of Truth về sản phẩm, thiết kế, kiến trúc và acceptance. |
+| `images` | Ảnh tham chiếu giao diện canonical theo Owner, PT và Member. |
+
+## Tài liệu dự án
+
+- [Mục lục Source of Truth](docs/README.md)
+- [Product Brief](docs/01-product-brief-sot.md) và [Product Requirements](docs/02-product-requirements-sot.md)
+- [Kiến trúc hệ thống](docs/03-technical-architecture-sot.md)
+- [Testing & Acceptance](docs/20-testing-acceptance-sot.md)
+- [Lịch sử quyết định](docs/CHANGELOG.md)
+- [Quy tắc làm việc trong repository](AGENTS.md)
 
 ## Yêu cầu cài đặt
 
@@ -64,7 +109,7 @@ Tạo file `.env` từ bản `.env.example` tương ứng rồi điền giá tr�
 | File | Cấu hình cần chú ý |
 |---|---|
 | `apps/api/.env` | `DATABASE_URL`, ba JWT secret khác nhau (`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_QR_SECRET`), `AI_SERVICE_TOKEN` và thông tin `SEED_OWNER_*`. |
-| `services/ai/.env` | `AI_SERVICE_TOKEN` giống giá trị ở API. |
+| `services/ai/.env` | `AI_SERVICE_TOKEN` giống giá trị ở API; `OPENAI_API_KEY` và `OPENAI_MODEL` nếu dùng diễn giải OpenAI. |
 | `apps/app/.env` | `EXPO_PUBLIC_API_URL` nếu không dùng URL API mặc định; `EXPO_PUBLIC_PROJECT_ID` khi cần native push. |
 
 Mỗi JWT secret cần ít nhất 32 ký tự. `DATABASE_URL` phải trỏ tới database phát triển dùng replica set. API mặc định chạy tại `http://localhost:3000/api`; với điện thoại, dùng địa chỉ LAN của máy chạy API (hoặc để client tự nhận host Metro trong môi trường development). Không commit `.env` hoặc secret.
