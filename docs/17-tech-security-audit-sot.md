@@ -34,6 +34,8 @@ PII gồm SĐT, CCCD, địa chỉ, DOB.
 
 ## 4. Critical invariants
 
+Khi hết số lần retry write conflict, API trả `409 CONCURRENT_CHANGE` với thông báo an toàn để client thử lại; không trả lỗi database hoặc nới khóa chống overlap/quota.
+
 1. phone unique.
 2. CCCD unique khi có.
 3. Trial once per phone.
@@ -61,6 +63,8 @@ Với booking, nếu hai request đồng thời cùng slot, service phải reval
 ---
 
 ## 6. Audit actions
+
+CRM 2026-10-20: endpoint hồ sơ chính thức và check-in phân trang theo customer đều Owner-only tại guard và service. Chỉ chọn họ tên/CCCD/trạng thái cần thiết; không trả password/token/session. Nhật ký truy vấn summary Member của booking để giữ liên kết lịch sử sau đổi Member; Mongo projection và mapper chỉ trả allowlist sự kiện, không đưa audit snapshots ra client.
 
 Audit tối thiểu:
 
@@ -108,3 +112,7 @@ Nếu crash analytics/logging được thêm sau này, không attach local video
 Access token 15 phút, refresh 7 ngày; refresh hash SHA-256, rotation transaction và revoke khi khóa account. Server đọc role/status/session hiện hành; mutation kiểm tra lại actor trong transaction. QR có chữ ký riêng, loại token checkin, hạn 2 phút; không nhúng SĐT/CCCD.
 
 Command lưu fingerprint và kết quả để replay cùng Idempotency-Key. Transaction lock bảo vệ Trial, quota, assignment và overlap của cả PT/Member. Từ 2026-10-09, FR-CHECKIN-008 thay cửa sổ 30 giây bằng daily guard UTC+7 theo memberId/customerId (OR để giữ conversion identity), không phụ thuộc context/gói/method. PT guard theo ptId/ngày độc lập. Query guard và consume/create log nằm sau shared write lock trong cùng transaction; write conflict retry đọc state mới. Timestamp log được chốt cùng ngày kiểm tra để tránh race qua nửa đêm. Log lỗi công khai không echo input, token, CCCD hoặc stack; audit chỉ lưu context nghiệp vụ cần thiết.
+
+## PT QR — 2026-10-21
+
+PT chỉ lấy QR của chính mình; chỉ Owner resolve/xác nhận PT attendance tại guard và service. Signed QR PT có kind pt-attendance khác Member checkin, expiry 2 phút, không PII. Confirm revalidate PT active trong transaction; source QR, audit actor Owner, không lưu token trong log/audit/result. Command chỉ lưu fingerprint của input và kết quả, không lưu raw QR. Daily guard/WriteLock bảo vệ các Owner quét đồng thời; replay cùng key không tạo log/audit mới. Log APP cũ được giữ nguyên, không cần migration/schema/index mới.

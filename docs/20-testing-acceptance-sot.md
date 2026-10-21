@@ -1,5 +1,36 @@
 # FITNESS-MANAGE SOT 20 — Testing & Acceptance
 
+## Năm lỗi design system sau review — 2026-10-20
+
+- `pnpm --filter @fitness/app lint`: pass TypeScript/unused checks.
+- `pnpm test:app`: pass 13 suites / 60 tests; thêm 9 ca contrast tối thiểu 4,5:1 cho semantic button/link/navigation/badge/message. Các cặp chính: CTA trắng trên primaryStrong khoảng 5,87:1; primaryText trên selected surface khoảng 6,07:1; dangerText trên dangerSurface khoảng 5,69:1.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass, 1.057 modules. Có cảnh báo NO_COLOR/FORCE_COLOR; không phải lỗi build. Đây là web bundle, không phải native build.
+- Regression runner `scripts/design-system-regression.cjs` dùng web export mới và API mock, không truy cập database/tài khoản/camera thật. Phạm vi gồm pending cấp/gia hạn, destructive confirmations, menu Owner màn thấp, booking loading/error/retry/empty, tự tập độc lập và PT/Member schedule read-only.
+- `pnpm --package=@playwright/test dlx -c "node scripts/design-system-regression.cjs"`: pass Owner/PT/Member trên Edge headless. Khóa picker/date/submit trong request giữ pending ở cả cấp/gia hạn, chặn thử đổi mẫu; ba nút hủy có label/màu semantic; Settings nằm trọn viewport và bấm được sau cuộn ở 1440×480 và 390×480; booking lỗi/rỗng khóa form, retry hoạt động, tự tập vẫn mở. Đã xem ảnh render trong `.local/design-system-fixes/`.
+- `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass regression hiện có cho package, booking datetime/prefill/timezone/pending, Member read-only, conversion/picker/shortcut, root isolation và local AI import/pose failure/góc giả lập/delete/cancel/pending. API mock; không suy ra độ chính xác video người thật hoặc tích hợp database.
+- `git diff --check` và `node --check scripts/design-system-regression.cjs`: pass; Git có cảnh báo CRLF.
+- Cover FR-UI-001/002/004, UX cấp/gia hạn FR-PKG-004/007, check-in FR-CHECKIN-001/002/003 và giữ FR-BOOK-002/003. Không đổi server RBAC/quota/history/schema/provider/dependency; chưa kiểm thử native/thiết bị thật hoặc concurrency MongoDB trong task UI này.
+
+## Dashboard và scheduler sau review — 2026-10-20
+
+- `pnpm --filter @fitness/api test`: pass 12 suites / 71 tests. Thêm 7 ca cho khoảng ngày UTC+7 trước/sau nửa đêm và chuyển năm, cùng khoảng query check-in/booking, Dashboard không dùng transaction và chặn PT/Member trước khi đọc DB; hai scheduler chỉ log mã cố định khi reject, chạy tiếp ở tick sau và dừng timer khi destroy.
+- `pnpm --filter @fitness/api lint`: pass TypeScript/unused checks.
+- `pnpm --filter @fitness/api build`: pass NestJS build (exit code 0).
+- `git diff --check`: pass, chỉ có cảnh báo line ending CRLF.
+- Đối chiếu SOT 03/13/17 và FR-SALES-002/FR-NOTI-001/002, giữ Owner-only Dashboard (FR-AUDIT-003); ngày UTC+7 đồng nhất với FR-CHECKIN-008. Không đổi schema/quota/API/stack. Dashboard chỉ đọc cảnh báo đã lưu, có thể trễ khoảng chu kỳ refresh 60 giây khi worker hoạt động bình thường.
+- Test dùng mock Prisma/fake timers, chưa xác minh MongoDB hoặc Expo push/thiết bị thật. Không chạy lại frontend/AI tests vì không sửa các phần này.
+
+## Notification và domain pattern fixes — 2026-10-20
+
+- `pnpm --filter @fitness/api prisma:generate` và `prisma:validate`: pass, Prisma Client 6.19.3 được generate từ schema mới. Không chạy db:push/db:indexes trên database nghiệp vụ trong task này.
+- `pnpm lint`: pass TypeScript/unused checks API và app. `pnpm build`: pass NestJS build và app typecheck.
+- `pnpm --filter @fitness/api test`: pass 10 suites / 64 tests. Bao gồm recovery/lease/claim-token fencing, claim thua không gửi, retry delay/giới hạn, thiếu device, batch được nhận một phần, chống chạy chồng local và khởi tạo external request không chờ push/không consume pass. Module test resolve toàn graph DI, kiểm tra 48 route có guards/roles explicit và HTTP test cho self attendance/pass cùng PT/Member booking/assignment/report 403. Lượt HTTP đầu quá timeout Jest 5 giây; sau đặt timeout khởi động 30 giây và timeout mỗi HTTP request 5 giây, cả suite pass.
+- `pnpm --filter @fitness/app test`: pass 12 suites / 51 tests.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass (1.057 modules). Đây là web bundle, không phải native build/thiết bị thật.
+- So sánh method/path với controller trước refactor: đủ 48 endpoint, không thêm/mất. `git diff --check`: pass (chỉ có cảnh báo line ending CRLF của Git).
+- `pnpm --filter @fitness/api test:integration`: chưa chạy được test (0 tests), thiếu TEST_DATABASE_URL tới database fitness_test_ riêng. Cổng MongoDB test local 127.0.0.1:27027 trong README không hoạt động. Không dùng database development thay thế; chưa xác minh backfill/index/lease concurrency trên MongoDB thật hoặc push Expo/thiết bị thật.
+- Cover FR-NOTI-001/002, giữ FR-AUDIT-002/003 và Owner-only booking/assignment. Không đổi UI behavior/stack/AI privacy pipeline. Trước rollout cần dừng worker cũ, chạy generate/db:push/db:indexes theo README/SOT 15. Push vẫn best-effort, có thể duplicate nếu upstream nhận trước khi response mất; không tuyên bố exactly-once.
+
 ## One check-in per UTC+7 day — 2026-10-09
 
 - `pnpm --filter @fitness/api lint`: pass TypeScript/unused checks.
@@ -235,3 +266,29 @@ Regression mobile/web CRM xác minh thêm: Customer tabs đầy đủ và bookin
 - `pnpm --filter @fitness/app exec expo export --platform android --platform ios --output-dir dist-sot-native`: pass bundle Hermes Android/iOS. Đây không phải native iOS/Xcode build.
 - `UI_TEST_URL=http://localhost:8081` + `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`: pass; cùng runner trên static export cũng pass. Video đen chạy MediaPipe thật kiểm tra pose failure; report góc dùng pose giả. API mock, không raw video HTTP payload.
 - `adb devices`: không có thiết bị kết nối. Không có Xcode trên Windows; chưa compile native iOS hoặc test trực tiếp thiết bị/camera/pose người thật. Cover implementation FR-AI-003/005/006/007, nhưng không tuyên bố hoàn tất native device acceptance hoặc kiểm chứng ngưỡng.
+
+### CRM regression fixes — 2026-10-20
+
+- Phạm vi: FR-PROFILE-001, FR-SALES-002, FR-AUDIT-001; hồ sơ Member chỉ Owner xem, lịch sử booking giữ liên kết Member cũ/mới, phân trang booking/check-in độc lập và Sales mặc định OPEN.
+- `pnpm --filter @fitness/api lint` và `pnpm --filter @fitness/app lint`: pass.
+- `pnpm test:api`: pass 13 suites / 89 tests. `pnpm test:app`: pass 13 suites / 60 tests.
+- `pnpm --filter @fitness/api build`: pass. Expo web export `dist-sot-web`: pass 1057 modules.
+- `node --check scripts/crm-regression.cjs` và `git diff --check`: pass (Git có cảnh báo LF/CRLF).
+- `pnpm --package=@playwright/test dlx -c "node scripts/crm-regression.cjs"`: pass trên Edge headless với API mock, identity giả; cover hồ sơ chính thức/trạng thái khóa, 31 booking/121 check-in, retry, reset/phân trang độc lập, Trial và bộ lọc OPEN/closed/ALL. Ảnh trong `.local/crm-fixes/` bị ignore.
+- Integration lần đầu dừng ở compile do fixture thiếu operatorId (đã sửa); lần kế tiếp dừng ở setup do ổ C thiếu dung lượng, chưa chạy scenario. Dùng MongoDB replica set riêng trên ổ D: lần đầu 11/12 pass, booking race trả một HTTP 500; chạy riêng booking race pass. Không khẳng định nguyên nhân của lần 500 từ response đã được che lỗi.
+- Bổ sung xử lý hết 8 lần retry P2034 thành `409 CONCURRENT_CHANGE` và hai unit test. Sau sửa: `pnpm test:api` pass 14 suites / 91 tests; API lint/build pass. Chạy lại toàn bộ `pnpm --filter @fitness/api test:integration` pass 12/12 scenario (260,988 giây), gồm CRM lịch sử A→B, 121 check-in, official profile Owner-only, Sales filter trước phân trang và booking concurrency. Database test được drop bởi runner, không dùng database nghiệp vụ.
+- `pnpm --package=@playwright/test dlx -c "node scripts/design-system-regression.cjs"`: pass Owner/PT/Member trên bản web export mới.
+- Dọn thư mục MongoDB test bị cơ chế tự động chặn (`blocked by policy`); giữ thư mục test trong `.local/crm-mongo-20261020-185258` và `D:/fitness-crm-test-20261020`, không thử xóa dữ liệu khác. Tiến trình MongoDB test được dừng sau khi kiểm tra.
+- Chưa kiểm tra native device/screen reader; không suy ra acceptance toàn app từ API mock. Không chạy index rollout trên database nghiệp vụ; khi triển khai cần `pnpm --filter @fitness/api db:indexes` theo SOT 15. Audit cũ thiếu cả quan hệ hiện tại lẫn snapshot Member không thể tự suy ra identity đã mất.
+
+## PT QR thay self-check-in — 2026-10-21
+
+- Cover FR-CHECKIN-004/005/008, FR-AUDIT-003: PT mở QR có hạn, Owner-only resolve/xác nhận; QR PT/Member không dùng chéo, chữ ký/expiry/id sai bị chặn, PT inactive bị kiểm tra lại, daily guard độc lập và audit không chứa token. Command replay chạy trước validation expiry; shared transaction/WriteLock hiện có được giữ nguyên.
+- `pnpm lint`: pass API/app. Sau sửa chặn identity Member cũ khi resolve PT: `pnpm --filter @fitness/app lint` pass.
+- `pnpm test:api`: pass 15 suites / 100 tests, gồm PT QR service và HTTP guard/route regression. `pnpm test:app`: pass 13 suites / 60 tests.
+- `pnpm build`: pass API build + app typecheck. `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: pass; export lại sau sửa identity cũ cũng pass.
+- `pnpm --package=@playwright/test dlx -c "node scripts/pt-qr-regression.cjs"`: pass PT/Owner/Member trên Edge headless, API giả và sự kiện quét giả tại CameraView boundary. Cover QR/làm mới PT và Member, bỏ nút PT tự check-in, Owner chỉ có form PT, pending disable, success, invalid QR xóa identity và daily conflict. Ảnh `.local/pt-qr/` bị ignore. Lần chạy đầu sai shape sự kiện native trong runner, lần hai full reload làm mất session Member; đã sửa runner và chạy đủ ba role thành công.
+- `pnpm --filter @fitness/api test:integration`: dừng trước scenario vì chưa có TEST_DATABASE_URL tới database fitness_test_ riêng (0 test chạy). Đã cập nhật fixture attendance cũ theo QR flow mới; chưa xác minh integration MongoDB/concurrency cho flow mới hoặc quét camera thật/native device. Không dùng database nghiệp vụ và không thay schema/index/dependency.
+- `node --check scripts/pt-qr-regression.cjs` và `git diff --check`: pass; Git chỉ cảnh báo LF/CRLF.
+
+- `pnpm --package=@playwright/test dlx -c "node scripts/design-system-regression.cjs"`: pass Owner/PT/Member trên export mới; runner thêm fixture GET pt/me/qr cho surface Hôm nay mới.

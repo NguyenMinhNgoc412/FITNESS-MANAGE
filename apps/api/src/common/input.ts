@@ -9,6 +9,8 @@ export const phone = z.string().transform(value => {
 }).pipe(z.string().regex(/^0[0-9]{9}$/));
 export const cccd = z.string().regex(/^[0-9]{12}$/);
 export const password = z.string().min(10).max(72);
+export const salesAlertFilter = z.enum(['OPEN', 'CONTACTED', 'CONVERTED_RENEWED', 'CLOSED_NOT_CONTINUING', 'ALL']);
+export type SalesAlertFilter = z.infer<typeof salesAlertFilter>;
 export const membershipInput = z.object({
   mode: z.enum(['TIME_BASED', 'SESSION_BASED']), name: text,
   startAt: z.string().datetime(), endAt: z.string().datetime().optional(),

@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { ActionLink, Badge, Card, Form, Kpi, Label, LoadState, Page, dateTime, mutation, styles, useLoad } from '../ui';
+import { ActionLink, Badge, Button, Card, Kpi, Label, LoadState, Page, styles } from '../ui';
+import { Form } from '../components/form';
+import { dateTime } from '../lib/date-time';
+import { mutation } from '../lib/http';
+import { useLoad } from '../hooks/use-load';
 import { useAuthStore } from '../store/auth';
 import { Booking, Checkin, ExternalRequest, Membership, Pass, Person } from '../models';
 import { PackageCard } from './packages';
+import { CheckinQr } from './member-checkin';
 export function OwnerHome() {
   const state = useLoad<{ checkins: number; trials: number; alerts: number; trialFinal: number; membershipExpiring: number; bookingsToday: number; ptsToday: number; bookings: Booking[] }>('/dashboard');
   return <Page title="Tổng quan vận hành" subtitle="Theo dõi hoạt động hôm nay và các việc cần xử lý."><LoadState state={state} />{state.data && <>
@@ -16,9 +21,9 @@ export function PtHome() {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const bookings = useLoad<Booking[]>('/bookings?from=' + encodeURIComponent(start.toISOString()) + '&to=' + encodeURIComponent(new Date(start.getTime() + 86400000).toISOString())), logs = useLoad<Checkin[]>('/pt/me/attendance');
   const today = bookings.data?.filter(b => new Date(b.startAt).toDateString() === new Date().toDateString() && b.status !== 'CANCELLED') ?? [];
-  return <Page title="Hôm nay" subtitle="Lịch của bạn và check-in PT độc lập."><Card title="PT check-in"><Form fields={[]} label="Xác nhận có mặt tại gym" submit={(_, k) => mutation('/pt/me/checkin', {}, k)} onSuccess={() => void logs.reload()} /></Card>
+  return <Page title="Hôm nay" subtitle="Lịch của bạn và check-in PT độc lập."><Label muted>Đưa QR cho Owner quét tại quầy để xác nhận có mặt tại gym.</Label><CheckinQr endpoint="/pt/me/qr" />
     <Card title="Lịch hôm nay"><LoadState state={bookings} empty={!today.length} emptyText="Hôm nay bạn chưa có lịch. Mở Lịch để xem các ngày khác." />{today.map(b => <Label key={b.id}>{dateTime(b.startAt)} — {dateTime(b.endAt)}</Label>)}<ActionLink href="/pt/schedule">Xem toàn bộ lịch</ActionLink></Card>
-    <Card title="Lịch sử PT check-in"><LoadState state={logs} empty={!logs.data?.length} emptyText="Bạn chưa có lần check-in nào." />{logs.data?.map(log => <Label key={log.id}>{dateTime(log.checkedInAt)}</Label>)}</Card>
+    <Card title="Lịch sử PT check-in"><Button secondary label="Làm mới lịch sử" pending={logs.loading} onPress={() => void logs.reload()} /><LoadState state={logs} empty={!logs.data?.length} emptyText="Bạn chưa có lần check-in nào." />{logs.data?.map(log => <Label key={log.id}>{dateTime(log.checkedInAt)}</Label>)}</Card>
   </Page>;
 }
 export function PtMembers() {

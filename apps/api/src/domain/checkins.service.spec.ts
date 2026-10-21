@@ -19,12 +19,14 @@ describe('one check-in per local day', () => {
   };
   const tx = { command: jest.fn((_actor, _action, _key, _input, work) => work(db, 'fixture-command')) };
   const memberships = { alert: jest.fn() };
-  const service = new CheckinsService({} as never, tx as never, {} as never, memberships as never);
+  const jwt = { verifyAsync: jest.fn() };
+  const service = new CheckinsService({} as never, tx as never, jwt as never, memberships as never);
   const customers = new CustomersService({} as never, tx as never, {} as never);
   const external = new ExternalPtService({} as never, tx as never, service, {} as never);
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date('2026-10-09T05:00:00Z'));
     jest.clearAllMocks();
+    jwt.verifyAsync.mockResolvedValue({ sub: '222222222222222222222222', kind: 'pt-attendance' });
     db.user.findUnique.mockResolvedValue({ role: Role.MEMBER, status: 'ACTIVE' });
     db.customer.findFirst.mockResolvedValue({ id: 'customer-fixture' });
     db.memberCheckin.findFirst.mockResolvedValue(null);
@@ -64,7 +66,7 @@ describe('one check-in per local day', () => {
   it('rejects PT repeat independently without creating a log', async () => {
     db.user.findUnique.mockResolvedValue({ role: Role.PT, status: 'ACTIVE' });
     db.ptAttendanceLog.findFirst.mockResolvedValue({ id: 'pt-log' });
-    await expect(service.pt({ ...owner, role: Role.PT }, 'new-key-fixture')).rejects.toMatchObject({ response: { code: 'ALREADY_CHECKED_IN_TODAY' } });
+    await expect(service.pt(owner, 'synthetic-qr', 'new-key-fixture')).rejects.toMatchObject({ response: { code: 'ALREADY_CHECKED_IN_TODAY' } });
     expect(db.ptAttendanceLog.create).not.toHaveBeenCalled();
   });
   it('does not consume an external pass for a pending request after another daily check-in', async () => {

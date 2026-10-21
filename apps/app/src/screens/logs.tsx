@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Badge, Card, Choices, Label, LoadState, Page, Pager, dateTime, useLoad } from '../ui';
+import { Badge, Card, Choices, Label, LoadState, Page, Pager } from '../ui';
+import { dateTime } from '../lib/date-time';
+import { useLoad } from '../hooks/use-load';
 import { MonthlyCheckins } from './statistics';
 export default function Logs() {
   const [kind, setKind] = useState('checkins'), [page, setPage] = useState(1);

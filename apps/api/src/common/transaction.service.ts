@@ -24,7 +24,8 @@ export class TransactionService {
         }, { maxWait: 10000, timeout: 20000 });
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
-          if (error.code === 'P2034' && attempt < 7) {
+          if (error.code === 'P2034') {
+            if (attempt === 7) fail('CONCURRENT_CHANGE', 'Dữ liệu đang được cập nhật. Vui lòng thử lại.');
             await new Promise(resolve => setTimeout(resolve, 15 * (attempt + 1)));
             continue;
           }

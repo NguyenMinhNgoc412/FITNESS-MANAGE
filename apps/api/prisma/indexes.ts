@@ -2,6 +2,10 @@ import { existsSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
 import { PrismaClient } from '@prisma/client';
 export async function ensureIndexes(prisma: PrismaClient) {
+  // Idempotent backfill for notification records created before delivery leases.
+  await prisma.$runCommandRaw({ update: 'notifications', updates: [
+    { q: { attempts: { $exists: false } }, u: { $set: { attempts: 0 } }, multi: true },
+  ] });
   await prisma.$runCommandRaw({ createIndexes: 'profiles', indexes: [
     { key: { cccd: 1 }, name: 'profiles_cccd_unique_present', unique: true, partialFilterExpression: { cccd: { $type: 'string' } } },
   ] });
@@ -12,6 +16,10 @@ export async function ensureIndexes(prisma: PrismaClient) {
     { key: { memberId: 1 }, name: 'one_active_primary_pt', unique: true, partialFilterExpression: { status: 'ACTIVE' } },
   ] });
   await prisma.writeLock.upsert({ where: { id: 'business' }, create: { id: 'business' }, update: {} });
+  await prisma.$runCommandRaw({ createIndexes: 'audit_logs', indexes: [
+    { key: { resourceType: 1, 'before.memberId': 1, createdAt: -1 }, name: 'audit_booking_member_before' },
+    { key: { resourceType: 1, 'after.memberId': 1, createdAt: -1 }, name: 'audit_booking_member_after' },
+  ] });
 }
 if (require.main === module) {
   if (existsSync('.env')) loadEnvFile('.env');

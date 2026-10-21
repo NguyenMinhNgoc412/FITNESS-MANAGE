@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/auth';
-import { Badge, Button, Card, Field, Form, Label, LoadState, Page, Pager, dateTime, iso, mutation, useLoad } from '../ui';
+import { Badge, Button, Card, Label, LoadState, Page, Pager } from '../ui';
+import { Field, Form } from '../components/form';
+import { dateTime, iso } from '../lib/date-time';
+import { mutation } from '../lib/http';
+import { useLoad } from '../hooks/use-load';
 import { Booking, Person } from '../models';
 const inputDateTime = (value: string) => {
   const date = new Date(value);
@@ -30,7 +34,7 @@ export default function Bookings() {
       <Label>{item.memberName ?? 'Member'} · {item.ptName ?? 'PT'}</Label>
       {!!item.cancelReason && <Label muted>Lý do: {item.cancelReason}</Label>}
       {owner && item.status !== 'CANCELLED' && <><Button secondary label="Sửa lịch" onPress={() => { setEditing(item); setCancelling(''); }} /><Button danger label="Hủy lịch" onPress={() => setCancelling(item.id)} /></>}
-      {owner && cancelling === item.id && <Form fields={[{ name: 'reason', label: 'Lý do hủy' }]} label="Xác nhận hủy lịch" submit={(v, k) => mutation('/bookings/' + item.id + '/cancel', v, k)} onSuccess={() => { setCancelling(''); void state.reload(); }} />}
+      {owner && cancelling === item.id && <Form danger fields={[{ name: 'reason', label: 'Lý do hủy' }]} label="Xác nhận hủy lịch" submit={(v, k) => mutation('/bookings/' + item.id + '/cancel', v, k)} onSuccess={() => { setCancelling(''); void state.reload(); }} />}
     </Card>)}</Card>)}<Pager page={page} setPage={setPage} more={state.data?.length === 30} /><Button secondary label="Làm mới lịch" onPress={() => void state.reload()} />
   </Page>;
 }

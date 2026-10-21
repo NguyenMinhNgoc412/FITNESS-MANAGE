@@ -16,7 +16,7 @@ export class BookingsService {
     const rows = await this.prisma.booking.findMany({ where: {
       ...(actor.role === Role.OWNER ? (memberId ? { memberId } : {}) : actor.role === Role.PT ? { ptId: actor.sub } : { memberId: actor.sub }),
       ...((from || to) ? { startAt: { ...(from ? { gte: new Date(from) } : {}), ...(to ? { lt: new Date(to) } : {}) } } : {}),
-    }, ...page(pageNumber), orderBy: { startAt: from ? 'asc' : 'desc' } });
+    }, ...page(pageNumber), orderBy: [{ startAt: from ? 'asc' : 'desc' }, { id: 'desc' }] });
     const profiles = await this.prisma.profile.findMany({ where: { userId: { in: [...new Set(rows.flatMap(b => [b.memberId, b.ptId]))] } }, select: { userId: true, fullName: true } });
     const names = new Map(profiles.map(p => [p.userId, p.fullName]));
     return rows.map(row => ({ ...row, memberName: names.get(row.memberId), ptName: names.get(row.ptId) }));
@@ -41,7 +41,6 @@ export class BookingsService {
       await this.notifications.enqueue(db, [input.memberId, input.ptId, ...(previous ? [previous.memberId, previous.ptId] : [])], id ? 'BOOKING_RESCHEDULED' : 'BOOKING_CREATED', booking.id);
       return booking;
     });
-    void this.notifications.deliver().catch(() => undefined);
     return value;
   }
   async cancel(actor: Actor, id: string, reason: string, key?: string) {
@@ -55,7 +54,6 @@ export class BookingsService {
       await this.notifications.enqueue(db, [old.memberId, old.ptId], 'BOOKING_CANCELLED', id);
       return booking;
     });
-    void this.notifications.deliver().catch(() => undefined);
     return value;
   }
   private async validate(db: Db, input: BookingInput, id?: string) {

@@ -1,8 +1,8 @@
 export const colors = {
   background: '#F7F9FC', surface: '#FFFFFF', surfaceMuted: '#EAF2FD', surfaceAccent: '#E8F7F2',
-  text: '#1F2937', textMuted: '#667085', primary: '#3A7BD5', primaryPressed: '#2864B5', onPrimary: '#FFFFFF',
+  text: '#1F2937', textMuted: '#667085', primary: '#3A7BD5', primaryStrong: '#2864B5', primaryText: '#245B9E', primaryPressed: '#205397', onPrimary: '#FFFFFF',
   border: '#E4E7EC', danger: '#D9534F', dangerSurface: '#FBEDEC', success: '#20A486', successSurface: '#E8F7F2',
-  successText: '#14715E', scrim: 'rgba(31, 41, 55, 0.38)', transparent: 'rgba(0, 0, 0, 0)',
+  successText: '#14715E', dangerText: '#AD302D', scrim: 'rgba(31, 41, 55, 0.38)', transparent: 'rgba(0, 0, 0, 0)',
   warning: '#86600F', warningSurface: '#FFF6DF', focus: '#3A7BD5', violet: '#3A7BD5',
   violetSurface: '#EAF2FD', slateSurface: '#F7F9FC', slateText: '#667085',
 } as const;

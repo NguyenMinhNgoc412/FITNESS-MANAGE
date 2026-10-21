@@ -136,7 +136,8 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     expect((await prisma.membership.findUniqueOrThrow({ where: { id: membership.id } })).usedSessions).toBe(1);
     expect((await request('/checkins/member', owner.accessToken, 'POST', body)).status).toBe(409);
     expect((await request('/auth/login', undefined, 'POST', { phone: member.phone, password })).status).toBe(200);
-    expect((await request('/pt/me/checkin', pt.accessToken, 'POST', {})).status).toBe(201);
+    const ptQr = await request('/pt/me/qr', pt.accessToken);
+    expect((await request('/checkins/pt', owner.accessToken, 'POST', { token: ptQr.data.token })).status).toBe(201);
     expect((await request('/pt/me/attendance', pt.accessToken)).status).toBe(200);
     expect(await prisma.ptAttendanceLog.count({ where: { ptId: pt.id } })).toBe(1);
     expect((await request('/pt/' + pt.id + '/attendance', member.accessToken)).status).toBe(403);
@@ -179,7 +180,8 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     expect((await prisma.membership.findUniqueOrThrow({ where: { id: membership.id } })).usedSessions).toBe(1);
     expect((await prisma.ptAttendanceLog.count({ where: { ptId: pt.id } }))).toBe(0);
     expect((await request('/members/me/checkins', member.accessToken)).data.some((log: { id: string }) => log.id === checkedIn.data.id)).toBe(true);
-    expect((await request('/pt/me/checkin', pt.accessToken, 'POST', {})).status).toBe(201);
+    const ptQr = await request('/pt/me/qr', pt.accessToken);
+    expect((await request('/checkins/pt', owner.accessToken, 'POST', { token: ptQr.data.token })).status).toBe(201);
     expect((await prisma.ptAttendanceLog.count({ where: { ptId: pt.id } }))).toBe(1);
   });
 
@@ -214,6 +216,75 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     await request('/people/' + member.id, owner.accessToken, 'PATCH', { status: 'LOCKED', reason: 'Test lock' });
     expect((await request('/auth/me', next.accessToken)).status).toBe(401);
     expect((await request('/auth/refresh', undefined, 'POST', { refreshToken: next.refreshToken })).status).toBe(401);
+  });
+
+  it('keeps CRM booking history attached to both Members after reassignment', async () => {
+    const a = await createPerson('MEMBER'), b = await createPerson('MEMBER'), pt = await createPerson('PT');
+    const customerA = await prisma.customer.findFirstOrThrow({ where: { memberUserId: a.id } });
+    const customerB = await prisma.customer.findFirstOrThrow({ where: { memberUserId: b.id } });
+    for (const member of [a, b]) expect((await request('/members/' + member.id + '/pt-assignment', owner.accessToken, 'POST', { ptId: pt.id, reason: 'CRM fixture assignment' })).status).toBe(201);
+    const body = { memberId: a.id, ptId: pt.id, startAt: '2027-03-01T01:00:00Z', endAt: '2027-03-01T02:00:00Z' };
+    const booking = await request('/bookings', owner.accessToken, 'POST', body);
+    expect(booking.status).toBe(201);
+    const edited = await request('/bookings/' + booking.data.id, owner.accessToken, 'PATCH', { ...body, memberId: b.id, reason: 'CRM fixture transfer' });
+    expect(edited.status).toBe(200);
+    for (const customer of [customerA, customerB]) {
+      const response = await request('/customers/' + customer.id + '/history', owner.accessToken);
+      expect(response.status).toBe(200);
+      expect(response.data.some((row: { action: string }) => row.action === 'BOOKING_CREATE')).toBe(true);
+      expect(response.data.some((row: { action: string; reason?: string }) => row.action === 'BOOKING_EDIT' && row.reason === 'CRM fixture transfer')).toBe(true);
+      expect(response.data.every((row: object) => !('before' in row) && !('after' in row) && !('actorId' in row))).toBe(true);
+    }
+    const first = await request('/customers/' + customerA.id + '/history', owner.accessToken);
+    const second = await request('/customers/' + customerA.id + '/history', owner.accessToken);
+    expect(first.data.map((row: { id: string }) => row.id)).toEqual(second.data.map((row: { id: string }) => row.id));
+    const indexes = await prisma.$runCommandRaw({ listIndexes: 'audit_logs' });
+    const names = (indexes.cursor as { firstBatch: { name: string }[] }).firstBatch.map(index => index.name);
+    expect(names).toEqual(expect.arrayContaining(['audit_booking_member_before', 'audit_booking_member_after']));
+  });
+
+  it('paginates CRM check-ins past 100 rows and restricts official profile data to Owner', async () => {
+    const member = await createPerson('MEMBER'), other = await createPerson('MEMBER'), pt = await createPerson('PT');
+    const customer = await prisma.customer.findFirstOrThrow({ where: { memberUserId: member.id } });
+    const start = Date.UTC(2026, 9, 20);
+    await prisma.memberCheckin.createMany({ data: Array.from({ length: 121 }, (_, n) => ({
+      memberId: member.id, ...(n < 120 ? { customerId: customer.id } : {}), subjectType: 'MEMBER' as const,
+      context: 'SELF_TRAINING' as const, method: 'PHONE' as const, operatorId: owner.user.id,
+      idempotencyKey: randomUUID(), checkedInAt: new Date(start - n * 86400000),
+    })) });
+    await prisma.memberCheckin.create({ data: { memberId: other.id, subjectType: 'MEMBER', context: 'SELF_TRAINING', method: 'PHONE', operatorId: owner.user.id, idempotencyKey: randomUUID() } });
+    const fourth = await request('/customers/' + customer.id + '/checkins?page=4', owner.accessToken);
+    const fifth = await request('/customers/' + customer.id + '/checkins?page=5', owner.accessToken);
+    expect(fourth.status).toBe(200); expect(fourth.data).toHaveLength(30);
+    expect(fifth.status).toBe(200); expect(fifth.data).toHaveLength(1);
+    expect(fifth.data[0].checkedInAt).toBe(new Date(start - 120 * 86400000).toISOString());
+    expect((await request('/customers/' + customer.id + '/checkins?page=0', owner.accessToken)).status).toBe(400);
+    for (const token of [member.accessToken, pt.accessToken]) {
+      expect((await request('/customers/' + customer.id, token)).status).toBe(403);
+      expect((await request('/customers/' + customer.id + '/checkins', token)).status).toBe(403);
+    }
+    expect((await request('/people/' + member.id, owner.accessToken, 'PATCH', { status: 'LOCKED', reason: 'CRM fixture lock' })).status).toBe(200);
+    const official = await request('/customers/' + customer.id, owner.accessToken);
+    expect(official.status).toBe(200);
+    expect(official.data.member.status).toBe('LOCKED');
+    expect(official.data.member.profile.cccd === member.cccd).toBe(true);
+    expect('passwordHash' in official.data.member).toBe(false);
+  });
+
+  it('filters Sales queues before pagination and keeps closed records available explicitly', async () => {
+    const member = await createPerson('MEMBER');
+    await prisma.salesAlert.createMany({ data: Array.from({ length: 35 }, (_, n) => ({ sourceKey: 'crm-closed-' + randomUUID(), memberId: member.id, type: 'TRIAL_FINAL', status: 'CLOSED_NOT_CONTINUING', triggeredAt: new Date(Date.now() + n) })) });
+    const open = await prisma.salesAlert.create({ data: { sourceKey: 'crm-open-' + randomUUID(), memberId: member.id, type: 'MEMBERSHIP_EXPIRING_SESSION', triggeredAt: new Date('2020-01-01T00:00:00Z') } });
+    const queue = await request('/sales-alerts', owner.accessToken);
+    expect(queue.status).toBe(200);
+    expect(queue.data.every((row: { status: string }) => row.status === 'OPEN')).toBe(true);
+    expect(queue.data.some((row: { id: string }) => row.id === open.id)).toBe(true);
+    const closed = await request('/sales-alerts?status=CLOSED_NOT_CONTINUING&page=2', owner.accessToken);
+    expect(closed.status).toBe(200); expect(closed.data).toHaveLength(5);
+    expect(closed.data.every((row: { status: string }) => row.status === 'CLOSED_NOT_CONTINUING')).toBe(true);
+    expect((await request('/sales-alerts?status=UNKNOWN', owner.accessToken)).status).toBe(400);
+    expect((await request('/sales-alerts?status=ALL', owner.accessToken)).status).toBe(200);
+    expect((await request('/sales-alerts', member.accessToken)).status).toBe(403);
   });
 
   it('does not expose CCCD to assigned PT and rejects duplicate CCCD', async () => {

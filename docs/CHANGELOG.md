@@ -1,5 +1,42 @@
 # FITNESS-MANAGE SOT — CHANGELOG
 
+## 2026-10-21 — PT check-in bằng QR như Member
+
+- Theo yêu cầu Owner, thay PT tự bấm có mặt bằng QR cá nhân hạn 2 phút để Owner quét/xác nhận tại quầy.
+- Thêm GET pt/me/qr, POST checkins/pt Owner-only; bỏ POST pt/me/checkin. QR kind riêng, kiểm tra active, audit và source QR. Giữ log độc lập, daily guard UTC+7, idempotency/WriteLock và dữ liệu cũ; không đổi schema/stack/dependency.
+- Cập nhật SOT 02/05/11/16/17; kết quả kiểm tra ghi SOT 20.
+
+## 2026-10-20 — Sửa 4 khoảng trống CRM sau review
+
+- Khi hết retry write conflict, transaction trả 409 CONCURRENT_CHANGE thay vì lỗi database 500; giữ nguyên khóa và số lần retry. Thêm unit regression cho retry thành công/hết retry.
+- Giữ nhật ký booking theo bằng chứng Member trong audit before/after sau reassignment; không ghi lại audit cũ. Thêm hai nested indexes bằng db:indexes, không thay schema/provider.
+- Thêm GET customers/:id/checkins Owner-only và phân trang riêng booking/check-in ở CRM; giữ preview detail cũ để tương thích, truy xuất được lịch sử sau 100 lượt.
+- Customer detail trả allowlist thông tin Member chính thức cho Owner và UI hiển thị CCCD/trạng thái tài khoản tách khỏi phân loại customer.
+- Sales mặc định OPEN, lọc các trạng thái hiện có hoặc ALL trước phân trang; đổi lọc reset trang 1, giữ mọi alert đã đóng và không tự convert/gia hạn.
+- Cập nhật SOT 02/05/13/15/16/17; validation/unit/integration/browser ghi tại SOT 20. Không sửa business database hoặc dữ liệu người thật.
+
+## 2026-10-20 — Sửa 5 lỗi design system sau review
+
+- Khóa picker mẫu trong pending cấp/gia hạn gói bằng Form ổn định theo revision; không reset guard bằng remount khi đổi mẫu.
+- Cho drawer/sidebar Owner cuộn trên màn thấp; giữ navigation theo role và touch target.
+- Giữ palette thương hiệu, thêm màu semantic đậm cho chữ/CTA/error với contrast tối thiểu 4,5:1. Form xác nhận hủy lịch/PT/gói có destructive variant và nhãn cụ thể.
+- Quầy hiển thị loading/error/retry/empty cho booking Member đang chọn, khóa xác nhận PT nội bộ khi booking chưa sẵn sàng; tự tập không bị khóa bởi booking. Dùng filter memberId của endpoint hiện có, không thêm API.
+- Cập nhật SOT 05, bổ sung regression màu/UI; không đổi nghiệp vụ, schema, stack hoặc dependency. Kết quả kiểm tra thực tế tại SOT 20.
+
+## 2026-10-20 — Sửa Dashboard UTC+7 và lỗi scheduler sau review
+
+- Dashboard dùng chung khoảng ngày UTC+7 cho check-in/booking, bao gồm đầu ngày và loại trừ đầu ngày kế tiếp; không phụ thuộc timezone máy chủ.
+- Bỏ refresh cảnh báo khỏi Dashboard và bỏ dependency SalesAlertsModule; đọc KPI không còn lấy business write lock. Giữ refresh lúc khởi động/mỗi 60 giây, ghi rõ độ trễ cập nhật tại SOT 03/13.
+- Hai scheduler log mã lỗi cố định bằng Nest Logger khi vòng chạy thất bại; không log exception/stack/PII và vẫn chạy vòng tiếp theo. Không đổi schema, dependency, endpoint, quyền hoặc quota.
+- Thêm regression test ranh giới ngày/năm, Owner-only/read-only Dashboard, scheduler failure/recovery/shutdown và log an toàn; kết quả thực tế ghi tại SOT 20.
+
+## 2026-10-20 — Sửa notification và tách trách nhiệm module
+
+- Theo review và yêu cầu Owner: notification có lease 60 giây/claim token, retry transport/429/5xx tối đa 3 lần và delay; phục hồi SENDING sau crash. Giữ best-effort, ghi rõ giới hạn duplicate khi upstream đã nhận nhưng response mất.
+- Booking/external initiation chỉ enqueue trong transaction, không gửi push trên request; scheduler riêng xử lý outbox. Không đổi consume/history/RBAC/endpoint/provider.
+- Thay `domain.controller.ts` và `operations.service.ts` bằng controller/module theo domain và Sales Alerts, Reports, Dashboard, Audit, Device Tokens service riêng; route me đứng trước dynamic id. Tách client form, useLoad, HTTP và date helpers khỏi ui.tsx, giữ hành vi giao diện.
+- Notification schema bổ sung attempts/lease/retry fields và index; db:indexes backfill attempts thiếu, không reset record cũ. Hướng dẫn rollout tại README/SOT 15; cập nhật SOT 03/13. Kết quả kiểm tra thực tế ghi tại SOT 20.
+
 ## 2026-10-09 — Chặn điểm danh nhiều lần cùng ngày
 
 - Owner báo QR quét lần hai trừ thêm buổi; code cũ chỉ chống lặp 30 giây.

@@ -46,7 +46,6 @@ export class ExternalPtService {
       await this.notifications.enqueue(db, [member.id], 'EXTERNAL_PT_CONFIRM', value.id);
       return value;
     });
-    await this.notifications.deliver().catch(() => undefined);
     return request;
   }
   confirm(actor: Actor, id: string, key?: string, fallbackReason?: string) {

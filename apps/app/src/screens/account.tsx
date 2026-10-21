@@ -2,7 +2,9 @@ import { useRouter } from 'expo-router';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { api, logout } from '../api';
-import { Card, Form, Label, LoadState, Page, useLoad } from '../ui';
+import { Card, Label, LoadState, Page } from '../ui';
+import { Form } from '../components/form';
+import { useLoad } from '../hooks/use-load';
 import { Person } from '../models';
 export default function Account() {
   const state = useLoad<Person>('/auth/me'), router = useRouter();

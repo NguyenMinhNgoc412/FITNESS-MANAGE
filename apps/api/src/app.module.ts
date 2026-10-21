@@ -2,19 +2,20 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { OwnerController, ReadController, SelfController } from './domain/domain.controller';
-import { CustomersService } from './domain/customers.service';
-import { MembershipsService } from './domain/memberships.service';
-import { PeopleService } from './domain/people.service';
-import { BookingsService } from './domain/bookings.service';
-import { CheckinsService } from './domain/checkins.service';
-import { ExternalPtService } from './domain/external-pt.service';
-import { NotificationsService } from './domain/notifications.service';
 import { AiController } from './ai/ai.controller';
-import { OperationsService } from './domain/operations.service';
+import { MembershipsModule } from './domain/memberships.module';
+import { CustomersModule } from './domain/customers.module';
+import { PeopleModule } from './domain/people.module';
+import { CheckinsModule } from './domain/checkins.module';
+import { NotificationsModule } from './domain/notifications.module';
+import { BookingsModule } from './domain/bookings.module';
+import { ExternalPtModule } from './domain/external-pt.module';
+import { SalesAlertsModule } from './domain/sales-alerts.module';
+import { ReportsModule } from './domain/reports.module';
+import { DashboardModule } from './domain/dashboard.module';
+import { AuditModule } from './domain/audit.module';
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule],
-  controllers: [SelfController, OwnerController, ReadController, AiController],
-  providers: [CustomersService, MembershipsService, PeopleService, BookingsService, CheckinsService, ExternalPtService, NotificationsService, OperationsService],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, MembershipsModule, CustomersModule, PeopleModule, CheckinsModule, NotificationsModule, BookingsModule, ExternalPtModule, SalesAlertsModule, ReportsModule, DashboardModule, AuditModule],
+  controllers: [AiController],
 })
 export class AppModule {}

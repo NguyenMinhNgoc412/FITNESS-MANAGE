@@ -1,6 +1,6 @@
 import { Link, Slot, usePathname } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Role } from './features/auth/types';
 import { useRoleGuard, GuardFallback } from './use-role-guard';
@@ -34,13 +34,14 @@ export function Shell({ role }: { role: Role }) {
       : <Link onPress={() => setOwnerMenu(false)} href={href as never} key={href} style={[s.link, active && s.active]} accessibilityRole="link">{label}</Link>;
   })}</View>;
   const compactOwner = role === 'OWNER' && !wide;
-  return <SafeAreaView style={s.safe}><View style={s.brand}><Text style={s.logo}>F</Text><View style={{ flex: 1 }}><Text style={s.brandText}>FITNESS-MANAGE</Text><Text style={s.subtitle}>{role === 'OWNER' ? 'Quản lý phòng tập' : role === 'PT' ? 'Huấn luyện viên' : 'Hội viên'}</Text></View>{compactOwner && <Pressable accessibilityLabel={ownerMenu ? 'Đóng menu' : 'Mở menu'} accessibilityRole="button" accessibilityState={{ expanded: ownerMenu }} onPress={() => setOwnerMenu(value => !value)} style={s.menuButton}><Text style={s.menuText}>{ownerMenu ? 'Đóng' : 'Menu'}</Text></Pressable>}</View><View style={[s.body, { flexDirection: wide ? 'row' : 'column' }]}>{wide && nav}{compactOwner && ownerMenu && <View accessibilityViewIsModal style={s.drawerLayer}><Pressable accessibilityLabel="Đóng menu" accessibilityRole="button" style={s.backdrop} onPress={() => setOwnerMenu(false)} /><View style={s.drawer}>{nav}</View></View>}<View style={{ flex: 1, minWidth: 0 }}><Slot /></View>{bottom && nav}</View></SafeAreaView>;
+  return <SafeAreaView style={s.safe}><View style={s.brand}><Text style={s.logo}>F</Text><View style={{ flex: 1 }}><Text style={s.brandText}>FITNESS-MANAGE</Text><Text style={s.subtitle}>{role === 'OWNER' ? 'Quản lý phòng tập' : role === 'PT' ? 'Huấn luyện viên' : 'Hội viên'}</Text></View>{compactOwner && <Pressable accessibilityLabel={ownerMenu ? 'Đóng menu' : 'Mở menu'} accessibilityRole="button" accessibilityState={{ expanded: ownerMenu }} onPress={() => setOwnerMenu(value => !value)} style={s.menuButton}><Text style={s.menuText}>{ownerMenu ? 'Đóng' : 'Menu'}</Text></Pressable>}</View><View style={[s.body, { flexDirection: wide ? 'row' : 'column' }]}>{wide && <ScrollView style={s.sidebarScroll} accessibilityLabel="Menu Owner" keyboardShouldPersistTaps="handled">{nav}</ScrollView>}{compactOwner && ownerMenu && <View accessibilityViewIsModal style={s.drawerLayer}><Pressable accessibilityLabel="Đóng menu" accessibilityRole="button" style={s.backdrop} onPress={() => setOwnerMenu(false)} /><View style={s.drawer}><ScrollView style={{ flex: 1 }} accessibilityLabel="Menu Owner" keyboardShouldPersistTaps="handled">{nav}</ScrollView></View></View>}<View style={{ flex: 1, minWidth: 0 }}><Slot /></View>{bottom && nav}</View></SafeAreaView>;
 }
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.surface }, body: { flex: 1 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderBottomWidth: 1, borderColor: c.border },
   logo: { color: c.onPrimary, backgroundColor: c.primary, ...typography.logo, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.sm },
-  brandText: { ...typography.brand, color: c.primary }, subtitle: { color: c.textMuted, ...typography.small, marginTop: spacing.xs },
+  brandText: { ...typography.brand, color: c.primaryText }, subtitle: { color: c.textMuted, ...typography.small, marginTop: spacing.xs },
+  sidebarScroll: { width: 208, flexGrow: 0, flexShrink: 0 },
   nav: { padding: spacing.sm, gap: spacing.xs, backgroundColor: c.surface }, sidebar: { width: 208, borderRightWidth: 1, borderColor: c.border },
   bottom: { flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', borderTopWidth: 1, borderColor: c.border },
   link: { minHeight: controlSize.touch, padding: spacing.md, color: c.textMuted, borderRadius: radius.sm, ...typography.caption, overflow: 'hidden' },
@@ -53,11 +54,11 @@ const s = StyleSheet.create({
   groupHead: { position: 'absolute', top: 4, width: 8, height: 8, borderRadius: 4 },
   groupBody: { position: 'absolute', bottom: 3, left: 2, width: 24, height: 9, borderTopLeftRadius: 10, borderTopRightRadius: 10, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
   qrCell: { position: 'absolute', width: 9, height: 9, borderWidth: 2, borderRadius: 2 },
-  activeText: { color: c.primary },
-  activeLabel: { color: c.primary, ...typography.activeTab },
-  active: { color: c.primary, backgroundColor: c.surfaceMuted, fontWeight: '600' },
+  activeText: { color: c.primaryText },
+  activeLabel: { color: c.primaryText, ...typography.activeTab },
+  active: { color: c.primaryText, backgroundColor: c.surfaceMuted, fontWeight: '600' },
   menuButton: { minHeight: controlSize.touch, minWidth: controlSize.menuWidth, paddingHorizontal: spacing.lg, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm, backgroundColor: c.surfaceMuted },
-  menuText: { color: c.primary, ...typography.label },
+  menuText: { color: c.primaryText, ...typography.label },
   drawerLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 10, elevation: 8, flexDirection: 'row' },
   backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: c.scrim },
   drawer: { width: 240, height: '100%', zIndex: 11, backgroundColor: c.surface, borderRightWidth: 1, borderColor: c.border },

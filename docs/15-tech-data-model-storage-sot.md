@@ -153,9 +153,16 @@ Không cần booking/member match field canonical.
 - type
 - payload minimal
 - delivery status/error
+- `attempts` mặc định 0, tối đa 3 lần thử; `claimToken`, `leaseUntil` cho claim có thời hạn; `nextAttemptAt` cho retry delay
 - timestamps
 
+Từ 2026-10-20: index `(status, nextAttemptAt, createdAt)` phục vụ outbox worker. MongoDB không dùng Prisma migrate: dừng worker/API cũ, chạy `prisma:generate`, `db:push`, `db:indexes` rồi khởi động code mới. `db:indexes` backfill idempotent `attempts=0` chỉ cho record chưa có field; không reset trạng thái terminal/lịch sử. Worker đọc được field nullable/missing và phục hồi SENDING cũ không có lease. Không chạy đồng thời worker phiên bản cũ và mới vì worker cũ không hiểu claim token.
+
 ### `audit_logs`
+
+CRM 2026-10-20 đọc thêm `before.memberId`/`after.memberId` của audit booking để không mất liên kết khi booking đổi Member. Truy vấn `aggregateRaw` qua Prisma MongoDB, kết hợp resource hiện tại và bằng chứng audit, sort `createdAt`/`_id`, phân trang trước projection allowlist; không trả snapshots cho client. Audit cũ có summary Member được đọc trực tiếp, không backfill hoặc ghi lại lịch sử. Bản ghi cũ thiếu cả liên kết hiện tại lẫn summary Member không thể suy ra identity đã mất.
+
+Không đổi Prisma schema/field. `db:indexes` bổ sung idempotent `audit_booking_member_before` và `audit_booking_member_after` theo resourceType + nested memberId + createdAt. Khi triển khai chạy `pnpm --filter @fitness/api db:indexes` trên database đích; task không tự chạy lệnh này trên database nghiệp vụ. Không cần Prisma generate/db push riêng cho phần sửa CRM này.
 
 - actor_id
 - action

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Card, Choices, Label, LoadState, useLoad } from '../ui';
+import { Button, Card, Choices, Label, LoadState } from '../ui';
+import { useLoad } from '../hooks/use-load';
 
 export function PackageStatistics() {
   const state = useLoad<{ name: string; mode: string; memberCount: number; registrations: number }[]>('/reports/packages');

@@ -15,19 +15,28 @@ export type CheckinInput = { memberId: string; membershipId: string; context: 'S
 export class CheckinsService {
   constructor(private readonly prisma: PrismaService, private readonly tx: TransactionService, private readonly jwt: JwtService, private readonly memberships: MembershipsService) {}
   async qr(actor: Actor) {
-    requireRole(actor, Role.MEMBER);
-    const token = await this.jwt.signAsync({ sub: actor.sub, kind: 'checkin' }, { secret: process.env.JWT_QR_SECRET, expiresIn: '2m' });
+    requireRole(actor, Role.MEMBER, Role.PT);
+    const token = await this.jwt.signAsync({ sub: actor.sub, kind: actor.role === Role.PT ? 'pt-attendance' : 'checkin' }, { secret: process.env.JWT_QR_SECRET, expiresIn: '2m' });
     return { token, expiresIn: 120 };
   }
-  async qrSubject(token: string) {
+  async qrSubject(token: string, kind = 'checkin') {
     try {
       const value = await this.jwt.verifyAsync<{ sub: string; kind: string }>(token, { secret: process.env.JWT_QR_SECRET });
-      if (value.kind !== 'checkin' || !/^[a-f0-9]{24}$/i.test(value.sub)) throw new Error();
+      if (value.kind !== kind || !/^[a-f0-9]{24}$/i.test(value.sub)) throw new Error();
       return value.sub;
     } catch { return fail('INVALID_QR', 'QR không hợp lệ hoặc đã hết hạn.', 400); }
   }
   async resolve(actor: Actor, token: string) {
     requireRole(actor, Role.OWNER);
+    let kind: string;
+    try { kind = (await this.jwt.verifyAsync<{ kind: string }>(token, { secret: process.env.JWT_QR_SECRET })).kind; }
+    catch { return fail('INVALID_QR', 'QR không hợp lệ hoặc đã hết hạn.', 400); }
+    if (kind === 'pt-attendance') {
+      const ptId = await this.qrSubject(token, 'pt-attendance');
+      const pt = await this.prisma.user.findFirst({ where: { id: ptId, role: Role.PT, status: 'ACTIVE' }, select: { id: true, profile: { select: { fullName: true } } } });
+      if (!pt) fail('INVALID_QR', 'QR không còn hợp lệ.', 400);
+      return { pt };
+    }
     const memberId = await this.qrSubject(token);
     const member = await this.prisma.user.findFirst({ where: { id: memberId, role: Role.MEMBER, status: 'ACTIVE' }, select: { id: true, profile: { select: { fullName: true } } } });
     if (!member) fail('INVALID_QR', 'QR không còn hợp lệ.', 400);
@@ -60,14 +69,17 @@ export class CheckinsService {
     await this.memberships.alert(db, membership.id);
     return log;
   }
-  pt(actor: Actor, key?: string) {
-    requireRole(actor, Role.PT);
-    return this.tx.command(actor, 'pt.checkin', key, {}, async (db, commandId) => {
-      await activeUser(db, actor.sub, Role.PT);
+  pt(actor: Actor, token: string, key?: string) {
+    requireRole(actor, Role.OWNER);
+    return this.tx.command(actor, 'pt.checkin', key, { token }, async (db, commandId) => {
+      const ptId = await this.qrSubject(token, 'pt-attendance');
+      await activeUser(db, ptId, Role.PT);
       const checkedInAt = new Date();
-      const existing = await db.ptAttendanceLog.findFirst({ where: { ptId: actor.sub, checkedInAt: checkinDayRange(checkedInAt) } });
+      const existing = await db.ptAttendanceLog.findFirst({ where: { ptId, checkedInAt: checkinDayRange(checkedInAt) } });
       if (existing) fail('ALREADY_CHECKED_IN_TODAY', 'PT đã điểm danh hôm nay. Không tạo thêm lượt điểm danh.');
-      return db.ptAttendanceLog.create({ data: { ptId: actor.sub, idempotencyKey: commandId, checkedInAt } });
+      const log = await db.ptAttendanceLog.create({ data: { ptId, source: 'QR', idempotencyKey: commandId, checkedInAt } });
+      await audit(db, actor, 'PT_QR_CHECKIN', 'pt_attendance', log.id);
+      return log;
     });
   }
   logs(actor: Actor, pageNumber?: string) {

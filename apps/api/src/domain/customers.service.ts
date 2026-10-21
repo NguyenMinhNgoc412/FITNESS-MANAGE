@@ -9,6 +9,7 @@ import { PrismaService } from '../prisma.service';
 import { uniqueIdentity } from './data';
 import { MembershipsService } from './memberships.service';
 import { assertNoDailyCheckin } from './checkin-day';
+import { readCustomerHistory } from './customer-history';
 @Injectable()
 export class CustomersService {
   constructor(private readonly prisma: PrismaService, private readonly tx: TransactionService, private readonly memberships: MembershipsService) {}
@@ -31,7 +32,22 @@ export class CustomersService {
     if (!customer) fail('NOT_FOUND', 'Không tìm thấy khách hàng.', 404);
     const trial = await this.prisma.trialEntitlement.findUnique({ where: { customerId: id } });
     const checkins = await this.prisma.memberCheckin.findMany({ where: { customerId: id }, orderBy: { checkedInAt: 'desc' }, take: 100 });
-    return { ...customer, trial, checkins };
+    const member = customer.memberUserId ? await this.prisma.user.findFirst({
+      where: { id: customer.memberUserId, role: Role.MEMBER },
+      select: { id: true, status: true, profile: { select: { fullName: true, cccd: true } } },
+    }) : null;
+    return { ...customer, trial, checkins, member };
+  }
+  async checkins(actor: Actor, id: string, pageNumber?: string) {
+    requireRole(actor, Role.OWNER);
+    const pagination = page(pageNumber);
+    const customer = await this.prisma.customer.findUnique({ where: { id }, select: { memberUserId: true } });
+    if (!customer) fail('NOT_FOUND', 'Không tìm thấy khách hàng.', 404);
+    return this.prisma.memberCheckin.findMany({
+      where: { OR: [{ customerId: id }, ...(customer.memberUserId ? [{ memberId: customer.memberUserId }] : [])] },
+      select: { id: true, checkedInAt: true, context: true, method: true, subjectType: true },
+      ...pagination, orderBy: [{ checkedInAt: 'desc' }, { id: 'desc' }],
+    });
   }
   async history(actor: Actor, id: string, pageNumber?: string) {
     requireRole(actor, Role.OWNER);
@@ -56,10 +72,10 @@ export class CustomersService {
       ...requests.map(item => ({ resourceType: 'externalRequest', resourceId: item.id })),
       ...alerts.map(item => ({ resourceType: 'salesAlert', resourceId: item.id })),
     ];
-    const rows = await this.prisma.auditLog.findMany({ where: { OR: targets }, select: { id: true, action: true, reason: true, actorId: true, createdAt: true }, ...page(pageNumber), orderBy: { createdAt: 'desc' } });
+    const rows = await readCustomerHistory(this.prisma, targets, memberId, pageNumber);
     const actors = await this.prisma.profile.findMany({ where: { userId: { in: [...new Set(rows.map(row => row.actorId))] } }, select: { userId: true, fullName: true } });
     const names = new Map(actors.map(item => [item.userId, item.fullName]));
-    return rows.map(row => ({ ...row, actorName: names.get(row.actorId) ?? 'Người thao tác' }));
+    return rows.map(({ actorId, ...row }) => ({ ...row, actorName: names.get(actorId) ?? 'Người thao tác' }));
   }
   create(actor: Actor, input: { fullName: string; phone: string }, key?: string) {
     requireRole(actor, Role.OWNER);

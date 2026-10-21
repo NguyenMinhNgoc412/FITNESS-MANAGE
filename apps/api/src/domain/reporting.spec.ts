@@ -1,16 +1,13 @@
 import { Role } from '@prisma/client';
 import { Actor } from '../common/access';
-import { OperationsService } from './operations.service';
+import { ReportsService } from './reports.service';
 import { PrismaService } from '../prisma.service';
-import { TransactionService } from '../common/transaction.service';
-import { MembershipsService } from './memberships.service';
-import { NotificationsService } from './notifications.service';
 import { reportMonthRange, summarizePackages } from './reporting';
 
 describe('Owner reports', () => {
   const actor: Actor = { sub: 'synthetic-owner', sessionId: 'synthetic-session', role: Role.OWNER };
   const prisma = { membership: { groupBy: jest.fn() }, memberCheckin: { groupBy: jest.fn() }, ptAttendanceLog: { count: jest.fn() } };
-  const service = new OperationsService(prisma as unknown as PrismaService, {} as TransactionService, {} as MembershipsService, {} as NotificationsService);
+  const service = new ReportsService(prisma as unknown as PrismaService);
   beforeEach(() => jest.resetAllMocks());
   it('counts people once across renewals and separates package modes', () => {
     expect(summarizePackages([

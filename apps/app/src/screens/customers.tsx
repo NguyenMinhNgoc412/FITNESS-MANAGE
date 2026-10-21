@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { TextInput, useWindowDimensions, View } from 'react-native';
 import { z } from 'zod';
-import { Badge, Button, Card, Choices, Form, Label, LoadState, Page, Pager, RecordPicker, dateTime, mutation, styles, useLoad } from '../ui';
-import { Booking, Customer } from '../models';
+import { Badge, Button, Card, Choices, Label, LoadState, Page, Pager, RecordPicker, styles } from '../ui';
+import { Form } from '../components/form';
+import { dateTime } from '../lib/date-time';
+import { mutation } from '../lib/http';
+import { useLoad } from '../hooks/use-load';
+import { Booking, Checkin, Customer } from '../models';
 import { MemberPackageSummary, MemberPackages, PackagePresetPicker, packageBody, packageFieldsFor } from './packages';
 import { colors as c } from '../design-system/theme';
 import { conversionBody } from '../features/conversion-input';
@@ -30,23 +34,33 @@ export default function Customers() {
       {(split || !!selected) && <View style={{ flex: 1.35, minWidth: 0, width: split ? undefined : '100%' }}>{selected ? <CustomerDetail key={selected} id={selected} compact={!split} close={() => setSelected('')} changed={() => void list.reload()} /> : <Card title="Hồ sơ khách hàng"><Label muted>Chọn một khách hàng trong danh sách để xem hồ sơ và thao tác.</Label></Card>}</View>}</View>
   </Page>;
 }
+function OfficialMemberProfile({ member }: { member: Customer['member'] }) {
+  const statuses: Record<string, string> = { ACTIVE: 'Đang hoạt động', INACTIVE: 'Ngừng hoạt động', LOCKED: 'Đã khóa' };
+  return <Card title="Thông tin Member chính thức">{member ? <>
+    <Label>Họ tên chính thức: {member.profile?.fullName ?? 'Chưa cập nhật'}</Label>
+    <Label>CCCD: {member.profile?.cccd ?? 'Chưa cập nhật'}</Label>
+    <Label>Trạng thái tài khoản: {statuses[member.status] ?? 'Chưa xác định'}</Label>
+  </> : <Label muted>Không tìm thấy thông tin Member liên kết.</Label>}</Card>;
+}
 function CustomerDetail({ id, compact, close, changed }: { id: string; compact: boolean; close: () => void; changed: () => void }) {
   const state = useLoad<Customer>('/customers/' + id);
   const [section, setSection] = useState('profile');
   const [historyPage, setHistoryPage] = useState(1);
+  const [bookingPage, setBookingPage] = useState(1), [checkinPage, setCheckinPage] = useState(1);
   const [presetId, setPresetId] = useState('');
   const refresh = () => { void state.reload(); changed(); };
   const customer = state.data;
   const memberId = customer?.memberUserId;
   const assignments = useLoad<{ id: string; ptName: string; status: string; reason: string; startAt: string; endAt?: string }[]>(memberId ? '/members/' + memberId + '/pt-assignment/history' : null);
-  const bookings = useLoad<Booking[]>(memberId ? '/bookings?memberId=' + memberId : null);
+  const bookings = useLoad<Booking[]>(section === 'booking' && memberId ? '/bookings?memberId=' + memberId + '&page=' + bookingPage : null);
+  const checkins = useLoad<Checkin[]>(section === 'checkin' ? '/customers/' + id + '/checkins?page=' + checkinPage : null);
   const history = useLoad<{ id: string; action: string; reason?: string; createdAt: string; actorName: string }[]>(section === 'history' ? '/customers/' + id + '/history?page=' + historyPage : null);
   return <Card title={customer?.fullName ?? 'Hồ sơ khách hàng'}>{compact && <Button secondary label="← Danh sách khách hàng" onPress={close} />}<LoadState state={state} />{customer && <><View style={styles.row}><Label>{customer.phone}</Label><Badge value={customer.status} /></View><Choices value={section} onChange={setSection} options={[{ value: 'profile', label: 'Hồ sơ' }, { value: 'membership', label: 'Gói tập' }, { value: 'assignment', label: 'PT' }, { value: 'booking', label: 'Booking' }, { value: 'checkin', label: 'Check-in' }, { value: 'trial', label: 'Trial' }, { value: 'history', label: 'Nhật ký' }]} />
-    {section === 'profile' && <Card title="Thông tin chính"><Label>Họ tên: {customer.fullName}</Label><Label>SĐT: {customer.phone}</Label><Label>Phân loại: {customer.status === 'TRIAL' ? 'Khách Trial' : 'Member'}</Label>{memberId ? <MemberPackageSummary key={memberId} memberId={memberId} /> : null}{customer.status === 'TRIAL' && <Card title="Chuyển thành Member"><Form revision={presetId} preserveFields={['cccd', 'password']} beforeFields={pending => <PackagePresetPicker value={presetId} onChange={setPresetId} disabled={pending} />} fields={[{ name: 'cccd', label: 'CCCD', numeric: true }, { name: 'password', label: 'Mật khẩu cấp cho Member (ít nhất 10 ký tự)', secret: true }, ...packageFieldsFor(presetId)]} label="Tạo Member và kích hoạt gói" submit={(v, k) => mutation('/customers/' + id + '/convert-to-member', conversionBody(v, () => packageBody(v, presetId)), k)} onSuccess={refresh} /></Card>}</Card>}
+    {section === 'profile' && <Card title="Thông tin chính"><Label>Họ tên: {customer.fullName}</Label><Label>SĐT: {customer.phone}</Label><Label>Phân loại: {customer.status === 'TRIAL' ? 'Khách Trial' : 'Member'}</Label>{memberId ? <><OfficialMemberProfile member={customer.member} /><MemberPackageSummary key={memberId} memberId={memberId} /></> : null}{customer.status === 'TRIAL' && <Card title="Chuyển thành Member"><Form revision={presetId} preserveFields={['cccd', 'password']} beforeFields={pending => <PackagePresetPicker value={presetId} onChange={setPresetId} disabled={pending} />} fields={[{ name: 'cccd', label: 'CCCD', numeric: true }, { name: 'password', label: 'Mật khẩu cấp cho Member (ít nhất 10 ký tự)', secret: true }, ...packageFieldsFor(presetId)]} label="Tạo Member và kích hoạt gói" submit={(v, k) => mutation('/customers/' + id + '/convert-to-member', conversionBody(v, () => packageBody(v, presetId)), k)} onSuccess={refresh} /></Card>}</Card>}
     {section === 'membership' && (memberId ? <MemberPackages memberId={memberId} /> : <Label muted>Khách Trial chưa có gói Member.</Label>)}
     {section === 'assignment' && <><LoadState state={assignments} empty={!assignments.data?.length} emptyText="Member chưa có lịch sử PT assignment." />{assignments.data?.map(item => <Card key={item.id} title={item.ptName}><Badge value={item.status} /><Label muted>{dateTime(item.startAt)}{item.endAt ? ' → ' + dateTime(item.endAt) : ' → hiện tại'}</Label><Label>{item.reason}</Label></Card>)}</>}
-    {section === 'booking' && <><LoadState state={bookings} empty={!bookings.data?.length} emptyText="Member chưa có booking." />{bookings.data?.map(item => <Card key={item.id} title={dateTime(item.startAt)}><Badge value={item.status} /><Label>{item.ptName ?? 'PT nội bộ'} · đến {dateTime(item.endAt)}</Label></Card>)}</>}
-    {section === 'checkin' && <><LoadState state={{ ...state, loading: false }} empty={!customer.checkins?.length} emptyText="Chưa có lịch sử vào tập." />{customer.checkins?.map(log => <Label key={log.id}>{dateTime(log.checkedInAt)} · {log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : log.context === 'WITH_EXTERNAL_PT' ? 'PT ngoài' : 'Trial'}</Label>)}</>}
+    {section === 'booking' && <View testID="customer-bookings"><LoadState state={bookings} empty={!bookings.data?.length} emptyText="Không có booking ở trang này. Xem trang trước hoặc kiểm tra mục Lịch tập." />{!bookings.loading && !bookings.error && bookings.data?.map(item => <Card key={item.id} title={dateTime(item.startAt)}><Badge value={item.status} /><Label>{item.ptName ?? 'PT nội bộ'} · đến {dateTime(item.endAt)}</Label></Card>)}{memberId && <Pager page={bookingPage} setPage={setBookingPage} more={!bookings.loading && !bookings.error && bookings.data?.length === 30} />}</View>}
+    {section === 'checkin' && <View testID="customer-checkins"><LoadState state={checkins} empty={!checkins.data?.length} emptyText="Không có lượt vào tập ở trang này. Xem trang trước hoặc đối chiếu tại quầy." />{!checkins.loading && !checkins.error && checkins.data?.map(log => <Label key={log.id}>{dateTime(log.checkedInAt)} · {log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : log.context === 'WITH_EXTERNAL_PT' ? 'PT ngoài' : 'Trial'}</Label>)}<Pager page={checkinPage} setPage={setCheckinPage} more={!checkins.loading && !checkins.error && checkins.data?.length === 30} /></View>}
     {section === 'trial' && (customer.trial ? <Card title="Trial 3 lượt"><Label>Đã dùng {customer.trial.usedSessions}/3 lượt</Label><Badge value={customer.trial.status} />{customer.status === 'TRIAL' && <Form fields={[]} label="Check-in Trial" submit={(_, k) => mutation('/customers/' + id + '/trial-checkin', {}, k)} onSuccess={refresh} />}</Card> : <Label muted>Hồ sơ không có Trial.</Label>)}
     {section === 'history' && <Card title="Nhật ký hồ sơ"><LoadState state={history} empty={!history.data?.length} emptyText="Hồ sơ chưa có thao tác được ghi nhận." />{history.data?.map(item => <Card key={item.id} title={auditLabels[item.action] ?? item.action}><Label muted>{dateTime(item.createdAt)} · {item.actorName}</Label>{!!item.reason && <Label>Lý do: {item.reason}</Label>}</Card>)}<Pager page={historyPage} setPage={setHistoryPage} more={history.data?.length === 30} /></Card>}
   </>}</Card>;

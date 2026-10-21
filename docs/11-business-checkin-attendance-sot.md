@@ -68,6 +68,10 @@ và tự đối chiếu theo thời gian/thực tế.
 
 ## 6. PT attendance
 
+Theo yêu cầu Owner 2026-10-21: PT mở QR cá nhân hạn 2 phút, tự làm mới như Member; Owner quét tại quầy, xem tên PT và xác nhận có mặt. Server xác thực chữ ký/expiry/loại mã PT và tài khoản PT active. Không có self-check-in trực tiếp; không cần gói hoặc booking để ghi PT attendance.
+
+Mutation Owner có Idempotency-Key, daily guard UTC+7 trong transaction có shared write lock; log source=QR và audit PT_QR_CHECKIN lưu Owner thực hiện, không lưu token. Replay cùng key giữ kết quả cũ kể cả QR đã hết hạn; key mới cần QR còn hiệu lực. Không thay đổi lịch sử cũ.
+
 PT check-in tạo log tối thiểu:
 
 - PT id;

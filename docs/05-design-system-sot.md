@@ -1,5 +1,19 @@
 # FITNESS-MANAGE SOT 05 — Design System & Role UI
 
+## Hoàn thiện CRM sau review — 2026-10-20
+
+- Hồ sơ customer liên kết Member hiển thị thông tin chính thức gồm họ tên, CCCD, trạng thái tài khoản với nhãn tiếng Việt. Phân loại Member không thay cho trạng thái account. Trial không có account thì không hiển thị một hồ sơ chính thức giả định; Member thiếu liên kết có thông báo rõ.
+- Booking và Check-in trong hồ sơ có bộ phân trang độc lập, 30 dòng/trang, loading/error/retry/empty. Chuyển khách reset trang qua identity của surface; không giữ dữ liệu khách cũ. Check-in dùng endpoint riêng theo customer, bao gồm Trial và Member liên kết; không dùng preview 100 dòng làm toàn bộ lịch sử.
+- Sales có bộ lọc Chưa xử lý/Đã liên hệ/Đã mua hoặc gia hạn/Không tiếp tục/Tất cả. Mặc định Chưa xử lý, đổi bộ lọc về trang 1; alert đã đóng vẫn xem được bằng bộ lọc tương ứng. Không đổi workflow cập nhật trạng thái/ghi chú hoặc tự suy kết quả bán hàng.
+
+## Sửa design system sau review — 2026-10-20
+
+- Giữ `primary=#3A7BD5` và `danger=#D9534F` cho màu thương hiệu/đồ họa. Chữ nhỏ dùng semantic `primaryText=#245B9E`, `dangerText=#AD302D`; CTA nền `primaryStrong=#2864B5`, hover/pressed `#205397` với chữ trắng. Các cặp chữ/nền của button, link, badge và message đạt tối thiểu 4,5:1; không dùng màu thương hiệu sáng làm chữ trên nền nhạt.
+- Cấp/gia hạn gói dùng Form ổn định theo revision; picker mẫu gói và mọi trường khóa cùng pending, không remount form để mở lại nút gửi. Conversion giữ cơ chế preserve identity hiện hành.
+- Menu Owner có vùng cuộn độc lập ở drawer compact và sidebar màn rộng để truy cập được mọi mục trên màn thấp; giữ scrim, đóng menu và vùng chạm 48px.
+- Form hỗ trợ destructive variant. Xác nhận hủy lịch, hủy PT, hủy gói dùng màu chữ danger semantic và nhãn rõ hành động, không dùng nhãn chung “Lưu”.
+- Quầy check-in PT nội bộ hiển thị loading/error/retry/empty cho booking của Member đang chọn; khi chưa có dữ liệu hợp lệ thì khóa form xác nhận. Empty state hướng dẫn kiểm tra/tạo lịch. Tự tập không phụ thuộc trạng thái booking; validation/quota/quyền ở server giữ nguyên.
+
 ## Counter check-in validation — 2026-10-08
 
 Sau resolve QR hoặc tra cứu SĐT, Owner phải chọn gói đang hoạt động trước xác nhận; PT nội bộ còn cần booking. Thiếu lựa chọn phải báo rõ tại form và không gửi request. Quét mã mới xóa Member/token của mã cũ trước resolve để lỗi quét không giữ identity cũ.
@@ -36,12 +50,16 @@ Không thiết kế theo kiểu dashboard enterprise nặng nề hoặc fitness 
 
 | Token | Màu | Dùng cho |
 |---|---|---|
-| `primary` | `#3A7BD5` | CTA chính, navigation active |
+| `primary` | `#3A7BD5` | màu thương hiệu, icon/indicator |
+| `primaryStrong` | `#2864B5` | nền CTA chính với chữ trắng |
+| `primaryPressed` | `#205397` | nền CTA chính hover/pressed |
+| `primaryText` | `#245B9E` | chữ link, navigation active, secondary CTA/badge |
 | `primary-soft` | `#EAF2FD` | selected surface, info card |
 | `secondary` | `#20A486` | success/fitness accent |
 | `secondary-soft` | `#E8F7F2` | success surface |
 | `accent` | `#F2B84B` | warning nhẹ, renewal/trial attention |
-| `danger` | `#D9534F` | destructive/error thực sự |
+| `danger` | `#D9534F` | icon/indicator destructive/error |
+| `dangerText` | `#AD302D` | chữ destructive/error trên nền nhạt |
 | `background` | `#F7F9FC` | app background |
 | `surface` | `#FFFFFF` | card/panel |
 | `text` | `#1F2937` | primary text |
@@ -173,8 +191,8 @@ PT chỉ thấy:
 - lịch của mình;
 - Member được assign;
 - detail booking;
-- nút PT check-in;
-- lịch sử check-in của chính mình nếu cần.
+- QR PT check-in trên Hôm nay, có đếm ngược/làm mới như Member; Owner quét và xác nhận tại quầy;
+- lịch sử check-in của chính mình, có nút làm mới sau khi Owner xác nhận.
 
 Không hiển thị Create/Edit/Delete booking.
 
@@ -286,3 +304,7 @@ Owner tạo/sửa booking chọn ngày giờ bắt đầu và kết thúc bằng
 Nhận xét được gọi tự động sau khi đo và hiển thị từng đoạn; ghi rõ OPENAI hoặc thuật toán local. Dịch vụ lỗi vẫn hiển thị kết quả local và cho phân tích lại. Stepper ba bước dùng chung web/mobile; lịch sử v1 vẫn đọc được. Các trường thiếu dữ liệu/thiếu tiêu chí không được biểu thị là đạt kỹ thuật.
 - Kết quả hiển thị độ phủ nhận diện, CTA mở/ẩn chi tiết từng lần; mỗi lần có timestamp điểm thấp nhất và các hàng số đo/tiêu chí/kết luận/gợi ý. Layout xếp dọc trên mobile, trạng thái dùng chữ, không chỉ màu.
 - Ghi rõ góc 2D, giới hạn cột sống/hướng tay/knee valgus, ngưỡng app chưa được kiểm chứng. Kết quả cũ thiếu detail hướng dẫn phân tích lại trên mobile/web; mobile báo cần Development Build mới nếu binary cũ/Expo Go. Nút dịch vụ ghi rõ chỉ giải thích độ sâu.
+
+## PT QR tại quầy — 2026-10-21
+
+Quầy Owner dùng chung máy quét cho Member/PT. Resolve PT chỉ hiện tên và CTA “Xác nhận PT có mặt”, không hiện form gói/context/booking của Member. Quét mã mới hoặc tra SĐT xóa identity/token trước; lỗi mã không giữ PT cũ. Form khóa khi pending, thông báo thành công/lỗi rõ ràng. QR PT dùng cùng component với Member, loading/error/retry, đếm ngược và tự làm mới trước hết hạn.

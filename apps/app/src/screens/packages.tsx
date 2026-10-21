@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { z } from 'zod';
-import { Card, Form, Label, Choices, LoadState, Page, RecordPicker, useLoad, mutation, Field, iso, Badge, dateTime, Pager } from '../ui';
+import { Card, Label, Choices, LoadState, Page, RecordPicker, Badge, Pager } from '../ui';
+import { Form, Field } from '../components/form';
+import { useLoad } from '../hooks/use-load';
+import { mutation } from '../lib/http';
+import { iso, dateTime } from '../lib/date-time';
 import { Membership, Pass, Person } from '../models';
 import { endAfterMonths, membershipPresets } from '../features/membership-presets';
 import { localDateValue } from '../features/conversion-input';
@@ -55,7 +59,7 @@ export function MemberPackageSummary({ memberId }: { memberId: string }) {
 }
 function PresetPackageForm({ label, submit, onSuccess }: { label: string; submit: (body: ReturnType<typeof packageBody>, key: string) => Promise<unknown>; onSuccess: () => void }) {
   const [presetId, setPresetId] = useState('');
-  return <><PackagePresetPicker value={presetId} onChange={setPresetId} /><Form key={presetId || 'custom'} fields={packageFieldsFor(presetId)} label={label} submit={(values, key) => submit(packageBody(values, presetId), key)} onSuccess={onSuccess} /></>;
+  return <Form revision={presetId} beforeFields={pending => <PackagePresetPicker value={presetId} onChange={setPresetId} disabled={pending} />} fields={packageFieldsFor(presetId)} label={label} submit={(values, key) => submit(packageBody(values, presetId), key)} onSuccess={onSuccess} />;
 }
 export default function Packages() {
   const [page, setPage] = useState(1), people = useLoad<Person[]>('/people?role=MEMBER&page=' + page), [memberId, setMember] = useState('');
@@ -78,6 +82,6 @@ export function MemberPackages({ memberId }: { memberId: string }) {
 
     {action && <Card title={action.type === 'renew' ? 'Gia hạn bằng gói mới' : 'Xác nhận hủy gói'}>{action.type === 'renew'
       ? <PresetPackageForm key={action.id} label="Gia hạn gói" submit={(body, key) => mutation('/memberships/' + action.id + '/renew', body, key)} onSuccess={() => { setAction(null); void state.reload(); }} />
-      : <Form fields={[{ name: 'reason', label: 'Lý do hủy' }]} submit={(values, key) => mutation('/memberships/' + action.id + '/cancel', { reason: values.reason }, key)} onSuccess={() => { setAction(null); void state.reload(); }} />}</Card>}
+      : <Form danger label="Xác nhận hủy gói" fields={[{ name: 'reason', label: 'Lý do hủy' }]} submit={(values, key) => mutation('/memberships/' + action.id + '/cancel', { reason: values.reason }, key)} onSuccess={() => { setAction(null); void state.reload(); }} />}</Card>}
   </>;
 }

@@ -41,8 +41,11 @@ Không expose role mutation cho Member/PT.
 
 - `POST /customers/trials` — Owner
 - `GET /customers/search?phone=` — Owner
-- `GET /customers/:id` — Owner
+- `GET /customers/:id` — Owner; thêm `member: {id,status,profile:{fullName,cccd}|null}|null` cho Member liên kết, select allowlist không có password/token/session. Trial trả member=null. Preview checkins tối đa 100 giữ tương thích; client dùng endpoint checkins phân trang để xem đầy đủ.
+- `GET /customers/:id/checkins?page=` — Owner-only; 30 dòng/trang, mới nhất trước, tie-break id desc. Query OR customerId và memberUserId liên kết để giữ Trial/conversion và logs Member cũ; trả id/checkedInAt/context/method/subjectType. Page sai trả INVALID_PAGE/400, customer không có trả NOT_FOUND/404. Không tự match PT attendance.
 - `GET /customers/:id/history?page=` — Owner; nhật ký audit theo customer và các resource liên quan, trả action/reason/time/actorName đã lược bỏ snapshot nhạy cảm, phân trang 30 bản ghi.
+
+Nhật ký dùng cả summary Member trong before/after booking để giữ lịch sử sau reassignment; sort createdAt desc rồi id desc, không lặp record khi khớp nhiều nhánh. Response không có before/after/actorId; actorName được lookup riêng.
 - `POST /customers/:id/trial-checkin` — Owner
 - `POST /customers/:id/convert-to-member` — Owner
 
@@ -98,7 +101,9 @@ Payload phải có context explicit.
 
 ## 8. PT attendance
 
-- `POST /pt/me/checkin` — PT
+- `GET /pt/me/qr` — PT; trả `{token,expiresIn:120}`, kind `pt-attendance`.
+- `POST /checkins/pt` — Owner; strict body `{token}`, Idempotency-Key bắt buộc. Chỉ QR PT còn hạn, tài khoản PT active; source QR + audit PT_QR_CHECKIN. Không consume gói/pass hoặc match booking.
+- Đã bỏ `POST /pt/me/checkin`; PT không tự ghi attendance.
 - `GET /pt/me/attendance` — PT
 - `GET /pt/:id/attendance` — Owner
 
@@ -123,7 +128,7 @@ Không có endpoint `match-booking-attendance` trong MVP.
 - `GET /reports/packages`: Owner-only; array `{name,mode,memberCount,registrations}` cho toàn lịch sử cấp gói, nhóm tên + mode, memberCount unique theo memberId.
 - `GET /reports/checkins?year=YYYY`: Owner-only; year bắt buộc 1900–2199, sai trả INVALID_INPUT/400. Response `{year,timezone: "Asia/Bangkok",months:[{month,member,trial,total,pt}]}` đủ 12 tháng; total=member+trial, PT riêng. Khoảng tháng UTC+7, đầu bao gồm/cuối loại trừ. Không trả identity/PII hoặc đọc AI data. Không đổi schema/consume logic.
 
-- `GET /sales-alerts` — Owner
+- `GET /sales-alerts?page=&status=` — Owner; status mặc định OPEN, nhận OPEN/CONTACTED/CONVERTED_RENEWED/CLOSED_NOT_CONTINUING/ALL. Lọc trước phân trang 30 dòng, triggeredAt desc rồi id desc; ALL trả mọi trạng thái. Giá trị không hợp lệ trả INVALID_INPUT/400, không echo query. Không đổi mutation lifecycle.
 - `PATCH /sales-alerts/:id` — Owner
 
 ---
@@ -160,7 +165,7 @@ Phone search hỗ trợ exact/normalized match; không log raw search unnecessar
 
 API prefix /api. Mutation nghiệp vụ dùng Idempotency-Key; cùng key/actor/action nhưng payload khác trả conflict. Body dùng strict Zod, không nhận field tùy ý. Danh sách phân trang 30 bản ghi qua page. Booking hỗ trợ from/to và scope theo account.
 
-Endpoint bổ sung cho UI: GET/POST /people, PATCH /people/:id; GET /members/me/qr; GET /members/me/checkins; GET /members/me/pt; GET /pt/me/members; GET /pt/me/attendance; POST /pt/me/checkin; GET /dashboard, /audit, /external-pt/requests; POST/DELETE /notifications/device-token.
+Endpoint bổ sung cho UI: GET/POST /people, PATCH /people/:id; GET /members/me/qr; GET /members/me/checkins; GET /members/me/pt; GET /pt/me/members; GET /pt/me/attendance; GET /pt/me/qr; POST /checkins/pt; GET /dashboard, /audit, /external-pt/requests; POST/DELETE /notifications/device-token.
 
 POST /ai/form-analysis chỉ Member, payload schemaVersion/exercise/status/reps/metrics/issues. Không có URL video hay endpoint upload. FastAPI nội bộ nhận cùng JSON với X-Service-Token; response feedback có schema strict.
 
@@ -169,3 +174,7 @@ POST /ai/form-analysis chỉ Member, payload schemaVersion/exercise/status/reps/
 POST /api/ai/form-analysis vẫn chỉ MEMBER. Gateway chấp nhận v1 tương thích và strict v2: schemaVersion=2.0, exercise SQUAT/PUSH_UP/LUNGE/UNKNOWN, status COMPLETED/POSE_NOT_DETECTED/INSUFFICIENT_REPS/UNRECOGNIZED_EXERCISE, recognitionScore [0,1], reps [0,500], metrics {detectedRatio,minJointAngle}, reference {trunkMax:null hoặc [0,90]}, perRep tối đa mười {index,timeSeconds [0,120],angles {kneeLeft,kneeRight,trunk,elbowLeft,elbowRight,armLeft,armRight},bodyLine}. Góc thiếu là null, không phải zero.
 
 COMPLETED cần bài xác định, reps>0, score≥0.7, coverage≥0.6, minJointAngle có dữ liệu và đúng min(reps,10) báo cáo chỉ số tuần tự. Failure không có reps/perRep; UNRECOGNIZED_EXERCISE cần UNKNOWN. Extra fields bị từ chối ở mọi object. FastAPI body ≤8192 bytes và X-Service-Token bắt buộc. V2 response strict {schemaVersion,exercise,status,provider:OPENAI|LOCAL,feedback:1..8 đoạn tối đa 600 ký tự}; gateway kiểm tra cùng exercise/status/version với request. Upstream timeout 25 giây; lỗi trả thông báo generic, không lộ SDK/input/secret.
+
+## PT QR — 2026-10-21
+
+POST /checkins/resolve-qr Owner-only giữ response Member `{member,memberships}`; QR PT trả `{pt:{id,profile:{fullName}}}`. Token PT dùng kind riêng, không dùng thay QR Member và ngược lại. Mã sai loại/chữ ký/hết hạn trả INVALID_QR/400. POST checkins/pt kiểm tra token trong callback command để retry cùng key replay trước validation expiry; key mới sau điểm danh bị ALREADY_CHECKED_IN_TODAY/409 khi mã hợp lệ.

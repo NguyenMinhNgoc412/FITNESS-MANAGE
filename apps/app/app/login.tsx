@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import { z } from 'zod';
 import { api } from '../src/api';
-import { Form, Page, Card, Label } from '../src/ui';
+import { Page, Card, Label } from '../src/ui';
+import { Form } from '../src/components/form';
 import { roleRoute, sessionSchema } from '../src/features/auth/types';
 import { useAuthStore } from '../src/store/auth';
 export default function Login() {

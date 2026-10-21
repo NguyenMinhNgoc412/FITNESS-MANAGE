@@ -163,6 +163,16 @@ UI action
 
 MVP ưu tiên local/free tier. Không thêm Kafka, Redis cluster, Kubernetes, event bus hoặc microservice infrastructure trừ khi SOT thay đổi.
 
+## Domain modules và side effects — 2026-10-20
+
+- Dashboard chỉ đọc dữ liệu đã lưu, không gọi refresh cảnh báo hoặc lấy business write lock; DashboardModule không phụ thuộc SalesAlertsModule. KPI check-in và booking hôm nay dùng cùng khoảng ngày UTC+7 `[đầu ngày, đầu ngày kế tiếp)` với helper check-in, độc lập timezone máy chủ.
+- Sales Alerts scheduler refresh lúc khởi động và mỗi 60 giây; KPI Dashboard phản ánh lần refresh thành công gần nhất (có thể trễ khoảng một chu kỳ khi worker hoạt động bình thường). Hai scheduler ghi mã lỗi cố định bằng Nest Logger khi một vòng thất bại và tiếp tục ở vòng kế tiếp; không log exception, stack, payload hoặc PII.
+- `apps/api/src/domain/*.module.ts` tổ chức Customers, Memberships, People/PT assignment, Bookings, Checkins/PT attendance, External PT, Sales Alerts, Notifications, Reports, Dashboard và Audit thành module NestJS riêng. Controller theo domain giữ nguyên endpoint, strict validation và quyền explicit từng handler; route `me` đứng trước route `:id` tương ứng.
+- `AppModule` chỉ compose module và AI gateway. Service domain được export khi domain khác sử dụng; không đăng ký lặp provider. Reports, Dashboard, Audit, Device Tokens và Sales Alerts không còn chung một OperationsService.
+- Sales Alerts scheduler chỉ refresh alerts. Notifications scheduler chạy mỗi 5 giây và một lần khi khởi động; có guard chống chạy chồng trong cùng process và atomic claim giữa các process.
+- Booking/external initiation ghi notification trong cùng transaction nghiệp vụ. Request trả sau commit, không đợi network push. Worker gửi ngoài transaction, dùng lease/claim token và retry có giới hạn; MongoDB vẫn là nguồn dữ liệu, không thêm queue/provider.
+- Client: `src/ui.tsx` giữ visual primitives; `src/components/form.tsx` giữ form/pending/idempotency UI; `src/hooks/use-load.ts` giữ REST loading và chống response cũ; `src/lib/http.ts`, `src/lib/date-time.ts` chứa helper riêng. Consumer import trực tiếp, tránh UI phụ thuộc HTTP.
+
 ## AI automatic flow — 2026-10-08
 
 App web/native dùng chung domain pose metrics → nhận diện heuristic bài → cycles/góc/so sánh → SQLite. Với kết quả hoàn chỉnh, app tự gửi JSON allowlist v2 qua gateway MEMBER đến FastAPI; OpenAI chỉ diễn giải bằng chứng do app đo, server ghép lại số đo/mục tiêu/verdict. Provider LOCAL fallback khi không thể lấy diễn giải. Pipeline raw video local → on-device metrics → JSON → FastAPI → OpenAI nếu cấu hình → structured feedback giữ nguyên provider/stack baseline. Chi tiết scope/heuristic/privacy tại SOT 14/18.

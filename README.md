@@ -58,6 +58,10 @@ Sau mutation, client refresh/re-fetch qua REST. Chi tiết baseline xem [Tech St
 | `docs` | Source of Truth về sản phẩm, thiết kế, kiến trúc và acceptance. |
 | `images` | Ảnh tham chiếu giao diện canonical theo Owner, PT và Member. |
 
+Backend có controller/module theo domain tại `apps/api/src/domain`; Reports, Dashboard, Sales Alerts, Audit và Device Tokens có service riêng. Notification outbox được enqueue trong transaction và gửi bởi scheduler. Client tách visual primitives (`src/ui.tsx`), form (`src/components/form.tsx`), REST loading (`src/hooks/use-load.ts`) và helper (`src/lib/http.ts`, `src/lib/date-time.ts`).
+
+Khi nâng cấp notification từ bản trước 2026-10-20: dừng API/worker cũ, chạy `pnpm --filter @fitness/api prisma:generate`, `pnpm --filter @fitness/api db:push`, `pnpm --filter @fitness/api db:indexes`, rồi chạy API mới. Lệnh indexes backfill attempts còn thiếu; giữ lịch sử/trạng thái terminal. Không chạy worker cũ và mới đồng thời. Xem SOT 13/15 về lease, retry và giới hạn push best-effort.
+
 ## Tài liệu dự án
 
 - [Mục lục Source of Truth](docs/README.md)
@@ -163,6 +167,10 @@ Web host cần HTTPS (localhost được hỗ trợ), SPA fallback, header `Cros
 Nếu web dev chọn video nhưng nút bị mờ và không có phiên mới, restart Expo sau khi sửa `metro.config.js`, rồi mở trực tiếp `http://localhost:8081/login` và đăng nhập lại. Metro có entry worker SQLite trong workspace để tránh URL 404 khi pnpm store nằm ngoài repository. Chọn video chỉ lưu local; sau thông báo thành công, bấm **Phân tích trên thiết bị**. Khởi tạo SQLite lỗi/quá 15 giây phải có thông báo, không chờ vô hạn.
 
 Kiểm tra hồi quy UI trên dev server bằng PowerShell: `$env:UI_TEST_URL="http://localhost:8081"` rồi `pnpm --package=@playwright/test dlx -c "node scripts/ui-regression.cjs"`. Runner dùng API mock, identity/video sinh lúc chạy; không dùng tài khoản hoặc video thật.
+
+Kiểm tra 5 lỗi design system trên web export mới: chạy `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`, rồi `pnpm --package=@playwright/test dlx -c "node scripts/design-system-regression.cjs"`. Runner dùng Edge headless/API mock để kiểm tra khóa pending cấp/gia hạn, destructive CTA, menu Owner cuộn trên màn thấp, booking loading/error/retry/empty và lịch PT/Member read-only; ảnh lưu tại `.local/design-system-fixes/`. Unit test tương phản semantic colors nằm trong `theme.spec.ts`; không thay kiểm thử thiết bị native thật.
+
+CRM regression trên cùng web export: `pnpm --package=@playwright/test dlx -c "node scripts/crm-regression.cjs"`. Runner kiểm tra profile Owner, phân trang riêng với 31 booking/121 check-in, retry, đổi customer reset dữ liệu và lọc Sales OPEN/đã đóng/ALL; chỉ dùng API giả lập. Khi rollout sửa CRM 2026-10-20, chạy `pnpm --filter @fitness/api db:indexes` để thêm hai index tra audit theo Member trước/sau đổi booking. Không cần đổi schema hoặc backfill audit cho phần CRM này; xem SOT 15/16 về dữ liệu cũ và contract.
 
 Integration test cần MongoDB replica set và database test **riêng**; runner chỉ chấp nhận tên bắt đầu bằng `fitness_test_` và xóa database test khi kết thúc:
 

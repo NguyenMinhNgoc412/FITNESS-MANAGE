@@ -79,6 +79,8 @@ Chi tiết: `08-business-membership-package-sot.md`.
 ### FR-PROFILE-001
 Hồ sơ Member/PT chính thức có họ tên, SĐT và CCCD; các field bổ sung có thể gồm ngày sinh, giới tính, địa chỉ, avatar.
 
+Owner mở hồ sơ customer đã liên kết Member xem được họ tên chính thức, CCCD và trạng thái tài khoản; phân biệt account bị khóa/ngừng hoạt động với phân loại customer là Member. Không mở rộng dữ liệu này cho PT/Member khác.
+
 ### FR-PROFILE-002
 SĐT unique cho identity đăng nhập/customer chính thức; CCCD unique khi đã nhập.
 
@@ -134,7 +136,7 @@ Hỗ trợ context: `TRIAL`, `SELF_TRAINING`, `WITH_INTERNAL_PT`, `WITH_EXTERNAL
 Member có thể tự tập mà không cần PT.
 
 ### FR-CHECKIN-004
-PT nội bộ có check-in/attendance log độc lập.
+PT nội bộ có check-in/attendance log độc lập. PT mở QR cá nhân có thời hạn như Member; Owner quét và xác nhận có mặt tại quầy. PT không tự tạo attendance qua nút xác nhận.
 
 ### FR-CHECKIN-005
 Hệ thống không tự match Member log với PT log để kết luận PT vắng/có mặt cho booking.
@@ -177,6 +179,8 @@ Trial buổi cuối tạo lead-sale alert cho Owner.
 
 ### FR-SALES-002
 Member sắp hết package tạo renewal alert cho Owner.
+
+Hàng đợi Sales mặc định chỉ hiển thị `OPEN`; Owner lọc theo các trạng thái chăm sóc hiện hành hoặc `ALL` để xem lịch sử đã đóng. Lọc trước phân trang, không xóa alert cũ hoặc tự gia hạn/convert.
 
 ### FR-NOTI-001
 Khi Owner tạo/sửa/hủy booking, PT và Member liên quan nhận notification phù hợp.
@@ -240,6 +244,8 @@ Chi tiết: `05-design-system-sot.md`.
 
 ### FR-AUDIT-001
 Các mutation quan trọng phải lưu actor/time/reason phù hợp.
+
+Nhật ký CRM giữ liên kết với booking từng liên quan khách kể cả sau khi đổi Member. Owner xem lịch booking/check-in theo trang trong hồ sơ, không bị giới hạn ở 30 booking hoặc 100 lượt check-in đầu tiên.
 
 ### FR-AUDIT-002
 Không double-consume Trial session, Membership session hoặc External PT Pass vì double-tap/retry.

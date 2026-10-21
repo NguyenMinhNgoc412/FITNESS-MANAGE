@@ -221,8 +221,13 @@ model Notification {
   resourceId  String
   status      String   @default("PENDING")
   errorCode   String?
+  attempts    Int      @default(0)
+  claimToken  String?
+  leaseUntil  DateTime?
+  nextAttemptAt DateTime?
   createdAt   DateTime @default(now())
   @@index([recipientId, createdAt])
+  @@index([status, nextAttemptAt, createdAt])
   @@map("notifications")
 }
 
