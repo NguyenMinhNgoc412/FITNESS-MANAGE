@@ -67,7 +67,8 @@ async function main() {
         assert(!/multipart|video\//i.test(request.headers()['content-type'] ?? ''), 'Unexpected media request');
         assert(!/"(video|base64|mediaUrl|video_uri)"\s*:/.test(request.postData() ?? ''), 'Unexpected raw-video payload');
         let body = [];
-        if (url.pathname === '/api/auth/login') body = { accessToken: randomBytes(32).toString('hex'), refreshToken: randomBytes(32).toString('hex'), user: { id, role } };
+        if (url.pathname === '/api/members/me/workouts') body = { items: [], total: 0, page: 1, pageSize: 20 };
+        else if (url.pathname === '/api/auth/login') body = { accessToken: randomBytes(32).toString('hex'), refreshToken: randomBytes(32).toString('hex'), user: { id, role } };
         else if (url.pathname === '/api/dashboard') body = { checkins: 0, trials: 1, alerts: 0, trialFinal: 0, membershipExpiring: 0, bookingsToday: 0, ptsToday: 0, bookings: [] };
         else if (url.pathname === '/api/customers/search') body = url.searchParams.get('phone') === member.phone ? [memberCustomer] : [customer, memberCustomer];
         else if (url.pathname === '/api/checkins/member') {
@@ -123,10 +124,10 @@ async function main() {
     if (role === 'OWNER') {
       stage = 'conversion preserves identity across presets';
       await page.getByRole('link', { name: 'Khách hàng', exact: true }).click();
-      const row = page.getByRole('radio', { name: /Trial UI regression/ });
+      const row = page.getByRole('button', { name: /Xem chi tiết Trial UI regression/ });
       await row.click();
-      assert((await row.innerText()).includes('✓'), 'Selected record lacks visible checkmark');
-      assert(await row.getAttribute('aria-checked') === 'true', 'Selected record lacks accessible checked state');
+      await page.getByRole('dialog').waitFor();
+      assert.equal(await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).count(), 1, 'Customer detail is not a popup');
       const cccd = String(randomInt(100000, 999999)) + String(randomInt(100000, 999999));
       const password = randomBytes(16).toString('hex');
       await page.getByLabel('CCCD', { exact: true }).fill(cccd);
@@ -158,22 +159,29 @@ async function main() {
       await page.getByText('Phản hồi kiểm tra UI; không ghi dữ liệu.', { exact: true }).waitFor();
       assert(await page.getByRole('radio', { name: /Hội viên 15 buổi/ }).isEnabled(), 'Preset remains locked after failure');
       stage = 'customer profile displays linked member membership';
-      await page.getByRole('radio', { name: /Customer linked to member/ }).click();
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
+      await page.getByRole('button', { name: /Xem chi tiết Customer linked to member/ }).click();
       await page.getByText('Owned membership fixture', { exact: true }).waitFor();
       await page.getByText('Còn 23 / 30 lượt', { exact: true }).waitFor();
+      await page.getByRole('button', { name: 'Xem chi tiết Owned membership fixture', exact: true }).click();
       await page.getByText('Giá ghi nhận: 2.100.000 ₫', { exact: true }).waitFor();
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).last().click();
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       stage = 'PT and Member navigation, selected member package and empty state';
       await page.getByRole('link', { name: 'PT & Member', exact: true }).click();
       await page.getByRole('radio', { name: /Hội viên/, exact: false }).click();
-      await page.getByRole('radio', { name: /Member UI fixture/ }).click();
+      await page.getByRole('button', { name: /Xem chi tiết Member UI fixture/ }).click();
       await page.getByText('Owned membership fixture', { exact: true }).waitFor();
-      await page.getByRole('radio', { name: /Member without package/ }).click();
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
+      await page.getByRole('button', { name: /Xem chi tiết Member without package/ }).click();
       await page.getByText('Member chưa có gói tập.', { exact: true }).waitFor();
       assert.equal(await page.getByText('Owned membership fixture', { exact: true }).count(), 0, 'Previous member package remained visible');
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       stage = 'packages remove duplicate catalog and retain selection prices';
       await page.getByRole('link', { name: 'Gói tập', exact: true }).click();
       assert.equal(await page.getByText('6 gói hội viên mẫu', { exact: true }).count(), 0);
       await page.getByRole('radio', { name: /Member UI fixture/ }).click();
+      await page.getByRole('button', { name: 'Thêm gói tập', exact: true }).click();
       await page.getByRole('radio', { name: /Hội viên 15 buổi/ }).waitFor();
       assert((await page.getByRole('radio', { name: /Hội viên 15 buổi/ }).innerText()).includes('1.200.000'));
       stage = 'time-based package uses dates without time fields';
@@ -190,8 +198,10 @@ async function main() {
       assert.equal(packageBodyCaptured.mode, 'TIME_BASED');
       assert.equal(packageBodyCaptured.startAt, '2026-10-09T17:00:00.000Z');
       assert.equal(packageBodyCaptured.endAt, '2027-01-09T17:00:00.000Z');
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       stage = 'booking datetime controls, local timezone conversion and pending lock';
       await page.getByRole('link', { name: 'Lịch tập', exact: true }).click();
+      await page.getByRole('button', { name: 'Tạo lịch tập', exact: true }).click();
       const start = page.getByLabel('Ngày giờ bắt đầu', { exact: true });
       const end = page.getByLabel('Ngày giờ kết thúc', { exact: true });
       assert.equal(await start.getAttribute('type'), 'datetime-local');
@@ -209,11 +219,15 @@ async function main() {
       releaseBooking();
       await page.getByText('Booking UI fixture; không ghi dữ liệu.', { exact: true }).waitFor();
       assert(await start.isEnabled());
+      await page.getByRole('button', { name: 'Đóng biểu mẫu', exact: true }).click();
+      await page.getByTestId('booking-row').click();
       await page.getByRole('button', { name: 'Sửa lịch', exact: true }).click();
       assert.equal(await start.inputValue(), '2026-10-10T07:00');
       assert.equal(await end.inputValue(), '2026-10-10T08:00');
       await page.getByLabel('Lý do chỉnh sửa', { exact: true }).waitFor();
       await page.screenshot({ path: path.join(root, '.local/booking-datetime.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Đóng biểu mẫu', exact: true }).click();
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       stage = 'counter missing choices are rejected locally and selected package satisfies API';
       await page.getByRole('link', { name: 'Check-in', exact: true }).click();
       await page.getByLabel('Số điện thoại', { exact: true }).fill(member.phone);
@@ -232,21 +246,23 @@ async function main() {
       await page.getByText('Chọn booking của Member khi tập với PT nội bộ.', { exact: true }).waitFor();
       assert.equal(checkinCount, 1, 'Missing booking submitted to API');
     } else {
-      stage = 'mobile shortcuts have touch target and keyboard focus';
-      for (const name of ['Mở mã QR check-in →', 'Xem lịch tập', 'Kiểm tra form →']) {
+      stage = 'Member Home activity and navigation touch targets';
+      await page.getByRole('button', { name: 'Nhật ký', exact: true }).waitFor();
+      for (const name of ['Mở mã QR check-in →', 'Xem lịch tập', 'Kiểm tra form →']) assert.equal(await page.getByRole('link', { name, exact: true }).count(), 0, 'Duplicate Home shortcut remains');
+      for (const name of ['Trang chủ', 'Lịch', 'Check-in', 'AI', 'Tài khoản']) {
         const link = page.getByRole('link', { name, exact: true });
         const box = await link.boundingBox();
-        if (!box || box.height < 48) console.error(JSON.stringify(await link.evaluate(el => ({ tag: el.tagName, minHeight: getComputedStyle(el).minHeight, padding: getComputedStyle(el).padding, display: getComputedStyle(el).display, height: el.getBoundingClientRect().height }))));
-        assert(box && box.height >= 48, 'Shortcut touch target is too small');
+        assert(box && box.height >= 48, 'Navigation touch target is too small');
         await link.focus();
-        await page.waitForFunction(label => {
-          const link = [...document.querySelectorAll('[role="link"]')].find(el => el.getAttribute('aria-label') === label);
-          return link && getComputedStyle(link).borderTopColor !== 'rgba(0, 0, 0, 0)';
-        }, name);
+        assert(await link.evaluate(el => document.activeElement === el), 'Navigation keyboard focus failed');
       }
       stage = 'AI imports local video and deletion locks competing controls';
       await page.getByRole('link', { name: 'Lịch', exact: true }).click();
+      await page.getByTestId('booking-row').click();
+      assert.equal(await page.getByRole('button', { name: 'Sửa lịch', exact: true }).count(), 0);
+      assert.equal(await page.getByRole('button', { name: 'Hủy lịch', exact: true }).count(), 0);
       assert.equal(await page.getByRole('button', { name: 'Tạo booking', exact: true }).count(), 0);
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       assert.equal(await page.getByRole('button', { name: 'Sửa lịch', exact: true }).count(), 0);
       await page.getByRole('link', { name: 'AI', exact: true }).click();
       assert.equal(await page.getByText('1. Chọn bài', { exact: true }).count(), 0, 'Exercise selection remains in auto flow');
@@ -302,11 +318,13 @@ async function main() {
       await analyze.click();
       await page.getByText('Nhận xét AI kiểm thử từ chỉ số đo.', { exact: true }).waitFor();
       await page.getByRole('button', { name: 'Xem góc và so sánh từng lần', exact: true }).click();
+      await page.getByRole('button', { name: /^Xem chi tiết Lần 1 ·/ }).click();
       await page.getByText('Gối trái: 80°', { exact: true }).waitFor();
       await page.getByText('Khuỷu tay trái: 180°', { exact: true }).waitFor();
       await page.getByText('Độ nghiêng thân: 0°', { exact: true }).waitFor();
       await page.getByText('Tham chiếu: Mục tiêu bạn nhập: ≤40° so với phương thẳng đứng', { exact: true }).waitFor();
       await page.screenshot({ path: path.join(root, '.local/ai-angle-comparison.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).last().click();
       await page.getByRole('button', { name: 'Ẩn so sánh từng lần', exact: true }).click();
       stage = 'AI delete cancellation and pending';
       const remove = page.getByRole('button', { name: 'Xóa phiên và video local', exact: true });

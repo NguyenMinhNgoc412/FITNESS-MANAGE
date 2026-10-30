@@ -1,5 +1,24 @@
 # FITNESS-MANAGE SOT 05 — Design System & Role UI
 
+## Danh sách và thống kê dùng list → popup — 2026-10-29
+
+- Theo yêu cầu Owner, danh sách bản ghi dùng hàng có tên/thời gian, mô tả ngắn, trạng thái chữ và dấu mở chi tiết; bỏ card lặp lại theo từng bản ghi. Các hàng nằm trong một list container không có gap giữa record, padding dọc 8px và vùng chạm ít nhất 56px; tránh giữ lại khoảng cách vốn dành cho các card. Bấm hàng mở popup. Áp dụng khách hàng CRM, gói đã cấp/Pass, lịch ba role, Sales/Logs, thống kê gói/tháng, lịch sử PT/check-in, Member phụ trách, nhật ký/số đo/bài mẫu/revisions/biểu đồ và phiên AI/chi tiết từng lần. Control chọn hồ sơ trong form vẫn là selection list/radio, không biến thành thao tác mở detail.
+- CRM thay surface master/detail cũ bằng danh sách và popup trên cả web/mobile. Gói cấp/gia hạn/hủy, tạo gói/pass, lịch Owner và chăm sóc Sales thực hiện bên trong popup; giữ quyền Owner, lý do/idempotency, pagination và không thêm API/business rule. Mỗi cấp popup giữ nội dung đúng resource, close/Back/Escape trả về danh sách ở vị trí trước đó.
+- Popup giới hạn chiều cao, safe-area/keyboard avoidance, header/nút đóng cố định, nội dung cuộn riêng và focus containment/restoration theo RN Modal. Form/useCommand đăng ký pending với popup; đang gửi khóa đóng, Escape và các control cạnh tranh. Nhật ký/số đo dirty xác nhận trước khi đóng; lỗi/conflict vẫn giữ form. Popup có scroll context riêng cho focus ô lỗi native, không cuộn Page phía sau.
+- Giữ card cho KPI tổng quan, QR, vùng form/nhóm nhập liệu và hướng dẫn có ý nghĩa; padding/gap phổ biến 16/12px, không để vùng rỗng lớn. Không dùng card lặp cho từng record hoặc từng dòng report. Navigation tiles hoạt động là control chuyển mục, vẫn giữ icon/nhãn và vùng chạm.
+- Giữ summary số liệu hiện hành, source/API và quyền từng role; PT/Member detail lịch không có sửa/hủy, Owner/PT không có route AI/tập luyện riêng tư của Member. Video local, metrics và lifecycle AI không đổi. Lịch sử vẫn xem đầy đủ qua phân trang.
+
+## Quản lý PT/Member trong một màn hình — 2026-10-29
+
+- Theo yêu cầu Owner, màn PT & Member dùng hàng danh sách (tên, SĐT, trạng thái có chữ), chiều cao giới hạn theo vùng nội dung. Số dòng mỗi trang tự điều chỉnh theo chiều cao; nút trang trước/sau luôn ở ngoài danh sách. Không render form hoặc detail nối dài dưới danh sách. Giữ khả năng truy cập các nhóm dữ liệu API 30 hồ sơ, không cắt mất các hồ sơ sau nhóm đầu. Lọc tên/SĐT chỉ trong nhóm dữ liệu hiện tại và ghi rõ phạm vi.
+- Bấm một hàng mở popup chi tiết; Thông tin, Sửa hồ sơ và PT phụ trách tách thành mục. Thông tin Member giữ gói đã cấp, PT hiện tại và trạng thái hồ sơ; mục PT giữ phân trang chọn PT, lý do và lịch sử. Thêm PT/Member cũng mở popup.
+- Popup giới hạn trong viewport, cuộn nội dung riêng; header và nút đóng luôn thấy. Có trợ năng modal và đóng bằng Escape/back khi không pending. Khóa đóng và các thao tác cạnh tranh khi lưu; lỗi giữ form. Đóng popup giữ trang/lọc hiện tại. Không đổi quyền Owner hoặc business/API/schema.
+
+## Lịch dạng danh sách gọn — 2026-10-29
+
+- Theo yêu cầu Owner, màn Lịch của Owner/PT/Member dùng các hàng phân cách theo ngày, giờ bắt đầu–kết thúc, tên Member/PT và trạng thái bằng chữ; không bọc từng buổi trong card. Giữ phân trang 30 buổi, responsive và vùng chạm 48px.
+- Form tạo/sửa của Owner chỉ mở khi chủ động chọn; phân trang danh sách chọn nằm trong form. Khóa thao tác cạnh tranh khi đang lưu/hủy. PT và Member chỉ xem.
+
 ## Hoàn thiện CRM sau review — 2026-10-20
 
 - Hồ sơ customer liên kết Member hiển thị thông tin chính thức gồm họ tên, CCCD, trạng thái tài khoản với nhãn tiếng Việt. Phân loại Member không thay cho trạng thái account. Trial không có account thì không hiển thị một hồ sơ chính thức giả định; Member thiếu liên kết có thông báo rõ.
@@ -308,3 +327,70 @@ Nhận xét được gọi tự động sau khi đo và hiển thị từng đo�
 ## PT QR tại quầy — 2026-10-21
 
 Quầy Owner dùng chung máy quét cho Member/PT. Resolve PT chỉ hiện tên và CTA “Xác nhận PT có mặt”, không hiện form gói/context/booking của Member. Quét mã mới hoặc tra SĐT xóa identity/token trước; lỗi mã không giữ PT cũ. Form khóa khi pending, thông báo thành công/lỗi rõ ràng. QR PT dùng cùng component với Member, loading/error/retry, đếm ngược và tự làm mới trước hết hạn.
+
+
+## Hoạt động tập luyện Member — 2026-10-28
+
+Home Member có shortcut Hoạt động tập luyện; màn /member/workouts có Nhật ký, Tiến bộ, Số đo cơ thể và Bài tập mẫu. Dùng lại primitives/tokens, form RHF, ngày date-only, kg/cm rõ ràng. Pending khóa form và đổi mục; dirty form xác nhận bỏ thay đổi, lỗi/conflict giữ nội dung, tải bản mới có xác nhận. Biểu đồ cột có bảng ngày/giá trị/đơn vị, không bịa số liệu khi thiếu. Có lọc/phân trang/loading/empty/error/retry/success; account switch remount theo identity. Không thêm màn Owner/PT xem dữ liệu riêng. Nội dung chi tiết SOT 21.
+
+### Hoàn thiện sau review — 2026-10-28
+
+- Bộ lọc có nhãn hiển thị cố định “Từ ngày”/“Đến ngày” bên cạnh tên trợ năng; không chỉ đặt aria-label cho ô ngày.
+- Bốn mục chức năng dùng Button có dấu ✓ cho mục đang chọn, trạng thái selected trên native và aria-pressed trên web, tên trợ năng giữ nguyên. Giữ hover/focus, vùng chạm 48px, wrap trên màn hẹp và khóa đổi mục khi mutation pending.
+- Feedback lỗi/thành công dùng styles.error/styles.success với màu semantic trong theme, nội dung chữ và live region polite; lỗi có role alert. Áp dụng cho mutation, kết quả lưu ở danh sách, validation khoảng ngày và lỗi mở nguồn thư viện.
+- Trạng thái nhật ký/số đo ở danh sách, chi tiết và revision dùng Badge với nhãn tiếng Việt; action lịch sử hiển thị Tạo mới/Cập nhật/Hoàn tất/Lưu trữ, không đưa mã enum vào giao diện. Nháp dùng warning, hoàn tất/đang hoạt động dùng success, lưu trữ dùng info.
+- Ô lọc bài đã ghi có nhãn “Bài đã ghi”, placeholder “Nhập tên bài tập”; giữ placeholder tìm hồ sơ ở các màn khác theo ngữ cảnh của chúng.
+
+### Giảm thao tác và độ dài màn Member — 2026-10-28
+
+- Lưu nháp/lưu thay đổi nhật ký giữ màn nhập, cập nhật id/version và nội dung từ response server. Sau lưu nháp hiển thị hướng dẫn tiếp tục nhập hoặc hoàn tất; không tự hoàn tất, vẫn gửi request complete riêng khi người dùng chọn. Conflict giữ nội dung, tải bản mới cần xác nhận; tải lại thất bại không biến nhật ký đã có thành form tạo mới. Lưu trữ thành công về danh sách.
+- Nhật ký, Số đo, Tiến bộ mặc định thu gọn bộ lọc, hiển thị khoảng ngày/trạng thái hoặc nhóm tuần/tháng đang áp dụng. Mở rộng mới hiện nhãn ngày/tuỳ chọn; đóng/mở không reset lựa chọn và không thay dữ liệu đã lưu. Lọc vẫn trước phân trang.
+- Hiệp dùng hàng nhẹ, hai ô số lần/tạ song song khi đủ chỗ và tự xuống hàng trên màn hẹp; giữ đơn vị/vùng chạm 48px, không card lồng card cho từng hiệp.
+- Lỗi nhập liệu gắn tại ô, nêu bài/hiệp và đơn vị liên quan; đánh dấu invalid, đưa ô lỗi đầu vào vùng nhìn thấy/focus. Validation vẫn dùng giới hạn hiện hành, không mất dữ liệu; thiếu reps được lưu nháp nhưng phải bổ sung trước complete.
+- Tiến bộ đưa số buổi, cân nặng/chiều cao gần nhất cùng ngày đo riêng trong khoảng lọc lên trước các biểu đồ. Bảng ngày/giá trị/đơn vị thu gọn mặc định và mở bằng nút có tên theo biểu đồ; không bỏ bảng trợ năng hoặc suy diễn số liệu thiếu.
+- Form chính ưu tiên trạng thái đã lưu/chưa lưu; số phiên bản ở lịch sử. Hướng dẫn số đo dùng “chưa ghi số đo” thay cho thuật ngữ null.
+
+
+### Điều hướng từ hoạt động tập luyện — 2026-10-29
+
+Thanh điều hướng Member rời màn hoạt động dùng client navigation cả khi không có editor/guard (Nhật ký dạng danh sách, Tiến bộ, Số đo dạng danh sách, Bài tập mẫu). Không tải lại document làm mất phiên web. Editor dirty tiếp tục xác nhận rời; đang mutation thì giữ màn và nội dung. Không thay cơ chế token/auth guard.
+
+
+### Hoạt động tập luyện mobile — làm mới giao diện 2026-10-29
+
+- Dùng ActivityHeader nền primary-soft, tiêu đề/copy ngắn và biểu tượng hình học native. Bốn mục là ô có icon và nhãn, hai cột trên mobile/bốn cột từ 600px; selected có viền/dấu chọn và aria-pressed, pending vẫn khóa đổi mục. Giữ màu/spacing/radius/typography của theme, không thêm ảnh tải mạng, dependency hoặc animation.
+- ActivityCard dùng padding 16px trên mobile để form có đủ không gian. Nhật ký/số đo có ô ngày và trạng thái chữ, tên và ngày đầy đủ vẫn đọc được; số đo tách cân nặng/chiều cao có đơn vị, thiếu dữ liệu ghi Chưa đo. Thẻ tiến bộ có icon/viền nhấn nhẹ, giá trị thật và ngày; không thêm streak, mục tiêu hoặc điểm sức khỏe suy diễn.
+- Thư viện ưu tiên tìm tên và danh sách bài; bộ lọc nhóm cơ/dụng cụ thu gọn mặc định, có summary và giữ lựa chọn khi mở/đóng. Icon không thay cho tên bài/nhóm cơ. Nội dung tham khảo và giới hạn vẫn có, không tạo giáo án.
+- Home trên thanh dưới là mục cha được chọn khi mở /member/workouts, giữ nút Home rõ nhãn. Điều hướng client, dirty/pending, biểu đồ bắt đầu 0 và bảng số liệu mở theo nhu cầu giữ nguyên.
+
+
+### Thu gọn thống kê gói tập — 2026-10-29
+
+Owner/Gói tập: thống kê dùng hàng chia hai nhóm Theo số buổi/Theo thời gian, bỏ card riêng và nhãn mode lặp ở mỗi gói. Từ 1100px hiển thị hai nhóm cạnh nhau, không kéo chiều cao khối ít dòng bằng khối nhiều dòng; màn nhỏ chọn Số buổi/Thời gian, chỉ hiển thị nhóm đang chọn. Chỉ dựng nhóm có dữ liệu. Mỗi nhóm tối đa 3 gói/trang, phân trang độc lập và giữ trang khi đổi nhóm; nhóm <=3 gói không có hàng phân trang thừa. Tên dài tối đa hai dòng; chữ đầy đủ vẫn trong nội dung/có thể sao chép. Dòng thống kê ghi người đăng ký và lần cấp; mô tả chung nêu lần cấp gồm gia hạn, toàn lịch sử cả hết hạn/hủy và cách khử trùng theo tên + mode. Nhãn trợ năng đầy đủ gồm lần cấp/gia hạn. Không cộng memberCount của các nhóm thành tổng người toàn gym. Giữ loading/error/retry/empty/refresh và Owner-only report hiện hành.
+
+
+## Bộ lọc thư viện bài mẫu — 2026-10-30
+
+Theo yêu cầu Owner, Nhóm cơ và Dụng cụ dùng combo box xổ xuống, không dùng dải lựa chọn cuộn ngang. Giữ nhãn, giá trị đã chọn, lựa chọn Tất cả, summary khi thu gọn bộ lọc và reset trang 1 khi đổi giá trị. Web dùng select hệ thống có keyboard/focus; native dùng trigger 48px và danh sách cuộn tối đa 240px, đánh dấu lựa chọn và tự đóng sau chọn. Dùng token màu/khoảng cách hiện hành, không thêm dependency. FilterSelect chỉ giữ presentation state; query/filter theo FR-WORKOUT-009 giữ nguyên.
+
+## Trang chủ Member là hoạt động tập luyện — 2026-10-30
+
+Theo yêu cầu Owner, /member hiển thị trực tiếp Nhật ký/Tiến bộ/Số đo cơ thể/Bài tập mẫu, không còn card hoặc link mở hoạt động. Bỏ shortcut/nội dung lặp Lịch, QR và AI vì đã có trên navigation. Mục Tài khoản (khu vực cài đặt Member) chứa PT chính, toàn bộ gói sở hữu, External PT Pass và yêu cầu xác nhận pass, cùng hồ sơ/thông báo/đăng xuất. Các gói dùng list → popup, chỉ xem; PT không có control đổi assignment. Giữ loading/error/retry/empty của từng resource. Bấm lại Trang chủ khi đang ở đó không reset section/form; rời sang mục khác vẫn giữ guard dirty/pending và client navigation không reload. Route /member/workouts cũ redirect về /member. Quyết định này thay cho mô tả mở hoạt động qua shortcut Home trong các mục lịch sử.
+
+
+## Tìm bài và hiển thị kết quả — 2026-10-30
+
+Nút Tìm bài tập là CTA chính. Nút và phím Search/Enter dùng cùng handler: blur input/Keyboard.dismiss, giữ bộ lọc, trim từ khóa, reset trang 1, đưa vùng kết quả vào viewport không animation. Native căn lại sau keyboardDidHide để phù hợp vùng nhìn mới. Tìm lại cùng từ khóa vẫn refresh. Kết quả có tiêu đề/số bài và từ khóa đang áp dụng, nền surface/viền nhấn; từng bài vẫn list → popup, không card lặp. Loading/error/retry/empty và pager nằm cùng vùng kết quả; pager khóa trong loading. Không đổi API/logic lọc/quyền hoặc dữ liệu catalog.
+
+## Minh họa bài tập trong popup — 2026-10-30
+
+Ảnh minh họa ưu tiên phía trên mô tả/bước tập của popup; giới hạn chiều cao 320px, contain không cắt người/dụng cụ, giữ header/nút đóng cố định. Hiển thị khung hiện tại/tổng số khung; điều khiển Trước/Phát hoặc Tạm dừng/Sau cùng một hàng, touch >=48px, không audio. Mặc định phát chậm từng vị trí chính sau khi toàn bộ 2–3 frame tải xong; reduced-motion mặc định dừng, vẫn có thể xem thủ công. Rời foreground dừng; unmount popup hủy timer. Không phát tất cả bài trong list.
+
+Loading khóa playback; lỗi ảnh giữ hướng dẫn văn bản/nút chọn bài và có tải lại. Không gán media của phiên bản khác khi catalog thay đổi. Nguồn/giấy phép và nguồn hướng dẫn gốc nằm trong disclosure, ghi công tác giả và license link. Ảnh chụp nền nhạt; PNG nét trắng dùng surface tối để đọc rõ. Đây là ngoại lệ animation có mục đích minh họa theo yêu cầu Owner, không thêm animation trang trí khác.
+
+
+## Sửa các điểm review Member/library — 2026-10-30
+
+- Lỗi ảnh minh họa dùng trạng thái gọn: bỏ khung ảnh trống và control playback bị khóa, chỉ giữ thông báo/tải lại/nguồn và hướng dẫn. Retry dựng lại khung khi người dùng chủ động chọn, không giữ khoảng trắng cho media không tải được.
+- Combo box native Nhóm cơ/Dụng cụ dùng một trạng thái mở ở parent, mở ô này đóng ô kia. Chọn giá trị, tìm bài, mở detail hoặc thu/mở bộ lọc đều đóng danh sách; Android Back đóng dropdown trước khi rời màn. Giữ giá trị lọc và query/page hiện hành. Web tiếp tục native select của browser.
+- Popup chi tiết bài có CTA Chọn bài vào buổi nháp ở footer cố định, ngoài ScrollView, chỉ hiện khi detail tải thành công. Header/footer không co lại; nội dung giữa cuộn riêng. Chiều cao modal trừ cả safe-area top/bottom để CTA/close nằm trong viewport cả mobile ngang. Popup khác không có footer giữ flow hiện hành. Không đổi quyền, dữ liệu hoặc cách chọn bài vào nhật ký.

@@ -178,3 +178,8 @@ COMPLETED cần bài xác định, reps>0, score≥0.7, coverage≥0.6, minJoint
 ## PT QR — 2026-10-21
 
 POST /checkins/resolve-qr Owner-only giữ response Member `{member,memberships}`; QR PT trả `{pt:{id,profile:{fullName}}}`. Token PT dùng kind riêng, không dùng thay QR Member và ngược lại. Mã sai loại/chữ ký/hết hạn trả INVALID_QR/400. POST checkins/pt kiểm tra token trong callback command để retry cùng key replay trước validation expiry; key mới sau điểm danh bị ALREADY_CHECKED_IN_TODAY/409 khi mã hợp lệ.
+
+
+## Workouts / measurements / exercise library — 2026-10-28
+
+Các path mới dưới /api, MEMBER-only. Danh sách đầy đủ, request/response và mã lỗi tại SOT 21 mục 8; Workout PATCH nhận {expectedVersion,input}, measurement PATCH nhận expectedVersion và hai trường nullable weightKg/heightCm. Mọi mutation có Idempotency-Key; server strict validation, role/self scope, version conflict, private revisions. GET library read-only, PUBLISHED; draft/archived 404. Không expose snapshot cá nhân qua API Owner. Phân trang 20 dòng, lọc trước phân trang, khoảng ngày tối đa 366. Catalog metadata chỉ server tạo; entry cũ giữ snapshot, entry mới validate published/version. Không có upload media.

@@ -1,5 +1,126 @@
 # FITNESS-MANAGE SOT — CHANGELOG
 
+## 2026-10-30 — Sửa review design system thư viện Member
+
+- Thu gọn trạng thái ảnh lỗi; dropdown native chỉ mở một ô, đóng khi chọn/tìm/thu bộ lọc và xử lý Android Back.
+- CTA chọn bài chuyển sang footer cố định của DetailModal; fetch một nguồn dữ liệu, tính safe-area, header/body/footer độc lập. Giữ form/dirty/pending của popup khác.
+- SOT 03/05 và regression media/footer/workouts cập nhật; kết quả SOT 20. Không đổi API/business/database/dependency.
+
+## 2026-10-30 — Minh họa động tác cho 20 bài mẫu
+
+- Owner chọn nguồn ảnh mở: đóng gói 43 frame cho 20 bài, nguồn free-exercise-db và Workout Guide; không sao chép media ACE. Thêm player phát/dừng/từng khung, reduced-motion, AppState, lỗi/tải lại và ghi công/giấy phép.
+- Manifest code/name/version giữ identity và catalog bất biến; không đổi API/schema/DB/provider hoặc AI video boundary. Cập nhật SOT 02/03/04/05/21 và verification SOT 20; scripts kiểm tra provenance và browser media.
+
+## 2026-10-30 — Sửa native measureLayout sau tìm bài
+
+- Native scroll tìm bài và focus field lỗi dùng getInnerViewRef() thay getInnerViewNode(): RN 0.88 ReactNativeElement.measureLayout yêu cầu native component ref, không nhận numeric handle dù signature còn union number. Giữ null guard, offset và Keyboard.dismiss.
+- Không thay UI flow/query/API/dữ liệu; kết quả verification và giới hạn thiết bị thật tại SOT 20.
+
+## 2026-10-30 — Đóng bàn phím và làm rõ kết quả tìm bài
+
+- Nút/phím Search đóng bàn phím, cuộn tới vùng kết quả; thêm tiêu đề, số bài/từ khóa, nền và viền nhấn; giữ danh sách → popup. Cùng query vẫn refresh và giữ filters.
+- Sửa exercise-library.tsx, mở rộng workouts-regression về blur/Enter/viewport; SOT 05 và kết quả SOT 20 cập nhật. Không đổi server/database/dependency.
+
+## 2026-10-30 — Member Home tập trung hoạt động tập luyện
+
+- Home render trực tiếp hoạt động, bỏ QR/Lịch/AI shortcut và card trùng navigation; PT/gói/Pass/yêu cầu xác nhận chuyển vào Tài khoản Member. Route cũ redirect, giữ dirty/pending guard ở Home mới.
+- Không sửa API/quyền/dữ liệu. SOT 03/05/21 và browser regression cập nhật; kết quả SOT 20.
+
+## 2026-10-30 — Thu gọn bộ lọc nhóm cơ và dụng cụ
+
+- Thư viện bài mẫu dùng FilterSelect dạng xổ xuống thay Choices cuộn ngang; giữ giá trị/query/summary/phân trang và chọn bài vào nhật ký. Không đổi API/catalog/business/dependency.
+- Cập nhật SOT 05, regression tương tác combo box và scenario browser; kết quả thực tế ở SOT 20.
+
+## 2026-10-29 — Kiểm tra lại toàn dự án trên SDK 58
+
+- Lint/build/unit API/app/AI, Expo Doctor/export và tám browser regression PASS; integration MongoDB thật 16 ca và scenario 30 Member/browser API thật PASS. Kết quả, dataset riêng và giới hạn tại SOT 20.
+- Sửa race của runner activity-scenario-browser: chờ hàng thống kê gói tải/render trước khi duyệt locator.all(); giữ toàn bộ assertions tên/count/phân trang. Không thay mã ứng dụng hay dữ liệu Atlas.
+
+## 2026-10-29 — Nâng Expo SDK 58 theo yêu cầu Owner
+
+- Nâng Expo/React Native/React và module native tương thích; đồng bộ TypeScript/Jest/ts-jest và lockfile. Chuyển splash sang plugin mới, bỏ config-plugins trực tiếp và packageExtension picker cũ.
+- Migrate RN instance refs, React type resolution ngoài workspace và Router unsaved guard; giữ Web SPA/loading đồng bộ. Không đổi backend/database/privacy. Baseline và yêu cầu rebuild native ở SOT 04; kết quả thực tế ở SOT 20.
+
+## 2026-10-29 — Thống nhất record list và popup chi tiết
+
+- Owner yêu cầu bỏ card lặp ở danh sách/thống kê: chuyển CRM, gói/Pass, lịch, Sales/Logs, thống kê tháng/gói, lịch sử/check-in/PT Member, tập luyện/biểu đồ/revisions và AI session/per-rep sang hàng mở popup. Giữ card KPI/QR/form và giảm padding; selection picker trong form dùng hàng phẳng.
+- Thêm RecordRow/PopupRow và DetailState/FormScroll; popup cuộn riêng, có safe-area/keyboard, khóa đóng khi Form/useCommand pending. Nhật ký/số đo giữ dirty confirmation; Home tiếp tục client navigation. Không đổi server/API/dữ liệu hay raw-video pipeline.
+- Cập nhật các browser regression theo popup mà giữ kiểm tra payload, pending, reason, pagination, role, conflict và privacy. Bổ sung list-popup-regression cho Sales pending/error/retry và tháng zero/PT độc lập; kết quả và giới hạn tại SOT 20.
+
+## 2026-10-29 — Thu gọn thống kê gói theo nhóm
+
+- PackageStatistics bỏ card lồng từng gói, dùng nhóm Theo số buổi/Theo thời gian với hàng gọn và 3 gói/trang mỗi nhóm. Màn rộng hai cột, mobile đổi nhóm, bỏ nhóm rỗng và footer phân trang không cần thiết. Giữ cách đếm toàn lịch sử/unique Member theo tên + mode, API và dữ liệu.
+- Thêm package-statistics-regression kiểm tra viewport, phân trang đủ dữ liệu, không gộp trùng tên khác mode, nhóm rỗng và loading/error/retry. Cập nhật scenario browser đọc qua từng trang thống kê thay vì giả định mọi gói hiện cùng lúc. Kết quả tại SOT 20.
+
+## 2026-10-29 — Đổi tên 30 Member và 3 PT trong dữ liệu vận hành kiểm thử
+
+- Owner yêu cầu thay tên Demo bằng tên tiếng Việt tự nhiên: cập nhật trực tiếp fitness_manage qua PeopleService.update/TransactionService với actor Owner, giữ audit; 30 customer liên kết đồng bộ tên. Không thêm tài khoản hoặc đổi SĐT, CCCD, credentials, gói, lịch, assignment, check-in, workout/số đo hay revision.
+- Lưu tên cũ/mới để khôi phục và đối chiếu digest 21 model; cập nhật members.csv, accounts.csv, demo30-data.json, pt-matches.json và hướng dẫn tra cứu tên mới trong .local/demo30-app-data. Report nhập gốc giữ tính lịch sử. Không khởi động API chiếm port; xác minh domain service/MongoDB và read model tên trong booking/PT/Member. Kết quả ở SOT 20.
+
+## 2026-10-29 — Làm mới giao diện hoạt động mobile
+
+- Thêm activity-visuals dùng token hiện hành: header nền nhạt, menu icon hai cột mobile, card padding gọn, thẻ ngày nhật ký/số đo, giá trị có đơn vị và thẻ tiến bộ có điểm nhấn. Thư viện thu bộ lọc để ưu tiên bài tập. Không thêm dependency, ảnh mạng hoặc animation.
+- Page hỗ trợ header riêng; Home được đánh dấu mục cha khi ở workouts. Giữ dữ liệu thật, validation, dirty/pending, client navigation và API/quyền. Bổ sung regression bộ lọc thư viện, ảnh mobile và cập nhật runner scenario để mở bộ lọc; kết quả thực tế tại SOT 20.
+
+## 2026-10-29 — Sửa Member từ hoạt động về Home mất phiên
+
+- Handler link trong Shell luôn chặn tải lại document và điều hướng bằng Expo Router, kể cả khi màn hoạt động không có form guard. Trước đây nhánh không có guard trả về sớm, làm anchor tải lại trang và mất phiên web lưu trong memory. Không thay cách lưu token hoặc auth/RBAC/API.
+- Bổ sung workouts-regression: từ cả bốn mục về Home trên mobile/desktop không có document request, editor chưa sửa vẫn về được, đang lưu chặn Home và dirty cancel giữ nội dung. Đối chiếu bản thật 8081 bằng tài khoản Demo Member; kết quả tại SOT 20.
+
+## 2026-10-29 — Danh sách PT/Member phân trang và popup
+
+- Owner PT & Member chuyển sang list giới hạn chiều cao, phân trang tự co theo vùng nhìn thấy; form tạo và chi tiết chuyển vào popup. Chi tiết tách thông tin/gói, sửa hồ sơ, PT phụ trách/lịch sử; giữ trang khi đóng và khóa đóng khi mutation pending.
+- Tách DetailModal và PeopleDetail; giữ API, RBAC, audit/history và schema hiện hành. Cập nhật regression cũ theo popup, thêm people-regression cho phân trang vượt 30 hồ sơ, viewport nhỏ, pending/lỗi/empty và popup. Kết quả thực tế ghi tại SOT 20.
+
+## 2026-10-29 — Lịch dạng list và phân công PT mẫu
+
+- Đổi màn Lịch dùng chung ba role sang hàng gọn theo ngày; thu form Owner mặc định, giữ quyền và xác nhận hủy có lý do. Cập nhật regression để mở form trước khi kiểm tra.
+- Phân công thêm Demo 30 Member 25–30 cho 3 Demo PT hiện có bằng API Owner trên fitness_manage; không thay phân công cũ. Đối chiếu một primary PT active mỗi Member và lịch sử; báo cáo `.local/demo30-app-data/pt-matches.json`.
+
+## 2026-10-29 — Đối chiếu và xuất Demo 30 trong app localhost:8081
+
+- Theo Owner chỉ định app 8081, bổ sung dữ liệu scenario đã kiểm tra vào database cấu hình fitness_manage, giữ nguyên dữ liệu/tài khoản cũ: 30 Member, 3 PT, 67 gói, 855 check-ins, 73 PT logs, 341 nhật ký, 315 số đo và 20 bài mẫu.
+- Lưu CSV đăng nhập không mật khẩu, JSON dữ liệu mẫu đã lược credentials/CCCD và báo cáo tại .local/demo30-app-data/. Xác minh 30 Member bằng API thật (1.236 assertions / 279 requests) và browser 8081/API/Atlas không mock PASS; hướng dẫn và giới hạn ở testing-activity-scenario.md/SOT 20.
+- Cập nhật locator empty state của activity-scenario-browser.cjs theo UI mới, chạy full scenario riêng lại PASS trước nhập. Không đổi nghiệp vụ, API/schema/provider hoặc guard database test của runner gốc.
+
+## 2026-10-28 — Cải thiện trải nghiệm hoạt động tập luyện Member
+
+- Giữ form nhật ký sau lưu nháp/sửa với id/version từ server để tiếp tục hoặc complete ngay; không gộp request lưu và complete. Giữ conflict/retry/pending, tải lại lỗi không mở form tạo mới, archive về danh sách.
+- Thu gọn bộ lọc có tóm tắt ở nhật ký/số đo/tiến bộ, trình bày hiệp theo hàng responsive, lỗi tại trường với bài/hiệp và focus/scroll, đưa số đo gần nhất lên trước biểu đồ và cho mở/ẩn bảng số liệu. Bỏ thuật ngữ null và thông tin version khỏi form chính.
+- Cập nhật SOT 05/21, regression frontend và browser hiện có; không đổi API/schema/stack, không reset dataset test 30 Member. Kết quả thực tế ghi tại SOT 20.
+
+## 2026-10-28 — Hoàn thiện design system hoạt động tập luyện
+
+- Thêm nhãn bộ lọc ngày, dấu chọn/trạng thái trợ năng cho bốn mục, Feedback semantic có live region/alert; dùng chung token UI và giữ pending/focus/vùng chạm 48px.
+- Việt hóa action lịch sử, dùng Badge trạng thái ở danh sách/chi tiết/revisions và sửa placeholder tìm bài trong Tiến bộ. Thay đổi ở ui.tsx, workout-controls, workout-revision-history, features/workouts và các màn Member tương ứng; không đổi API/schema/nghiệp vụ.
+- Mở rộng workouts-regression.cjs kiểm tra 5 điểm review, viewport 320/390/768/1280px, semantic feedback và giữ các ca pending/retry/conflict hiện có. Cập nhật SOT 05; kết quả thực tế tại SOT 20.
+
+## 2026-10-28 — Sửa cấu trúc hoạt động tập luyện sau review
+
+- Tách BodyMeasurementsService và ExerciseLibraryService khỏi WorkoutsService, đăng ký DI trong WorkoutsModule; controller gọi đúng service, giữ nguyên routes/contract và MEMBER self checks. Nhật ký/số đo giữ transaction, idempotency, expectedVersion và private revisions; không đổi schema/index/stack hoặc dữ liệu nghiệp vụ.
+- Chuyển RevisionHistory sang components/workout-revision-history.tsx và useDirtyEffect sang hooks/use-dirty-effect.ts; hai màn Member import từ phần dùng chung, bỏ phụ thuộc số đo vào màn nhật ký.
+- rangeQuery dùng generic Zod shape giữ kiểu status/groupBy và các bộ lọc, bỏ unknown index signature/ép kiểu ở service. Bổ sung regression query default/coercion/strict validation, quyền tại ba service và DI graph. Cập nhật SOT 03/17; bằng chứng kiểm tra tại SOT 20.
+
+## 2026-10-28 — Scenario 30 Member và kiểm tra dữ liệu nhiều ngày
+
+- Thêm activity-scenario.ts, activity-scenario-browser.cjs và command test:activity-scenario; tạo dataset test riêng giữ lại, không đụng database nghiệp vụ. Thêm hướng dẫn testing-activity-scenario.md, liên kết README và ghi bằng chứng SOT 20.
+- Dataset cuối: 30 Member + Owner/3 PT, 67 gói, 855 lượt Member/Trial, 73 PT logs, 341 nhật ký, 315 số đo, 20 bài mẫu. Có expired/exhausted/cancelled/pending, lịch sử nhiều ngày/UTC+7/ngày nhuận và gia hạn.
+- Full run + browser API/MongoDB thật PASS 8.168 assertions / 1.777 HTTP requests; unit API 109 tests pass. Chưa phát hiện sai lệch thống kê trong phạm vi ca đã chạy; chỉ sửa launcher test Windows, không thay nghiệp vụ hoặc implementation production. Giới hạn lịch sử fixture/native/camera theo SOT 20.
+
+## 2026-10-28 — Triển khai hoạt động tập luyện Member
+
+- Verification cuối: lint/build pass, API 109 unit tests, app 63 tests, MongoDB test riêng 16 integration scenarios, browser luồng mới và hồi quy ba role pass; web/native bundle export pass. Đã sửa regex search literal và guard rời form/menu; chi tiết các lần fail/fix và giới hạn tại SOT 20. Chưa rollout vào database nghiệp vụ.
+- Owner duyệt triển khai sau khi bổ sung số đo cơ thể và bài mẫu. Chuyển phạm vi sang SOT 21, đăng ký FR-WORKOUT-001–010 tại SOT 02, cập nhật SOT 01/03/05/06/15/16/17 và README. Proposal giữ làm lịch sử.
+- Module Member-only, transaction/idempotency/version và revisions riêng; không thay booking/check-in/quota/AI. UI Home → Hoạt động tập luyện, 20 bài/10 nhóm, online/text-only, không thêm dependency. Schema/index/seed và rollout tại SOT 15/21; kết quả kiểm tra thực tế ghi SOT 20.
+
+## 2026-10-28 — Đề xuất nhật ký tập luyện và lịch sử tiến bộ Member
+
+- Bổ sung theo yêu cầu Owner: thư viện bài mẫu theo nhóm cơ, baseline đề xuất 10 nhóm/20 bài; FR-WORKOUT-009/010, tìm/lọc/đọc, chọn vào nhật ký với catalog id/version/snapshot và acceptance. Nội dung cần review trước publish; không thêm giáo án, media hoặc mở rộng AI.
+- Bổ sung theo yêu cầu Owner: theo dõi cân nặng (kg)/chiều cao (cm) theo ngày đo, FR-WORKOUT-007/008 dự kiến, lịch sử/revision, biểu đồ và chênh lệch từng chỉ số; dữ liệu/API, quyền riêng tư, concurrency và acceptance tương ứng. Chưa thêm BMI/dinh dưỡng hoặc thay đổi SOT canonical.
+- Theo yêu cầu Owner viết tài liệu sau trao đổi ý tưởng, thêm `proposals/member-workout-journal-progress.md` và liên kết trong README.
+- Đặc tả FR-WORKOUT-001–006 dự kiến: Member tự ghi bài/hiệp/lần/tạ, nháp/hoàn tất/sửa có revision/lưu trữ, lịch sử và công thức tiến bộ; có hợp đồng dữ liệu/API đề xuất và ma trận nghiệm thu.
+- Đây là proposal để review, chưa chốt các lựa chọn nghiệp vụ mới hoặc thay đổi SOT canonical 01–20. Không mở rộng PT giao bài hoặc AI; không thay code/schema/stack hoặc dữ liệu nghiệp vụ. Nhật ký độc lập với booking/check-in/attendance/quota.
+
 ## 2026-10-21 — PT check-in bằng QR như Member
 
 - Theo yêu cầu Owner, thay PT tự bấm có mặt bằng QR cá nhân hạn 2 phút để Owner quét/xác nhận tại quầy.

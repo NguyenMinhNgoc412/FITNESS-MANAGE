@@ -1,3 +1,5 @@
+import { PopupRow, RecordRow } from '../components/record-row';
+import { DetailModal } from '../components/detail-modal';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Platform, Text, TextInput, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,6 +19,8 @@ import { analysisStep, runExclusive } from '../features/ai-analysis/workflow';
 import { assertLocalStorageReady } from '../features/ai-analysis/storage-runtime';
 export default function Ai() {
   const memberId = useAuthStore(s => s.session!.user.id), [sessions, setSessions] = useState<LocalSession[]>([]), [error, setError] = useState(''), [stage, setStage] = useState(''), [busy, setBusy] = useState(false);
+  const [openedId, setOpenedId] = useState<string | null>(null);
+  const opened = sessions.find(session => session.id === openedId);
   const controller = useRef<AbortController | null>(null), inFlight = useRef(false);
   const [activeId, setActiveId] = useState<string | null>(null), [deletingId, setDeletingId] = useState<string | null>(null);
   const [picking, setPicking] = useState<'camera' | 'library' | null>(null), [importStage, setImportStage] = useState(''), [success, setSuccess] = useState('');
@@ -37,7 +41,7 @@ export default function Ai() {
       setImportStage('Đang lưu video trên thiết bị…');
       const id = Crypto.randomUUID(); copied = await importVideo(memberId, id, result.assets[0].uri);
       setImportStage('Đang ghi phiên phân tích vào bộ nhớ local…');
-      await addSession(memberId, id, copied); copied = undefined; setActiveId(id);
+      await addSession(memberId, id, copied); copied = undefined; setActiveId(id); setOpenedId(id);
       if (await reload()) setSuccess('Video đã lưu trên thiết bị. Bấm “Phân tích trên thiết bị” bên dưới để nhận kết quả.');
     } catch (e) { if (copied) await deleteVideo(memberId, copied).catch(() => undefined); setError(e instanceof Error ? e.message : 'Không nhập được video.'); }
     finally { inFlight.current = false; setBusy(false); setPicking(null); setImportStage(''); }
@@ -84,15 +88,20 @@ export default function Ai() {
   });
   return <Page title="AI kiểm tra form" subtitle="Tự nhận diện bài từ video • Video chỉ lưu trên thiết bị • Hỗ trợ kiểm tra form">
     <View style={styles.row}>{['1. Video', '2. Nhận diện và phân tích', '3. Nhận xét'].map((label, index) => <Text key={label} style={{ padding: spacing.sm, borderRadius: radius.sm, color: index + 1 <= currentStep ? c.primaryPressed : c.textMuted, backgroundColor: index + 1 === currentStep ? c.surfaceMuted : c.surface, fontWeight: index + 1 === currentStep ? '600' : '400', marginBottom: spacing.xs }}>{label}</Text>)}</View>
-    <Card title="Nhận diện tự động"><Label>Không cần chọn bài. Hệ thống nhận diện Squat, chống đẩy hoặc lunge từ chuyển động trong video.</Label><Label muted>Mỗi video quay một bài, thấy rõ toàn thân từ bên hông. Bài khác, video trộn nhiều bài hoặc dữ liệu chưa đủ sẽ báo chưa xác định. Nhận diện hiện dùng heuristic, chưa được kiểm chứng trên video người thật.</Label><Label>Mục tiêu độ nghiêng thân tối đa (°; tùy chọn theo hướng dẫn PT)</Label><TextInput accessibilityLabel="Mục tiêu độ nghiêng thân tối đa" keyboardType="numeric" value={trunkTarget} onChangeText={setTrunkTarget} editable={!busy} placeholder="Để trống nếu chưa có mục tiêu" style={styles.input} /><Label muted>Đo đoạn vai–hông so với phương thẳng đứng, không đo độ cong cột sống. Không có mục tiêu thì chỉ báo số đo.</Label>{Platform.OS !== 'web' ? <Label muted>AI mobile cần Development Build có module phân tích góc; Expo Go không hỗ trợ.</Label> : null}</Card>
-    <Card title="1. Chuẩn bị video"><Label>Quay toàn thân, đủ sáng, camera ngang bên hông. Giữ máy cố định, video tối đa 2 phút.</Label><Label muted>Sau khi chọn video, bấm “Phân tích trên thiết bị” ở phiên bên dưới. Chọn video chưa tự chạy phân tích.</Label><Button label="Quay video" pending={picking === 'camera'} disabled={busy} onPress={() => void pick(true)} /><Button secondary label="Chọn video local" pending={picking === 'library'} disabled={busy} onPress={() => void pick(false)} />{importStage ? <Text accessibilityLiveRegion="polite" style={styles.text}>{importStage}</Text> : null}{success ? <Text accessibilityLiveRegion="polite" style={styles.success}>{success}</Text> : null}</Card>
-    {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}{stage ? <Card title="2. Đang phân tích"><Label>{stage}</Label><Button secondary label="Hủy phân tích" onPress={() => controller.current?.abort()} /></Card> : null}
+    <Card title="Nhận diện tự động"><Label>Không cần chọn bài. Hệ thống nhận diện Squat, chống đẩy hoặc lunge từ chuyển động trong video.</Label><Label muted>Mỗi video quay một bài, thấy rõ toàn thân từ bên hông. Bài khác, video trộn nhiều bài hoặc dữ liệu chưa đủ sẽ báo chưa xác định. Nhận diện hiện dùng heuristic, chưa được kiểm chứng trên video người thật.</Label>{Platform.OS !== 'web' ? <Label muted>AI mobile cần Development Build có module phân tích góc; Expo Go không hỗ trợ.</Label> : null}</Card>
+    <Card title="1. Chuẩn bị video"><Label>Quay toàn thân, đủ sáng, camera ngang bên hông. Giữ máy cố định, video tối đa 2 phút.</Label><Label muted>Sau khi chọn video, bấm “Phân tích trên thiết bị” ở phiên bên dưới. Chọn video chưa tự chạy phân tích.</Label><Button label="Quay video" pending={picking === 'camera'} disabled={busy} onPress={() => void pick(true)} /><Button secondary label="Chọn video local" pending={picking === 'library'} disabled={busy} onPress={() => void pick(false)} />{importStage ? <Text accessibilityLiveRegion="polite" style={styles.text}>{importStage}</Text> : null}{success && !opened ? <Text accessibilityLiveRegion="polite" style={styles.success}>{success}</Text> : null}</Card>
+    {error && !opened ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}{stage && !opened ? <Card title="2. Đang phân tích"><Label>{stage}</Label><Button secondary label="Hủy phân tích" onPress={() => controller.current?.abort()} /></Card> : null}
     {!sessions.length && <Label muted>Chưa có phiên phân tích. Chọn hoặc quay video để bắt đầu.</Label>}
-    {sessions.map(session => <Card key={session.id} title={exerciseLabel(session.exercise_type) + ' · ' + dateTime(session.created_at)}><Label muted>{session.status === 'COMPLETED' ? 'Đã phân tích' : session.status === 'FAILED' ? 'Phân tích chưa hoàn tất' : 'Sẵn sàng phân tích'}</Label>
-      {!!session.analysis_json && <>{session.status !== 'COMPLETED' ? <Label muted>Kết quả lần phân tích trước; lần mới chưa hoàn tất.</Label> : null}<Result result={JSON.parse(session.analysis_json)} /></>}
-      <Button label="Phân tích trên thiết bị" disabled={busy} onPress={() => void analyze(session)} />
-      <Button danger label="Xóa phiên và video local" pending={deletingId === session.id} disabled={busy} onPress={() => void remove(session)} />
-    </Card>)}
+    <View>{sessions.map(session => <RecordRow key={session.id} title={exerciseLabel(session.exercise_type) + ' · ' + dateTime(session.created_at)} description={session.status === 'COMPLETED' ? 'Đã phân tích' : session.status === 'FAILED' ? 'Phân tích chưa hoàn tất' : 'Sẵn sàng phân tích'} onPress={() => { if (!busy) setOpenedId(session.id); }} />)}</View>
+    {opened && <DetailModal title={exerciseLabel(opened.exercise_type) + ' · ' + dateTime(opened.created_at)} busy={busy} onClose={() => setOpenedId(null)}>
+      {success && <Text accessibilityLiveRegion="polite" style={styles.success}>{success}</Text>}{error && <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text>}
+      {stage && <><Label>{stage}</Label><Button secondary label="Hủy phân tích" onPress={() => controller.current?.abort()} /></>}
+      <Label>Mục tiêu độ nghiêng thân tối đa (°; tùy chọn theo hướng dẫn PT)</Label><TextInput accessibilityLabel="Mục tiêu độ nghiêng thân tối đa" keyboardType="numeric" value={trunkTarget} onChangeText={setTrunkTarget} editable={!busy} placeholder="Để trống nếu chưa có mục tiêu" style={styles.input} /><Label muted>Đo đoạn vai–hông so với phương thẳng đứng, không đo độ cong cột sống. Không có mục tiêu thì chỉ báo số đo.</Label>
+      {!!opened.analysis_json && <>{opened.status !== 'COMPLETED' ? <Label muted>Kết quả lần phân tích trước; lần mới chưa hoàn tất.</Label> : null}<Result result={JSON.parse(opened.analysis_json)} /></>}
+      <Button label="Phân tích trên thiết bị" disabled={busy} onPress={() => void analyze(opened)} />
+      <Button danger label="Xóa phiên và video local" pending={deletingId === opened.id} disabled={busy} onPress={() => void remove(opened)} />
+    </DetailModal>}
+
   </Page>;
 }
 function confirmDelete() {
@@ -109,9 +118,9 @@ function AutoResult({ result }: { result: AutoAnalysis }) {
     {(result.explanation?.feedback ?? autoFeedback(result)).map((line, i) => <Label key={i}>{line}</Label>)}
     <Label muted>Tỷ lệ mẫu đủ rõ: {Math.round(result.metrics.detectedRatio * 100)}%. Độ phủ không phản ánh độ chính xác của góc đo.</Label>
     {result.perRep.length ? <Button secondary label={showDetails ? 'Ẩn so sánh từng lần' : 'Xem góc và so sánh từng lần'} onPress={() => setShowDetails(value => !value)} /> : null}
-    {showDetails && result.perRep.map(rep => <Card key={rep.index} title={'Lần ' + rep.index + ' · điểm thấp nhất ' + rep.timeSeconds + ' giây'}>
+    <View>{showDetails && result.perRep.map(rep => <PopupRow key={rep.index} title={'Lần ' + rep.index + ' · điểm thấp nhất ' + rep.timeSeconds + ' giây'}>
       {autoComparisons(result, rep).map(row => <View key={row.label} style={styles.listRow}><Label>{row.label}: {row.value === null ? 'Không đo được' : Math.round(row.value) + '°'}</Label><Label>{row.verdict}</Label><Label muted>Tham chiếu: {row.reference}</Label>{row.advice ? <Label>{row.advice}</Label> : null}</View>)}
-    </Card>)}
+    </PopupRow>)}</View>
   </Card>;
 }
 function LegacyResult({ result }: { result: Analysis }) {
@@ -121,10 +130,10 @@ function LegacyResult({ result }: { result: Analysis }) {
     {result.detail ? <>
       <Label muted>So sánh theo Squat không tạ, hai tay đưa trước. Góc 2D phụ thuộc góc quay. Chưa đánh giá đầu gối lệch vào trong, độ cong lưng hoặc hướng tay ra trước/sau.</Label>
       {result.detail.repetitions.length ? <Button secondary label={showDetails ? 'Ẩn so sánh từng lần' : 'Xem góc và so sánh từng lần'} onPress={() => setShowDetails(value => !value)} /> : <Label muted>Chưa có lần hoàn chỉnh để so sánh góc.</Label>}
-      {showDetails && result.detail.repetitions.map(rep => <Card key={rep.index} title={'Lần ' + rep.index + ' · điểm thấp nhất ' + (rep.bottomTimeMs / 1000).toFixed(1) + ' giây'}>
+      <View>{showDetails && result.detail.repetitions.map(rep => <PopupRow key={rep.index} title={'Lần ' + rep.index + ' · điểm thấp nhất ' + (rep.bottomTimeMs / 1000).toFixed(1) + ' giây'}>
         <Label>Góc gối dùng đếm lần: {Math.round(rep.kneeAngle)}°</Label>
         {rep.angles ? compareAngles(rep.angles, result.detail!.reference).map(row => <View key={row.label} style={styles.listRow}><Label>{row.label}: {row.value === null ? 'Không đo được' : Math.round(row.value) + '°'}</Label><Label>{row.verdict}</Label><Label muted>Tham chiếu: {row.reference}</Label>{row.advice ? <Label>{row.advice}</Label> : null}</View>) : <Label muted>Không có số đo chi tiết tại thời điểm này.</Label>}
-      </Card>)}
+      </PopupRow>)}</View>
     </> : <Label muted>Phiên này chỉ có kết quả độ sâu. Phân tích lại video để lấy các góc chi tiết. Trên mobile cần bản cài Development Build mới.</Label>}
     {feedback ? <Label>{feedback}</Label> : null}
     <Button secondary label="Giải thích độ sâu từ dịch vụ (chỉ gửi chỉ số)" pending={loading} onPress={() => { void (async () => { setLoading(true); try { const { data } = await api.post('/ai/form-analysis', explanationPayload(result)); setFeedback(data.feedback.join(' ')); } catch { setFeedback('Chưa kết nối được dịch vụ. Bạn vẫn xem được kết quả local.'); } finally { setLoading(false); } })(); }} />

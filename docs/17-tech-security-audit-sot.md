@@ -116,3 +116,8 @@ Command lưu fingerprint và kết quả để replay cùng Idempotency-Key. Tra
 ## PT QR — 2026-10-21
 
 PT chỉ lấy QR của chính mình; chỉ Owner resolve/xác nhận PT attendance tại guard và service. Signed QR PT có kind pt-attendance khác Member checkin, expiry 2 phút, không PII. Confirm revalidate PT active trong transaction; source QR, audit actor Owner, không lưu token trong log/audit/result. Command chỉ lưu fingerprint của input và kết quả, không lưu raw QR. Daily guard/WriteLock bảo vệ các Owner quét đồng thời; replay cùng key không tạo log/audit mới. Log APP cũ được giữ nguyên, không cần migration/schema/index mới.
+
+
+## Quyền và integrity hoạt động tập luyện — 2026-10-28
+
+WorkoutsService, BodyMeasurementsService và ExerciseLibraryService đều enforce MEMBER tại mọi entrypoint tương ứng; identity lấy từ actor, đọc id theo memberId, cross-member 404. Guard xác thực account hiện hành, command revalidate actor trong transaction. Mutation dùng shared WriteLock/Command hiện có, fingerprint, expectedVersion và revision atomic; không ghi đè khi stale. Partial unique số đo ACTIVE/ngày cùng service guard. Riêng nhật ký/số đo/revisions không được đưa vào standard logs hoặc audit chung Owner xem được. Catalog snapshot không tin input; giữ bản cũ sau archive/đổi tên. Không thêm auto-match attendance, quyền booking, quota side effect hoặc AI raw video payload.

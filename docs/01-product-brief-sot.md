@@ -123,3 +123,8 @@ MVP không bắt buộc tích hợp payment gateway. Việc thanh toán có th�
 - AI workout-plan generation.
 - AI medical diagnosis/injury diagnosis.
 - Owner/PT xem raw AI video hoặc AI result cá nhân của Member.
+
+
+## Hoạt động tập luyện Member — 2026-10-28
+
+Phạm vi mở rộng được Owner duyệt: nhật ký tự ghi, tiến bộ theo bài, cân nặng/chiều cao và thư viện 20 bài theo 10 nhóm cơ. Dữ liệu cá nhân chỉ Member sở hữu xem; thư viện tham khảo chung, không phải giáo án. Độc lập booking/check-in/quota/AI. Chi tiết SOT 21; requirement FR-WORKOUT trong SOT 02.

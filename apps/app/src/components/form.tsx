@@ -7,11 +7,14 @@ import { Button, Choices, RecordPicker, styles } from '../ui';
 import { spacing } from '../design-system/theme';
 import { errorMessage } from '../lib/http';
 import DateTimeField from './date-time-field';
+import { useDetailLocked, useDetailPending } from './detail-state';
 
 export type Field = { name: string; label: string; secret?: boolean; numeric?: boolean; picker?: boolean; dateTime?: boolean; date?: boolean; options?: { value: string; label: string }[]; defaultValue?: string };
 export function Form({ fields, schema, submit, label = 'Lưu', onSuccess, revision, preserveFields = [], beforeFields, danger = false, disabled = false }: { fields: Field[]; schema?: z.ZodTypeAny; submit: (values: Record<string, string>, key: string) => Promise<unknown>; label?: string; onSuccess?: () => void; revision?: string; preserveFields?: readonly string[]; beforeFields?: (pending: boolean) => ReactNode; danger?: boolean; disabled?: boolean }) {
   const { control, handleSubmit, reset, getValues, formState: { isSubmitting } } = useForm<Record<string, string>>({ defaultValues: Object.fromEntries(fields.map(f => [f.name, f.defaultValue ?? ''])) });
   const [error, setError] = useState(''), [success, setSuccess] = useState(false);
+  const detailLocked = useDetailLocked();
+  useDetailPending(isSubmitting);
   const pending = useRef(false), command = useRef<{ input: string; key: string } | null>(null);
   const previousRevision = useRef(revision);
   useEffect(() => {
@@ -22,7 +25,7 @@ export function Form({ fields, schema, submit, label = 'Lưu', onSuccess, revisi
     command.current = null; setError(''); setSuccess(false);
   }, [revision, fields, preserveFields, getValues, reset]);
   const run = async (values: Record<string, string>) => {
-    if (pending.current || disabled) return;
+    if (pending.current || disabled || detailLocked) return;
     const checked = schema?.safeParse(values);
     if (checked && !checked.success) { setError('Kiểm tra các trường bắt buộc và định dạng dữ liệu.'); return; }
     pending.current = true; setError(''); setSuccess(false);
@@ -34,7 +37,7 @@ export function Form({ fields, schema, submit, label = 'Lưu', onSuccess, revisi
     } catch (e) { setError(e instanceof z.ZodError ? 'Dữ liệu không hợp lệ.' : errorMessage(e)); }
     finally { pending.current = false; }
   };
-  const locked = isSubmitting || disabled;
+  const locked = isSubmitting || disabled || detailLocked;
   return <View style={{ gap: spacing.md }}>
     {beforeFields?.(locked)}
     {fields.map(field => <Controller key={field.name} name={field.name} control={control} render={({ field: { value, onChange, onBlur } }) => <View style={{ gap: spacing.sm }}>
@@ -43,6 +46,6 @@ export function Form({ fields, schema, submit, label = 'Lưu', onSuccess, revisi
     </View>} />)}
     {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
     {success ? <Text accessibilityLiveRegion="polite" style={styles.success}>Đã thực hiện thành công.</Text> : null}
-    <Button label={label} danger={danger} disabled={disabled} pending={isSubmitting} onPress={() => void handleSubmit(run)()} />
+    <Button label={label} danger={danger} disabled={disabled || detailLocked} pending={isSubmitting} onPress={() => void handleSubmit(run)()} />
   </View>;
 }

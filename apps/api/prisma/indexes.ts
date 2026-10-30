@@ -16,6 +16,9 @@ export async function ensureIndexes(prisma: PrismaClient) {
     { key: { memberId: 1 }, name: 'one_active_primary_pt', unique: true, partialFilterExpression: { status: 'ACTIVE' } },
   ] });
   await prisma.writeLock.upsert({ where: { id: 'business' }, create: { id: 'business' }, update: {} });
+  await prisma.$runCommandRaw({ createIndexes: 'body_measurements', indexes: [
+    { key: { memberId: 1, measurementDate: 1 }, name: 'one_active_measurement_per_day', unique: true, partialFilterExpression: { status: 'ACTIVE' } },
+  ] });
   await prisma.$runCommandRaw({ createIndexes: 'audit_logs', indexes: [
     { key: { resourceType: 1, 'before.memberId': 1, createdAt: -1 }, name: 'audit_booking_member_before' },
     { key: { resourceType: 1, 'after.memberId': 1, createdAt: -1 }, name: 'audit_booking_member_after' },

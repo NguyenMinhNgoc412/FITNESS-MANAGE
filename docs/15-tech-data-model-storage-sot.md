@@ -240,3 +240,8 @@ Mutation nhạy cảm cập nhật một WriteLock trong cùng MongoDB transacti
 ## AI local schema v2 — 2026-10-08
 
 Phiên mới có exercise_type=AUTO khi PENDING; kết quả nhận diện cập nhật SQUAT/PUSH_UP/LUNGE/UNKNOWN. analysis_json đọc được envelope v1 và v2. SQLite user_version=2 tạo local_ai_results (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id, member_id, analysis_json, created_at); migration giữ kết quả cũ, append kết quả và update latest trong cùng transaction. Reanalysis lỗi/hủy không xóa kết quả đã có; UI ghi rõ đó là kết quả trước nếu lần mới thất bại. User xóa phiên xóa results cùng session theo member scope. Không có thay đổi Prisma/MongoDB; raw video và history chỉ local.
+
+
+## Hoạt động tập luyện — 2026-10-28
+
+Thêm workout_sessions/workout_session_revisions, body_measurements/body_measurement_revisions, exercise_catalog/exercise_catalog_versions. Latest và revisions ghi cùng transaction/Command; unique (resourceId,version), partial unique body_measurements(memberId,measurementDate) khi ACTIVE; ngày lưu YYYY-MM-DD theo UTC+7. weightUnits/heightUnits là số nguyên, API kg/cm; exercises/catalogSnapshot JSON server. Xem SOT 21 mục 8/11 và prisma/schema.prisma cho contract/rollout generate, validate, db:push, db:indexes, db:seed-exercises. Không backfill dữ liệu cũ hoặc chạy trên business DB trong task.

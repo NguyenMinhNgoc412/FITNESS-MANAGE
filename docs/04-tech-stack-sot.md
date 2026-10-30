@@ -123,3 +123,16 @@ Web dùng OPFS cho video và SQLite WASM cho sessions; static hosting cần COOP
 
 Date/time UI dùng `@react-native-community/datetimepicker` 9.1.0 đã có trong package/lockfile cho native, datetime-local của browser cho web. Không thêm dependency/provider trong task ngày 2026-10-08. Native binary cần chứa module picker; binary cũ thiếu module hiển thị hướng dẫn cài Development Build mới.
 
+
+## Nâng Expo SDK 58 — 2026-10-29
+
+Owner yêu cầu nâng SDK 57 lên SDK 58. Baseline client: Expo 58.0.21, React/React DOM 19.3.0, React Native 0.88.1, Router 58, TypeScript 6.0.3, Jest 30.5.2 và ts-jest 29.4.15; các module Expo/native căn theo `expo install --fix` và pnpm-lock.yaml. Node trên máy kiểm tra là 22.22.0.
+
+- Chuyển splash config cũ sang plugin `expo-splash-screen` 58; dùng sub-export Expo thay dependency trực tiếp `@expo/config-plugins`. Bỏ packageExtension datetimepicker 9.1.0 cũ khi nâng lên 9.2.1; bổ sung peer `@expo/dom-webview` 58 cho log-box.
+- Web giữ SPA bằng `web.output: single`, tắt asyncRoutes web để giữ flow và export hiện tại; không thêm server rendering/provider. Guard chưa lưu dùng `usePreventRemove`/`repeat` của Router 58. Ref dùng instance types của RN 0.88; TypeScript khai báo jest/node/react/typeRoots; packageExtension expo-camera@58.* bổ sung @types/react 19.3 để CameraView tìm được React.Component trong virtual store ngoài repo trên Windows (không dùng alias runtime React).
+- Không thay business/API/database, provider AI hay local-only video. Không cần migration MongoDB/SQLite. Native cần development build mới chứa SDK 58 và fitness-pose; binary SDK 57 không dùng lại với bundle mới. Chưa xác minh build Gradle/Xcode hoặc camera/pose trên thiết bị thật.
+- Nguồn migration: https://expo.dev/blog/how-to-upgrade-to-sdk-58 và https://docs.expo.dev/router/migrate/sdk-57-to-58/. Giữ packageManager pnpm hiện hành; cài trên máy này với npm_config_virtual_store_dir=C:\.fitness-pnpm.
+
+## Nguồn media thư viện bài mẫu — 2026-10-30
+
+Owner đã chọn ảnh mở: free-exercise-db (yuhonas, Unlicense/Public Domain) và Workout Guide (Bryl Lim/Everkinetic, CC BY-SA 4.0). Chỉ nhập các JPEG/PNG được review vào assets; không cài npm package workout-guide, không thêm API/provider/CDN runtime. React Native Image + timer hiện hành phát các vị trí chính; không dùng GIF decoder/new native dependency. Asset provenance pin commit và SHA256, LICENSE/ATTRIBUTION giữ nguyên. Baseline 43 ảnh khoảng 2,37 MiB thêm vào bundle, chỉ decode tối đa 3 ảnh khi mở một detail; cần cập nhật build/bundle đang chạy để có asset mới. Không liên quan raw AI video local-only.

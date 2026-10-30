@@ -1,3 +1,4 @@
+import { PopupRow } from '../components/record-row';
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View, useWindowDimensions } from 'react-native';
 import { Button, Card, Label, LoadState, Page } from '../ui';
@@ -20,6 +21,6 @@ export default function MemberCheckin() {
   const logs = useLoad<Checkin[]>('/members/me/checkins');
   return <Page title="Mã check-in" subtitle="Đưa QR cho chủ phòng tập. Quyền vào tập được kiểm tra tại quầy.">
     <CheckinQr endpoint="/members/me/qr" />
-    <Card title="Lịch sử vào tập"><LoadState state={logs} empty={!logs.data?.length} />{logs.data?.map(log => <Label key={log.id}>{dateTime(log.checkedInAt)} · {log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : 'PT ngoài'}</Label>)}</Card>
+    <Card title="Lịch sử vào tập"><LoadState state={logs} empty={!logs.data?.length} /><View>{logs.data?.map(log => <PopupRow key={log.id} title={dateTime(log.checkedInAt)} description={log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : 'PT ngoài'}><Label>{dateTime(log.checkedInAt)}</Label><Label>{log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : 'PT ngoài'}</Label></PopupRow>)}</View></Card>
   </Page>;
 }

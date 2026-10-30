@@ -11,7 +11,9 @@
     "prisma:validate": "prisma validate",
     "db:push": "prisma db push",
     "db:indexes": "ts-node prisma/indexes.ts",
+    "db:seed-exercises": "ts-node prisma/exercise-seed.ts",
     "test:integration": "jest --config jest.integration.config.cjs --runInBand",
+    "test:activity-scenario": "ts-node test/activity-scenario.ts",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {

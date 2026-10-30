@@ -58,7 +58,8 @@ async function main() {
       const req = route.request(), url = new URL(req.url());
       if (url.pathname.startsWith('/api/')) {
         let body = [];
-        if (url.pathname === '/api/auth/login') body = { accessToken: randomBytes(32).toString('hex'), refreshToken: randomBytes(32).toString('hex'), user: { id: memberId, role } };
+        if (url.pathname === '/api/members/me/workouts') body = { items: [], total: 0, page: 1, pageSize: 20 };
+        else if (url.pathname === '/api/auth/login') body = { accessToken: randomBytes(32).toString('hex'), refreshToken: randomBytes(32).toString('hex'), user: { id: memberId, role } };
         else if (url.pathname === '/api/auth/me') body = { ...person, role };
         else if (url.pathname === '/api/dashboard') body = { checkins: 3, trials: 1, alerts: 2, trialFinal: 1, membershipExpiring: 1, bookingsToday: 1, ptsToday: 1, bookings: [booking] };
         else if (url.pathname === '/api/pt/me/qr') body = { token: 'synthetic-pt-qr-for-layout-only', expiresIn: 120 };
@@ -70,6 +71,7 @@ async function main() {
           body = bookingMode === 'empty' ? [] : [booking];
         }
         else if (url.pathname.endsWith('/memberships')) body = [membership];
+        else if (url.pathname.endsWith('/pt-assignment/history')) body = [{ id: 'assignment-fixture', ptId, ptName: 'PT kiểm thử', status: 'ACTIVE', reason: 'Phân công kiểm thử' }];
         else if (url.pathname === '/api/members/me/pt') body = null;
         if (req.method() !== 'GET' && url.pathname !== '/api/auth/login') {
           if (url.pathname.endsWith('/memberships') || url.pathname.endsWith('/renew')) packageWrites++;
@@ -92,9 +94,12 @@ async function main() {
       stage = 'package activation and renewal keep preset/input/submit locked';
       await page.getByRole('link', { name: 'Gói tập', exact: true }).click();
       await page.getByRole('radio', { name: /Member kiểm thử/ }).click();
+      await page.getByRole('button', { name: 'Thêm gói tập', exact: true }).click();
       await page.getByRole('radio', { name: /Hội viên 15 buổi/ }).click();
       for (const action of ['Kích hoạt gói', 'Gia hạn gói']) {
         if (action === 'Gia hạn gói') {
+          await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
+          await page.getByRole('button', { name: 'Xem chi tiết Gói kiểm thử', exact: true }).click();
           await page.getByRole('radio', { name: /Gia hạn/, exact: false }).click();
           await page.getByRole('radio', { name: /Hội viên 15 buổi/ }).last().click();
         }
@@ -120,13 +125,19 @@ async function main() {
       const cancel = page.getByRole('button', { name: 'Xác nhận hủy gói', exact: true });
       await expect(cancel).toBeVisible();
       assert.deepEqual(await colors(cancel), { text: 'rgb(173, 48, 45)', background: 'rgb(251, 237, 236)' });
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       await page.getByRole('link', { name: 'PT & Member', exact: true }).click();
       await page.getByRole('radio', { name: /Hội viên/ }).click();
-      await page.getByRole('radio', { name: /Member kiểm thử/ }).click();
+      await page.getByRole('button', { name: /Xem chi tiết Member kiểm thử/ }).click();
+      await page.getByRole('radio', { name: /PT phụ trách$/ }).click();
+      await page.getByRole('button', { name: 'Hủy PT phụ trách', exact: true }).click();
       assert.deepEqual(await colors(page.getByRole('button', { name: 'Xác nhận hủy PT', exact: true })), { text: 'rgb(173, 48, 45)', background: 'rgb(251, 237, 236)' });
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       await page.getByRole('link', { name: 'Lịch tập', exact: true }).click();
+      await page.getByTestId('booking-row').click();
       await page.getByRole('button', { name: 'Hủy lịch', exact: true }).click();
       assert.deepEqual(await colors(page.getByRole('button', { name: 'Xác nhận hủy lịch', exact: true })), { text: 'rgb(173, 48, 45)', background: 'rgb(251, 237, 236)' });
+      await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
       stage = 'Owner short-screen sidebar and drawer scroll to Settings';
       for (const width of [1440, 390]) {
         await page.setViewportSize({ width, height: 480 });
@@ -176,6 +187,8 @@ async function main() {
       stage = role + ' retains read-only schedule';
       await page.getByRole('link', { name: 'Lịch', exact: true }).click();
       await page.getByText('Lịch do chủ phòng tập quản lý. Liên hệ chủ phòng tập khi cần thay đổi.', { exact: true }).waitFor();
+      await page.getByTestId('booking-row').click();
+      assert.equal(await page.getByRole('button', { name: 'Sửa lịch', exact: true }).count(), 0);
       assert.equal(await page.getByRole('button', { name: 'Tạo booking', exact: true }).count(), 0);
       assert.equal(await page.getByRole('button', { name: 'Hủy lịch', exact: true }).count(), 0);
     }

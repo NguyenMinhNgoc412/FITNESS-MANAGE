@@ -259,3 +259,87 @@ model WriteLock {
   version Int    @default(0)
   @@map("write_locks")
 }
+
+model WorkoutSession {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  memberId String @db.ObjectId
+  workoutDate String
+  title String @default("")
+  note String @default("")
+  status String @default("DRAFT")
+  statusBeforeArchive String?
+  exercises Json
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  completedAt DateTime?
+  archivedAt DateTime?
+  @@index([memberId, status, workoutDate, id])
+  @@map("workout_sessions")
+}
+
+model WorkoutRevision {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId String @db.ObjectId
+  memberId String @db.ObjectId
+  version Int
+  action String
+  actorId String @db.ObjectId
+  snapshot Json
+  recordedAt DateTime @default(now())
+  @@unique([sessionId, version])
+  @@index([memberId, sessionId, version])
+  @@map("workout_session_revisions")
+}
+
+model BodyMeasurement {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  memberId String @db.ObjectId
+  measurementDate String
+  weightUnits Int?
+  heightUnits Int?
+  status String @default("ACTIVE")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  archivedAt DateTime?
+  @@index([memberId, status, measurementDate, id])
+  @@map("body_measurements")
+}
+
+model MeasurementRevision {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  measurementId String @db.ObjectId
+  memberId String @db.ObjectId
+  version Int
+  action String
+  actorId String @db.ObjectId
+  snapshot Json
+  recordedAt DateTime @default(now())
+  @@unique([measurementId, version])
+  @@index([memberId, measurementId, version])
+  @@map("body_measurement_revisions")
+}
+
+model ExerciseCatalog {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  code String @unique
+  status String @default("DRAFT")
+  currentPublishedVersion Int
+  nameVi String
+  searchText String
+  muscleGroups String[]
+  equipmentCodes String[]
+  @@index([status, nameVi, id])
+  @@map("exercise_catalog")
+}
+
+model ExerciseCatalogVersion {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  catalogExerciseId String @db.ObjectId
+  contentVersion Int
+  content Json
+  publishedAt DateTime @default(now())
+  @@unique([catalogExerciseId, contentVersion])
+  @@map("exercise_catalog_versions")
+}

@@ -1,6 +1,10 @@
-import { useState } from 'react';
+import { Text, View } from 'react-native';
+import { spacing } from '../design-system/theme';
+import { PopupRow } from '../components/record-row';
+import { useDetailLocked } from '../components/detail-state';
+import { ReactNode, useState } from 'react';
 import { z } from 'zod';
-import { Card, Label, Choices, LoadState, Page, RecordPicker, Badge, Pager } from '../ui';
+import { Card, Label, Choices, LoadState, Page, RecordPicker, Badge, Pager, styles } from '../ui';
 import { Form, Field } from '../components/form';
 import { useLoad } from '../hooks/use-load';
 import { mutation } from '../lib/http';
@@ -46,16 +50,17 @@ export function packageBody(v: Record<string, string>, presetId = '') {
   }
   return { name, mode, startAt, priceVnd, totalSessions: z.number({ invalid_type_error: 'Số lượt phải là số nguyên dương.' }).int('Số lượt phải là số nguyên.').positive('Số lượt phải lớn hơn 0.').max(10000, 'Số lượt không được quá 10.000.').parse(Number(v.totalSessions)) };
 }
-export function PackageCard({ item }: { item: Membership }) {
-  return <Card title={item.name}><Badge value={item.effectiveStatus} /><Label>{item.mode === 'TIME_BASED' ? 'Hết hạn: ' + dateTime(item.endAt!) : 'Còn ' + item.remainingSessions + ' / ' + item.totalSessions + ' lượt'}</Label>{item.priceVnd != null && <Label muted>Giá ghi nhận: {money(item.priceVnd)}</Label>}</Card>;
+export function PackageCard({ item, children }: { item: Membership; children?: ReactNode }) {
+  const description = item.mode === 'TIME_BASED' ? 'Hết hạn: ' + dateTime(item.endAt!) : 'Còn ' + item.remainingSessions + ' / ' + item.totalSessions + ' lượt';
+  return <PopupRow title={item.name} description={description} trailing={<Badge value={item.effectiveStatus} />}><Badge value={item.effectiveStatus} /><Label>{description}</Label>{item.priceVnd != null && <Label muted>Giá ghi nhận: {money(item.priceVnd)}</Label>}{children}</PopupRow>;
 }
 export function MemberPackageSummary({ memberId }: { memberId: string }) {
   const state = useLoad<Membership[]>('/members/' + memberId + '/memberships');
   const items = [...(state.data ?? [])].sort((a, b) => Number(b.effectiveStatus === 'ACTIVE') - Number(a.effectiveStatus === 'ACTIVE'));
-  return <Card title="Gói tập của Member"><LoadState state={state} empty={!items.length} emptyText="Member chưa có gói tập." />
+  return <View style={{ gap: spacing.md }}><Text style={styles.heading}>Gói tập của Member</Text><LoadState state={state} empty={!items.length} emptyText="Member chưa có gói tập." />
     {!state.loading && !state.error && items.length > 0 && !items.some(item => item.effectiveStatus === 'ACTIVE') ? <Label muted>Hiện chưa có gói đang hoạt động. Các gói đã cấp được giữ bên dưới.</Label> : null}
-    {!state.loading && !state.error && items.map(item => <PackageCard key={item.id} item={item} />)}
-  </Card>;
+    <View>{!state.loading && !state.error && items.map(item => <PackageCard key={item.id} item={item} />)}</View>
+  </View>;
 }
 function PresetPackageForm({ label, submit, onSuccess }: { label: string; submit: (body: ReturnType<typeof packageBody>, key: string) => Promise<unknown>; onSuccess: () => void }) {
   const [presetId, setPresetId] = useState('');
@@ -72,16 +77,18 @@ export default function Packages() {
 export function MemberPackages({ memberId }: { memberId: string }) {
   const state = useLoad<Membership[]>('/members/' + memberId + '/memberships');
   const passes = useLoad<Pass[]>('/members/' + memberId + '/external-pt-passes');
-  const [action, setAction] = useState<{ id: string; type: 'renew' | 'cancel' } | null>(null);
   return <>
-    <LoadState state={state} empty={!state.data?.length} />{state.data?.map(item => <Card key={item.id}><PackageCard item={item} /><Choices value={action?.id === item.id ? action.type : ''} options={[{ value: 'renew', label: 'Gia hạn' }, { value: 'cancel', label: 'Hủy gói' }]} onChange={type => setAction({ id: item.id, type: type as 'renew' | 'cancel' })} /></Card>)}
-    <Card title="Thêm gói tập"><PresetPackageForm label="Kích hoạt gói" submit={(body, key) => mutation('/members/' + memberId + '/memberships', body, key)} onSuccess={() => void state.reload()} /></Card>
-    <Card title="External PT Pass"><LoadState state={passes} />{passes.data?.map(p => <Label key={p.id}>Còn {p.totalUses - p.usedUses} / {p.totalUses} lượt · {p.status}</Label>)}
-      <Form fields={[{ name: 'totalUses', label: 'Số lượt pass mới', numeric: true }]} label="Tạo External PT Pass" submit={(v, k) => mutation('/members/' + memberId + '/external-pt-passes', { totalUses: Number(v.totalUses) }, k)} onSuccess={() => void passes.reload()} />
+    <LoadState state={state} empty={!state.data?.length} /><View>{state.data?.map(item => <PackageCard key={item.id} item={item}><PackageActions item={item} changed={() => void state.reload()} /></PackageCard>)}</View>
+    <PopupRow title="Thêm gói tập" description="Chọn gói và ngày bắt đầu" label="Thêm gói tập"><PresetPackageForm label="Kích hoạt gói" submit={(body, key) => mutation('/members/' + memberId + '/memberships', body, key)} onSuccess={() => void state.reload()} /></PopupRow>
+    <Card title="External PT Pass"><LoadState state={passes} /><View>{passes.data?.map(p => <PopupRow key={p.id} title="External PT Pass" description={'Còn ' + (p.totalUses - p.usedUses) + ' / ' + p.totalUses + ' lượt'} trailing={<Badge value={p.status} />}><Badge value={p.status} /><Label>Còn {p.totalUses - p.usedUses} / {p.totalUses} lượt</Label></PopupRow>)}</View>
+      <PopupRow title="Tạo External PT Pass" label="Tạo External PT Pass"><Form fields={[{ name: 'totalUses', label: 'Số lượt pass mới', numeric: true }]} label="Tạo External PT Pass" submit={(v, k) => mutation('/members/' + memberId + '/external-pt-passes', { totalUses: Number(v.totalUses) }, k)} onSuccess={() => void passes.reload()} /></PopupRow>
     </Card>
-
-    {action && <Card title={action.type === 'renew' ? 'Gia hạn bằng gói mới' : 'Xác nhận hủy gói'}>{action.type === 'renew'
-      ? <PresetPackageForm key={action.id} label="Gia hạn gói" submit={(body, key) => mutation('/memberships/' + action.id + '/renew', body, key)} onSuccess={() => { setAction(null); void state.reload(); }} />
-      : <Form danger label="Xác nhận hủy gói" fields={[{ name: 'reason', label: 'Lý do hủy' }]} submit={(values, key) => mutation('/memberships/' + action.id + '/cancel', { reason: values.reason }, key)} onSuccess={() => { setAction(null); void state.reload(); }} />}</Card>}
+  </>;
+}
+function PackageActions({ item, changed }: { item: Membership; changed: () => void }) {
+  const [action, setAction] = useState(''), locked = useDetailLocked();
+  return <><Choices disabled={locked} value={action} options={[{ value: 'renew', label: 'Gia hạn' }, { value: 'cancel', label: 'Hủy gói' }]} onChange={setAction} />
+    {action === 'renew' && <PresetPackageForm label="Gia hạn gói" submit={(body, key) => mutation('/memberships/' + item.id + '/renew', body, key)} onSuccess={() => { setAction(''); changed(); }} />}
+    {action === 'cancel' && <Form danger label="Xác nhận hủy gói" fields={[{ name: 'reason', label: 'Lý do hủy' }]} submit={(values, key) => mutation('/memberships/' + item.id + '/cancel', { reason: values.reason }, key)} onSuccess={() => { setAction(''); changed(); }} />}
   </>;
 }

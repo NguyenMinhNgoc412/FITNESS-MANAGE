@@ -14,8 +14,9 @@ import { SalesAlertsModule } from './domain/sales-alerts.module';
 import { ReportsModule } from './domain/reports.module';
 import { DashboardModule } from './domain/dashboard.module';
 import { AuditModule } from './domain/audit.module';
+import { WorkoutsModule } from './domain/workouts.module';
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, MembershipsModule, CustomersModule, PeopleModule, CheckinsModule, NotificationsModule, BookingsModule, ExternalPtModule, SalesAlertsModule, ReportsModule, DashboardModule, AuditModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, MembershipsModule, CustomersModule, PeopleModule, CheckinsModule, NotificationsModule, BookingsModule, ExternalPtModule, SalesAlertsModule, ReportsModule, DashboardModule, AuditModule, WorkoutsModule],
   controllers: [AiController],
 })
 export class AppModule {}

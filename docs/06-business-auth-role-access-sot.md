@@ -101,3 +101,8 @@ Member không thể:
 3. Member không thấy control đổi PT hoặc edit booking.
 4. Owner không có API/screen để xem AI result Member.
 5. Trial/External PT không có login flow.
+
+
+## Quyền hoạt động tập luyện — 2026-10-28
+
+MEMBER active tự quản nhật ký và cân nặng/chiều cao, xem revisions/progress riêng; dùng thư viện bài kể cả gói hết hạn. OWNER/PT không có quyền đọc/mutation các resource này trong đợt đầu. Catalog seed/review qua repository, không thêm role hoặc API CRUD. Tất cả route mới MEMBER tại guard và service; id thuộc Member khác trả 404. Không mở quyền đọc AI hoặc sửa booking/assignment. Chi tiết SOT 21.

@@ -1,10 +1,11 @@
-import { Link, Slot, usePathname } from 'expo-router';
-import { useState } from 'react';
+import { Link, Slot, usePathname, useRouter } from 'expo-router';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Role } from './features/auth/types';
 import { useRoleGuard, GuardFallback } from './use-role-guard';
 import { colors as c, controlSize, radius, spacing, typography } from './design-system/theme';
+import { WorkoutLeaveContext } from './components/workout-leave-context';
 const menus: Record<Role, [string, string][]> = {
   OWNER: [['/owner', 'Tổng quan'], ['/owner/customers', 'Khách hàng'], ['/owner/packages', 'Gói tập'], ['/owner/bookings', 'Lịch tập'], ['/owner/checkins', 'Check-in'], ['/owner/pt', 'PT & Member'], ['/owner/alerts', 'Sales / Cảnh báo'], ['/owner/logs', 'Logs / Báo cáo'], ['/owner/settings', 'Cài đặt']],
   PT: [['/pt', 'Hôm nay'], ['/pt/schedule', 'Lịch'], ['/pt/members', 'Member'], ['/pt/account', 'Tài khoản']],
@@ -24,17 +25,27 @@ function NavIcon({ href, active }: { href: string; active: boolean }) {
 export function Shell({ role }: { role: Role }) {
   const ready = useRoleGuard(role), { width } = useWindowDimensions(), pathname = usePathname();
   const [ownerMenu, setOwnerMenu] = useState(false);
+  const workoutLeave = useRef<(() => Promise<boolean>) | null>(null), router = useRouter();
+  const navigate = (href: string, event: { preventDefault: () => void }) => {
+    // This custom Pressable handler owns navigation, including when no form guard
+    // is mounted. Letting the anchor reload the page discards the web session.
+    event.preventDefault();
+    if (href === pathname) return;
+    const check = workoutLeave.current;
+    if (!check) { router.push(href as never); return; }
+    void check().then(ok => { if (ok) router.push(href as never); });
+  };
   if (!ready) return <GuardFallback />;
   const wide = role === 'OWNER' && width >= 900;
   const bottom = !wide && role !== 'OWNER';
   const nav = <View style={[s.nav, wide || role === 'OWNER' ? s.sidebar : s.bottom]}>{menus[role].map(([href, label]) => {
-    const active = pathname === href;
+    const active = pathname === href || (href === '/member' && pathname === '/member/workouts');
     return bottom
-      ? <Link asChild href={href as never} key={href}><Pressable accessibilityRole="link" accessibilityLabel={label} accessibilityState={{ selected: active }} style={StyleSheet.flatten([s.bottomLink, active ? s.bottomActive : null])}><NavIcon href={href} active={active} />{active && <Text numberOfLines={1} style={s.activeLabel}>{label}</Text>}</Pressable></Link>
+      ? <Link asChild href={href as never} key={href} {...(role === 'MEMBER' ? { onPress: (event: { preventDefault: () => void }) => navigate(href, event) } : {})}><Pressable accessibilityRole="link" accessibilityLabel={label} accessibilityState={{ selected: active }} style={StyleSheet.flatten([s.bottomLink, active ? s.bottomActive : null])}><NavIcon href={href} active={active} />{active && <Text numberOfLines={1} style={s.activeLabel}>{label}</Text>}</Pressable></Link>
       : <Link onPress={() => setOwnerMenu(false)} href={href as never} key={href} style={[s.link, active && s.active]} accessibilityRole="link">{label}</Link>;
   })}</View>;
   const compactOwner = role === 'OWNER' && !wide;
-  return <SafeAreaView style={s.safe}><View style={s.brand}><Text style={s.logo}>F</Text><View style={{ flex: 1 }}><Text style={s.brandText}>FITNESS-MANAGE</Text><Text style={s.subtitle}>{role === 'OWNER' ? 'Quản lý phòng tập' : role === 'PT' ? 'Huấn luyện viên' : 'Hội viên'}</Text></View>{compactOwner && <Pressable accessibilityLabel={ownerMenu ? 'Đóng menu' : 'Mở menu'} accessibilityRole="button" accessibilityState={{ expanded: ownerMenu }} onPress={() => setOwnerMenu(value => !value)} style={s.menuButton}><Text style={s.menuText}>{ownerMenu ? 'Đóng' : 'Menu'}</Text></Pressable>}</View><View style={[s.body, { flexDirection: wide ? 'row' : 'column' }]}>{wide && <ScrollView style={s.sidebarScroll} accessibilityLabel="Menu Owner" keyboardShouldPersistTaps="handled">{nav}</ScrollView>}{compactOwner && ownerMenu && <View accessibilityViewIsModal style={s.drawerLayer}><Pressable accessibilityLabel="Đóng menu" accessibilityRole="button" style={s.backdrop} onPress={() => setOwnerMenu(false)} /><View style={s.drawer}><ScrollView style={{ flex: 1 }} accessibilityLabel="Menu Owner" keyboardShouldPersistTaps="handled">{nav}</ScrollView></View></View>}<View style={{ flex: 1, minWidth: 0 }}><Slot /></View>{bottom && nav}</View></SafeAreaView>;
+  return <SafeAreaView style={s.safe}><View style={s.brand}><Text style={s.logo}>F</Text><View style={{ flex: 1 }}><Text style={s.brandText}>FITNESS-MANAGE</Text><Text style={s.subtitle}>{role === 'OWNER' ? 'Quản lý phòng tập' : role === 'PT' ? 'Huấn luyện viên' : 'Hội viên'}</Text></View>{compactOwner && <Pressable accessibilityLabel={ownerMenu ? 'Đóng menu' : 'Mở menu'} accessibilityRole="button" accessibilityState={{ expanded: ownerMenu }} onPress={() => setOwnerMenu(value => !value)} style={s.menuButton}><Text style={s.menuText}>{ownerMenu ? 'Đóng' : 'Menu'}</Text></Pressable>}</View><View style={[s.body, { flexDirection: wide ? 'row' : 'column' }]}>{wide && <ScrollView style={s.sidebarScroll} accessibilityLabel="Menu Owner" keyboardShouldPersistTaps="handled">{nav}</ScrollView>}{compactOwner && ownerMenu && <View accessibilityViewIsModal style={s.drawerLayer}><Pressable accessibilityLabel="Đóng menu" accessibilityRole="button" style={s.backdrop} onPress={() => setOwnerMenu(false)} /><View style={s.drawer}><ScrollView style={{ flex: 1 }} accessibilityLabel="Menu Owner" keyboardShouldPersistTaps="handled">{nav}</ScrollView></View></View>}<View style={{ flex: 1, minWidth: 0 }}><WorkoutLeaveContext.Provider value={workoutLeave}><Slot /></WorkoutLeaveContext.Provider></View>{bottom && nav}</View></SafeAreaView>;
 }
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: c.surface }, body: { flex: 1 },

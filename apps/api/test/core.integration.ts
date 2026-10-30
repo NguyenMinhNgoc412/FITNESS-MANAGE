@@ -9,6 +9,8 @@ import { PrismaService } from '../src/prisma.service';
 import { ApiExceptionFilter } from '../src/common/errors';
 import { ensureIndexes } from '../prisma/indexes';
 import { checkinDayRange } from '../src/domain/checkin-day';
+import { seedExercises } from '../prisma/exercise-seed';
+import { todayVn } from '../src/domain/workout-rules';
 
 // All fixtures are generated test identities. Never use a real database/account.
 const url = process.env.TEST_DATABASE_URL;
@@ -61,6 +63,101 @@ describe('SOT core HTTP flows on MongoDB replica set', () => {
     // Only this explicitly named test database is eligible for cleanup.
     if (prisma) await prisma.$runCommandRaw({ dropDatabase: 1 });
     if (app) await app.close();
+  });
+
+  it('workout self CRUD, replay/races, revisions, rollback, progress and zero operational side effects', async () => {
+    const member = await createPerson('MEMBER'), other = await createPerson('MEMBER'), date = todayVn();
+    const counts = async () => Promise.all([prisma.membership.count(), prisma.memberCheckin.count(), prisma.ptAttendanceLog.count(), prisma.booking.count(), prisma.externalPtPass.count(), prisma.auditLog.count()]);
+    const before = await counts();
+    const input = { workoutDate: date, title: 'Fixture workout', note: '', exercises: [{ id: randomUUID(), source: 'CUSTOM', displayName: 'Squat', sets: [{ id: randomUUID(), reps: 10, weightKg: 20 }, { id: randomUUID(), reps: 8, weightKg: 25 }, { id: randomUUID(), reps: 12, weightKg: null }] }] };
+    const key = randomUUID();
+    const created = await Promise.all([request('/members/me/workouts', member.accessToken, 'POST', input, key), request('/members/me/workouts', member.accessToken, 'POST', input, key)]);
+    expect(created.map(v => v.status)).toEqual([201, 201]); expect(created[0].data.id).toBe(created[1].data.id);
+    const path = '/members/me/workouts/' + created[0].data.id;
+    expect((await request(path, other.accessToken)).status).toBe(404);
+    expect((await request(path + '/revisions', other.accessToken)).status).toBe(404);
+    expect((await request(path, other.accessToken, 'PATCH', { expectedVersion: 1, input })).status).toBe(404);
+    expect((await request(path + '/archive', other.accessToken, 'POST', { expectedVersion: 1 })).status).toBe(404);
+    expect((await request('/members/me/workouts', member.accessToken, 'POST', { ...input, title: 'Changed' }, key)).data.code).toBe('IDEMPOTENCY_CONFLICT');
+    const race = await Promise.all([request(path, member.accessToken, 'PATCH', { expectedVersion: 1, input: { ...input, title: 'A' } }), request(path, member.accessToken, 'PATCH', { expectedVersion: 1, input: { ...input, title: 'B' } })]);
+    expect(race.map(v => v.status).sort()).toEqual([200, 409]);
+    expect((await request(path + '/revisions', member.accessToken)).data.total).toBe(2);
+    const complete = await request(path + '/complete', member.accessToken, 'POST', { expectedVersion: 2 }); expect(complete.status).toBe(201);
+    const progress = await request('/members/me/workout-progress?from=' + date + '&to=' + date, member.accessToken);
+    expect(progress.data.totalSessions).toBe(1); expect(progress.data.series[0].points[0]).toMatchObject({ reps: 30, maxWeightKg: 25 });
+    const invalid = await request(path, member.accessToken, 'PATCH', { expectedVersion: 3, input: { ...input, exercises: [] } }); expect(invalid.status).toBe(400);
+    expect((await request(path + '/revisions', member.accessToken)).data.total).toBe(3);
+    const archiveRace = await Promise.all([request(path + '/archive', member.accessToken, 'POST', { expectedVersion: 3 }), request(path, member.accessToken, 'PATCH', { expectedVersion: 3, input })]);
+    expect(archiveRace.filter(v => v.status < 300)).toHaveLength(1); expect(archiveRace.filter(v => v.status === 409)).toHaveLength(1);
+    let current = (await request(path, member.accessToken)).data;
+    if (current.status !== 'ARCHIVED') { expect((await request(path + '/archive', member.accessToken, 'POST', { expectedVersion: current.version })).status).toBe(201); current = (await request(path, member.accessToken)).data; }
+    expect((await request(path, member.accessToken, 'PATCH', { expectedVersion: current.version, input })).data.code).toBe('WORKOUT_STATE_CONFLICT');
+    expect((await request('/members/me/workout-progress?from=' + date + '&to=' + date, member.accessToken)).data.totalSessions).toBe(0);
+    expect(await counts()).toEqual(before);
+  });
+
+  it('measurement daily concurrency, idempotency, independent metrics, archive and self privacy', async () => {
+    const member = await createPerson('MEMBER'), other = await createPerson('MEMBER');
+    const input = { measurementDate: '2026-01-01', weightKg: 70, heightCm: 170 };
+    const raced = await Promise.all([request('/members/me/body-measurements', member.accessToken, 'POST', input), request('/members/me/body-measurements', member.accessToken, 'POST', input)]);
+    expect(raced.map(v => v.status).sort()).toEqual([201, 409]); expect(raced.find(v => v.status === 409)?.data.code).toBe('MEASUREMENT_DATE_CONFLICT');
+    const first = raced.find(v => v.status === 201)!.data;
+    const key = randomUUID(), laterInput = { measurementDate: '2026-01-10', weightKg: 69.5, heightCm: null };
+    const later = await request('/members/me/body-measurements', member.accessToken, 'POST', laterInput, key);
+    expect((await request('/members/me/body-measurements', member.accessToken, 'POST', laterInput, key)).data.id).toBe(later.data.id);
+    const path = '/members/me/body-measurements/' + later.data.id;
+    expect((await request(path, other.accessToken)).status).toBe(404);
+    expect((await request(path + '/revisions', other.accessToken)).status).toBe(404);
+    expect((await request(path, other.accessToken, 'PATCH', { expectedVersion: 1, weightKg: 1, heightCm: null })).status).toBe(404);
+    expect((await request(path + '/archive', other.accessToken, 'POST', { expectedVersion: 1 })).status).toBe(404);
+    const progressPath = '/members/me/body-measurement-progress?from=2026-01-01&to=2026-01-10';
+    const p = (await request(progressPath, member.accessToken)).data;
+    expect(p.weight.comparison.delta).toBe(-0.5); expect(p.height.latest).toEqual({ date: '2026-01-01', value: 170 }); expect(p.height.comparison).toBeNull();
+    const race = await Promise.all([request(path, member.accessToken, 'PATCH', { expectedVersion: 1, weightKg: 69.4, heightCm: null }), request(path + '/archive', member.accessToken, 'POST', { expectedVersion: 1 })]);
+    expect(race.filter(v => v.status < 300)).toHaveLength(1); expect(race.filter(v => v.status === 409)).toHaveLength(1);
+    const latest = (await request(path, member.accessToken)).data;
+    if (latest.status === 'ACTIVE') await request(path + '/archive', member.accessToken, 'POST', { expectedVersion: latest.version });
+    expect((await request(progressPath, member.accessToken)).data.weight.latest.value).toBe(70);
+    expect((await request('/members/me/body-measurements', member.accessToken, 'POST', laterInput)).status).toBe(201);
+    const row = await prisma.bodyMeasurement.findUniqueOrThrow({ where: { id: first.id } }); expect(row.weightUnits).toBe(7000); expect(row.heightUnits).toBe(1700);
+    expect((await request('/members/me/body-measurements/' + first.id, member.accessToken, 'PATCH', { expectedVersion: 1, weightKg: 71 })).status).toBe(400);
+    const revision = await request(path + '/revisions', member.accessToken); expect(revision.data.items[0].snapshot.weightUnits).toBeUndefined();
+    expect(await prisma.auditLog.count({ where: { resourceType: { in: ['workout', 'measurement'] } } })).toBe(0);
+  });
+
+  it('catalog seed idempotence, search, immutable snapshots and archived entry editing', async () => {
+    await seedExercises(prisma); await seedExercises(prisma);
+    expect(await prisma.exerciseCatalog.count()).toBe(20); expect(await prisma.exerciseCatalogVersion.count()).toBe(20);
+    const member = await createPerson('MEMBER');
+    expect((await request('/exercise-library?q=.', member.accessToken)).data.total).toBe(0);
+    const list = await request('/exercise-library?muscleGroup=CHEST&equipment=DUMBBELL&q=day%20nguc', member.accessToken); expect(list.data.total).toBe(1);
+    const e = list.data.items[0]; const detail = await request('/exercise-library/' + e.id, member.accessToken); expect(detail.data.steps.length).toBeGreaterThan(0);
+    const input = { workoutDate: todayVn(), exercises: [{ id: randomUUID(), source: 'CATALOG', catalogExerciseId: e.id, contentVersion: 1, sets: [{ id: randomUUID(), reps: 10, weightKg: null }] }] };
+    const result = await request('/members/me/workouts', member.accessToken, 'POST', input); expect(result.status).toBe(201);
+    await prisma.exerciseCatalog.update({ where: { id: e.id }, data: { status: 'ARCHIVED' } });
+    expect((await request('/exercise-library/' + e.id, member.accessToken)).status).toBe(404);
+    expect((await request('/members/me/workouts', member.accessToken, 'POST', input)).data.code).toBe('CATALOG_VERSION_CONFLICT');
+    const updated = await request('/members/me/workouts/' + result.data.id, member.accessToken, 'PATCH', { expectedVersion: 1, input }); expect(updated.status).toBe(200);
+    expect(updated.data.exercises[0].displayName).toBe(detail.data.nameVi);
+    await seedExercises(prisma); expect((await prisma.exerciseCatalog.findUniqueOrThrow({ where: { id: e.id } })).status).toBe('ARCHIVED');
+    expect((await request('/members/me/workouts', member.accessToken, 'POST', { ...input, exercises: [{ ...input.exercises[0], displayName: 'Forged snapshot' }] })).status).toBe(400);
+  });
+
+  it('paginates workouts, measurements and private revisions beyond twenty with server-side filters', async () => {
+    const member = await createPerson('MEMBER');
+    const fixtures = Array.from({ length: 21 }, (_, i) => ({ memberId: member.id, workoutDate: '2026-01-' + String(i + 1).padStart(2, '0'), title: 'Generated pagination fixture', status: i % 2 ? 'DRAFT' : 'COMPLETED', exercises: [] }));
+    await prisma.workoutSession.createMany({ data: fixtures });
+    await prisma.bodyMeasurement.createMany({ data: fixtures.map((f, i) => ({ memberId: f.memberId, measurementDate: f.workoutDate, weightUnits: 7000 + i, heightUnits: null })) });
+    const query = '?from=2026-01-01&to=2026-01-21&page=2';
+    const page = await request('/members/me/workouts' + query, member.accessToken);
+    expect(page.data.total).toBe(21); expect(page.data.items).toHaveLength(1); expect(page.data.items[0].workoutDate).toBe('2026-01-01');
+    expect((await request('/members/me/workouts' + query + '&status=COMPLETED', member.accessToken)).data.total).toBe(11);
+    expect((await request('/members/me/body-measurements' + query, member.accessToken)).data.items).toHaveLength(1);
+    const record = page.data.items[0];
+    await prisma.workoutSession.update({ where: { id: record.id }, data: { version: 21 } });
+    await prisma.workoutRevision.createMany({ data: Array.from({ length: 21 }, (_, i) => ({ memberId: member.id, actorId: member.id, sessionId: record.id, version: i + 1, action: 'FIXTURE', snapshot: { ...record, version: i + 1 } })) });
+    const revisions = await request('/members/me/workouts/' + record.id + '/revisions?page=2', member.accessToken);
+    expect(revisions.data.total).toBe(21); expect(revisions.data.items[0].version).toBe(1);
   });
 
   it('Trial once per normalized phone, exactly 3 visits, retry and conversion preserve identity/history', async () => {

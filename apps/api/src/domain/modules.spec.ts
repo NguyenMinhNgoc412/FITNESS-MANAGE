@@ -15,6 +15,10 @@ import { ReportsController } from './reports.controller';
 import { SalesAlertsController } from './sales-alerts.controller';
 import { DashboardController } from './dashboard.controller';
 import { AuditController } from './audit.controller';
+import { WorkoutsController } from './workouts.controller';
+import { WorkoutsService } from './workouts.service';
+import { BodyMeasurementsService } from './body-measurements.service';
+import { ExerciseLibraryService } from './exercise-library.service';
 import { DeviceTokensController } from './device-tokens.controller';
 import { CheckinsService } from './checkins.service';
 import { ExternalPtService } from './external-pt.service';
@@ -28,11 +32,15 @@ describe('Domain module wiring and route authorization', () => {
     const module = await Test.createTestingModule({ imports: [AppModule] }).overrideProvider(PrismaService).useValue({}).compile();
     expect(module.get(BookingsController)).toBeDefined();
     expect(module.get(ExternalPtController)).toBeDefined();
+    expect(module.get(WorkoutsController)).toBeDefined();
+    expect(module.get(WorkoutsService)).toBeDefined();
+    expect(module.get(BodyMeasurementsService)).toBeDefined();
+    expect(module.get(ExerciseLibraryService)).toBeDefined();
     await module.close();
   });
   it('keeps every domain route guarded with explicit roles and unique method/path', () => {
     const routes = new Set<string>();
-    for (const controller of [BookingsController, PeopleController, CustomersController, MembershipsController, CheckinsController, ExternalPtController, ReportsController, SalesAlertsController, DashboardController, AuditController, DeviceTokensController]) {
+    for (const controller of [BookingsController, PeopleController, CustomersController, MembershipsController, CheckinsController, ExternalPtController, ReportsController, SalesAlertsController, DashboardController, AuditController, DeviceTokensController, WorkoutsController]) {
       expect(Reflect.getMetadata(GUARDS_METADATA, controller)).toEqual([JwtAuthGuard, RolesGuard]);
       for (const name of Object.getOwnPropertyNames(controller.prototype)) {
         if (name === 'constructor') continue;
@@ -47,7 +55,7 @@ describe('Domain module wiring and route authorization', () => {
     }
     for (const name of ['book', 'editBooking', 'cancelBooking'] as const) expect(Reflect.getMetadata('roles', BookingsController.prototype[name])).toEqual([Role.OWNER]);
     for (const name of ['assign', 'changeAssignment', 'unassign'] as const) expect(Reflect.getMetadata('roles', PeopleController.prototype[name])).toEqual([Role.OWNER]);
-    expect(routes.size).toBe(50);
+    expect(routes.size).toBe(67);
   });
   it('dispatches self routes before dynamic ids and rejects PT/Member mutations over HTTP', async () => {
     let role: Role = Role.PT;
@@ -84,6 +92,11 @@ describe('Domain module wiring and route authorization', () => {
         expect((await request('/reports/packages')).status).toBe(403);
         expect((await request('/customers/synthetic-id')).status).toBe(403);
         expect((await request('/customers/synthetic-id/checkins')).status).toBe(403);
+      }
+      for (role of [Role.PT, Role.OWNER]) {
+        for (const path of ['/members/me/workouts', '/members/me/body-measurements', '/members/me/workout-progress', '/members/me/body-measurement-progress', '/exercise-library']) expect((await request(path)).status).toBe(403);
+        expect((await request('/members/me/workouts', 'POST')).status).toBe(403);
+        expect((await request('/members/me/body-measurements', 'POST')).status).toBe(403);
       }
       expect(bookings.save).not.toHaveBeenCalled();
       expect(people.assign).not.toHaveBeenCalled();

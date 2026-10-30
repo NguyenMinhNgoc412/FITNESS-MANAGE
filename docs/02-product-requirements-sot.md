@@ -268,3 +268,25 @@ Chi tiết: `17-tech-security-audit-sot.md`.
 - raw AI video cloud upload.
 - WebSocket/realtime trong MVP.
 - full accounting/payroll/payment gateway nếu chưa có SOT mới phê duyệt.
+
+
+## 13. Hoạt động tập luyện Member — 2026-10-28
+
+Chi tiết nghiệp vụ và acceptance: [SOT 21](21-business-member-workout-sot.md). Phạm vi được Owner duyệt triển khai, không thay đổi FR-BOOK/FR-CHECKIN/FR-AI.
+
+| ID | Requirement | Acceptance chính |
+|---|---|---|
+| FR-WORKOUT-001 | Member tạo và lưu nháp buổi tập của mình | Lưu thành công trả id/version; mở lại vẫn có dữ liệu; retry không tạo bản trùng |
+| FR-WORKOUT-002 | Nhập bài tập và từng hiệp với số lần/mức tạ | Validation ở client và server; lỗi chỉ rõ trường; không mất nội dung form khi lưu lỗi |
+| FR-WORKOUT-003 | Hoàn tất, sửa và lưu trữ buổi tập có lịch sử | Chỉ buổi hợp lệ mới hoàn tất; sửa/lưu trữ giữ revision trước; conflict không ghi đè |
+| FR-WORKOUT-004 | Xem danh sách và chi tiết nhật ký theo thời gian | Phân trang, lọc khoảng ngày/trạng thái, sort ổn định; không giới hạn ở trang đầu |
+| FR-WORKOUT-005 | Xem số buổi và tiến bộ theo bài | Chỉ tính buổi COMPLETED chưa lưu trữ; công thức rõ ràng; thiếu dữ liệu không được bịa điểm |
+| FR-WORKOUT-006 | Bảo vệ dữ liệu cá nhân và tách nghiệp vụ | Chặn truy cập chéo tại server; mọi mutation nhật ký không đổi booking/check-in/quota/AI |
+| FR-WORKOUT-007 | Member ghi cân nặng và/hoặc chiều cao theo ngày đo | Ít nhất một số đo hợp lệ; kg/cm rõ ràng; có thể ghi độc lập với buổi tập; retry không tạo bản trùng |
+| FR-WORKOUT-008 | Xem lịch sử, biểu đồ và chênh lệch số đo | Mỗi chỉ số có ngày đo riêng, bỏ qua giá trị thiếu, không nội suy hoặc coi thiếu là 0; sửa/lưu trữ giữ revision và cập nhật biểu đồ |
+| FR-WORKOUT-009 | Member tham khảo bài tập mẫu theo nhóm cơ | Có danh mục, tìm kiếm tên Việt/Anh, lọc nhóm cơ/dụng cụ, chi tiết và nguồn nội dung; chỉ bài PUBLISHED được đọc |
+| FR-WORKOUT-010 | Chọn bài mẫu vào nhật ký, giữ định danh và nội dung lịch sử | Không tự điền hiệp/lần/tạ; catalog đổi tên/ngừng phát hành không sửa nhật ký cũ; không tự gộp bài tùy chỉnh với bài mẫu |
+
+## Minh họa thư viện bài mẫu — 2026-10-30
+
+Owner yêu cầu mở rộng FR-WORKOUT-009: popup bài mẫu hiển thị chuỗi ảnh minh họa đóng gói trong app, có phát/dừng và xem từng khung, nguồn/giấy phép rõ ràng. Owner chọn nguồn mở thay cho tái sử dụng ảnh ACE chưa được phép. Đủ 20 bài baseline; không tự tạo bài/giáo án hay kết luận ảnh là tiêu chuẩn AI. Phạm vi chi tiết tại SOT 21 và UX tại SOT 05; FR-WORKOUT-010 snapshot và identity giữ nguyên.

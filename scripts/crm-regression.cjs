@@ -77,7 +77,7 @@ async function main() {
   await page.getByRole('button', { name: 'Đăng nhập', exact: true }).click();
   await page.waitForURL('**/owner');
   await page.getByRole('link', { name: 'Khách hàng', exact: true }).click();
-  await page.getByRole('radio', { name: /^○?\s*CRM Member fixture/ }).click();
+  await page.getByRole('button', { name: /^Xem chi tiết CRM Member fixture/ }).click();
   stage = 'official profile';
   await page.getByText('Trạng thái tài khoản: Đã khóa', { exact: true }).waitFor();
   assert((await page.getByText(/^CCCD:/).innerText()).endsWith('Synthetic identity'));
@@ -92,30 +92,33 @@ async function main() {
   stage = '121 check-ins, retry and independent page';
   await page.getByRole('radio', { name: /Check-in/ }).click();
   const logs = page.getByTestId('customer-checkins');
-  await expect(logs.getByText(/· Tự tập$/)).toHaveCount(30);
+  await expect(logs.getByText('Tự tập', { exact: true })).toHaveCount(30);
   failCheckins = true;
   await logs.getByRole('button', { name: 'Trang sau', exact: true }).click();
   await logs.getByText('Không tải được check-in fixture.', { exact: true }).waitFor();
   failCheckins = false;
   await logs.getByRole('button', { name: 'Thử lại', exact: true }).click();
-  await expect(logs.getByText(/· Tự tập$/)).toHaveCount(30);
+  await expect(logs.getByText('Tự tập', { exact: true })).toHaveCount(30);
   for (let number = 3; number <= 5; number++) {
     await logs.getByRole('button', { name: 'Trang sau', exact: true }).click();
     await expect(logs.getByText('Trang ' + number, { exact: true })).toBeVisible();
-    await expect(logs.getByText(/· Tự tập$/)).toHaveCount(number === 5 ? 1 : 30);
+    await expect(logs.getByText('Tự tập', { exact: true })).toHaveCount(number === 5 ? 1 : 30);
   }
   await expect(logs.getByRole('button', { name: 'Trang sau', exact: true })).toBeDisabled();
   await page.getByRole('radio', { name: /Booking/ }).click();
   await expect(bookings.getByText('Trang 2', { exact: true })).toBeVisible();
   stage = 'switching customer resets data and pages';
-  await page.getByRole('radio', { name: /Other CRM Member fixture/ }).click();
+  await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
+  await page.getByRole('button', { name: /Xem chi tiết Other CRM Member fixture/ }).click();
   await page.getByText('Trạng thái tài khoản: Ngừng hoạt động', { exact: true }).waitFor();
   await page.getByRole('radio', { name: /Booking/ }).click();
   await expect(bookings.getByText('Trang 1', { exact: true })).toBeVisible();
   await expect(bookings.getByText('Đã lên lịch', { exact: true })).toHaveCount(0);
-  await page.getByRole('radio', { name: /CRM Trial fixture/ }).click();
+  await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
+  await page.getByRole('button', { name: /Xem chi tiết CRM Trial fixture/ }).click();
   await page.getByText('Họ tên: CRM Trial fixture', { exact: true }).waitFor();
   assert.equal(await page.getByText('Thông tin Member chính thức', { exact: true }).count(), 0);
+  await page.getByRole('button', { name: 'Đóng chi tiết', exact: true }).click();
   stage = 'Sales default OPEN, closed/all filters and reset to page 1';
   await page.getByRole('link', { name: 'Sales / Cảnh báo', exact: true }).click();
   await expect(page.getByText('Open CRM fixture', { exact: true })).toHaveCount(30);

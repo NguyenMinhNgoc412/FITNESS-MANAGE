@@ -54,6 +54,7 @@ Các nguyên tắc khóa:
 - Auth/RBAC: `docs/06-business-auth-role-access-sot.md`, `docs/17-tech-security-audit-sot.md`, `docs/16-tech-api-contract-sot.md`.
 - Trial/CRM: `docs/07-business-lead-trial-conversion-sot.md`, `docs/08-business-membership-package-sot.md`, `docs/13-business-sales-trigger-notification-sot.md`.
 - Profile/PT: `docs/09-business-member-profile-pt-assignment-sot.md`.
+- Nhật ký tập luyện/tiến bộ/số đo/thư viện bài Member: `docs/21-business-member-workout-sot.md`, `docs/06-business-auth-role-access-sot.md`, `docs/15-tech-data-model-storage-sot.md`, `docs/16-tech-api-contract-sot.md`, `docs/17-tech-security-audit-sot.md`.
 - Booking/schedule: `docs/10-business-booking-schedule-sot.md`, `docs/13-business-sales-trigger-notification-sot.md`.
 - Check-in/attendance: `docs/11-business-checkin-attendance-sot.md`, `docs/12-business-external-pt-pass-sot.md`.
 - AI/privacy: `docs/14-business-ai-form-analysis-sot.md`, `docs/18-tech-local-ai-privacy-sot.md`.

@@ -1,1 +1,1 @@
-export { MemberHome as default } from '../../src/screens/home';
+export { default } from '../../src/screens/workouts';

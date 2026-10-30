@@ -1,0 +1,549 @@
+{
+  "push-up": {
+    "nameEn": "Push-up",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "push-up-0.jpg",
+      "push-up-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Pushups",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "push-up-0.jpg": "8e6757ae0dc1d50a30f0ea67cdb330994947716a106451860cf7362bcd15f9f4",
+      "push-up-1.jpg": "e835d50facea325828d7a3700185a0d8ba9f908db3f033334f81a6f85f774f27"
+    }
+  },
+  "dumbbell-bench-press": {
+    "nameEn": "Dumbbell bench press",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "dumbbell-bench-press-0.jpg",
+      "dumbbell-bench-press-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Dumbbell_Bench_Press",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "dumbbell-bench-press-0.jpg": "06494fc5d679283ad7de10fd60149e543396bbd9ba65b0821937de317ce9e001",
+      "dumbbell-bench-press-1.jpg": "29ce1d1335b10ae5e92b208c512f4f562493379a9c49bafb249f945c5b702299"
+    }
+  },
+  "lat-pulldown": {
+    "nameEn": "Lat pulldown",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "lat-pulldown-0.jpg",
+      "lat-pulldown-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Wide-Grip_Lat_Pulldown",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "lat-pulldown-0.jpg": "929bc29751c35d0a624840b24501e74dc59438d351e66cc017e7ee8682fb3346",
+      "lat-pulldown-1.jpg": "781952e629e8a4cff549df94ee6b1da7e32c7cd507382d47e8566718c07807dd"
+    }
+  },
+  "one-arm-row": {
+    "nameEn": "One-arm dumbbell row",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "one-arm-row-0.jpg",
+      "one-arm-row-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/One-Arm_Dumbbell_Row",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "one-arm-row-0.jpg": "04b2f49e6ba0c2fce5f566fe53d03571715fa58350a2b8558b3dfa9110093a53",
+      "one-arm-row-1.jpg": "83d5ceaa6d9ec6732f0afedaaa9a842c34cfdedce89e6fed75681c0bf971174a"
+    }
+  },
+  "seated-dumbbell-press": {
+    "nameEn": "Seated dumbbell shoulder press",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "seated-dumbbell-press-0.jpg",
+      "seated-dumbbell-press-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Dumbbell_Shoulder_Press",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "seated-dumbbell-press-0.jpg": "e0a775bfa0b32b63c84f19fba2b1a05db535bde849feb3e54a3479a943b3bed6",
+      "seated-dumbbell-press-1.jpg": "940d5aad6b85960e833f88e218de8ce4f806d84cf2764741f1cbff9cce365d84"
+    }
+  },
+  "lateral-raise": {
+    "nameEn": "Dumbbell lateral raise",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "lateral-raise-0.jpg",
+      "lateral-raise-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Side_Lateral_Raise",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "lateral-raise-0.jpg": "aa1982c367ea9151ee7769ac1f9f8795209db94a6eb85f7d51a7033886fb7ebc",
+      "lateral-raise-1.jpg": "9210e0fb0202c306026d45a55703aaec89b3bef7aafeb7791aa1d06adcf58ab3"
+    }
+  },
+  "dumbbell-curl": {
+    "nameEn": "Dumbbell biceps curl",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "dumbbell-curl-0.jpg",
+      "dumbbell-curl-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Seated_Dumbbell_Curl",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "dumbbell-curl-0.jpg": "09eaabb7368cbc2f87ed27b0da4c66042fe84b2ea64825c925798db3dd042550",
+      "dumbbell-curl-1.jpg": "63a97b19561b2684e119b3d0f498c5e0dd9b502a291b35fd25d45591cb32dcf0"
+    }
+  },
+  "hammer-curl": {
+    "nameEn": "Hammer curl",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "hammer-curl-0.jpg",
+      "hammer-curl-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Hammer_Curls",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "hammer-curl-0.jpg": "f3c330d75545bed1cc325a4abf84940109db64fa5ab967b1963ecccccd3b2fe8",
+      "hammer-curl-1.jpg": "42adf0d1577528fdfab45b360918320394a5017b082d2502ab3a00600622907e"
+    }
+  },
+  "triceps-pushdown": {
+    "nameEn": "Cable triceps pushdown",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "triceps-pushdown-0.jpg",
+      "triceps-pushdown-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Triceps_Pushdown",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "triceps-pushdown-0.jpg": "5f52b0f699fcd01bcf07053d9abe26e428f227816d62bc61a3232435715b5e7e",
+      "triceps-pushdown-1.jpg": "76f7793452cebb4f00846f9fd5ce3306d90d4b1912b192125cd428c2d8b76a3c"
+    }
+  },
+  "overhead-triceps-extension": {
+    "nameEn": "Dumbbell overhead triceps extension",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "overhead-triceps-extension-0.jpg",
+      "overhead-triceps-extension-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Standing_Dumbbell_Triceps_Extension",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "overhead-triceps-extension-0.jpg": "f1689989803e4463fb92bcc955d96b422f6f5ef9ebd23d9a9e9547ab1242932f",
+      "overhead-triceps-extension-1.jpg": "9fd2a8098c9a042300789e542f651d599114adbb3f070dfe44a0c9e3d3bdcd0c"
+    }
+  },
+  "bodyweight-squat": {
+    "nameEn": "Bodyweight squat",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "bodyweight-squat-0.jpg",
+      "bodyweight-squat-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Bodyweight_Squat",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "bodyweight-squat-0.jpg": "85715b9b75afe568ef7cb1863005be532a2457bf7e340802da0cd5cc06914b62",
+      "bodyweight-squat-1.jpg": "3fa6886632674f02308cdee53ce32649fd648774701fbd20ee280d63be40e5a4"
+    }
+  },
+  "leg-extension": {
+    "nameEn": "Leg extension",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "leg-extension-0.jpg",
+      "leg-extension-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Leg_Extensions",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "leg-extension-0.jpg": "54fd46441d63459e3cdd26f26b826ad049e835fb7f1984b42398fdfbdefb5bfa",
+      "leg-extension-1.jpg": "9e04d0e306d8fee608305766b14a56df1d1312956d374152f58dcbf267d591a9"
+    }
+  },
+  "seated-leg-curl": {
+    "nameEn": "Seated leg curl",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "seated-leg-curl-0.jpg",
+      "seated-leg-curl-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Seated_Leg_Curl",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "seated-leg-curl-0.jpg": "c84ece2e8b52314c8605e9fc3ef1930a59fec475ff1b5a7f98687a4b8fc580a7",
+      "seated-leg-curl-1.jpg": "2cbd4aa6c22162a209a7ced5d1a68274d44e88780c8c3936c7fab57d6e9918fd"
+    }
+  },
+  "glute-bridge": {
+    "nameEn": "Glute bridge",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "glute-bridge-0.jpg",
+      "glute-bridge-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Butt_Lift_Bridge",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "glute-bridge-0.jpg": "f74f6813fc43cd5f60e6779ec182049a2ddb3ed9dc5777389dd4ab1880392d5c",
+      "glute-bridge-1.jpg": "3eacd0851b56e3e1ea29a0a73c596b0d10e4bc746dd64afaed50d7255eae0819"
+    }
+  },
+  "barbell-hip-thrust": {
+    "nameEn": "Barbell hip thrust",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "barbell-hip-thrust-0.jpg",
+      "barbell-hip-thrust-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Barbell_Hip_Thrust",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "barbell-hip-thrust-0.jpg": "b2c82d4647df0621e2b0568f383d14e9577f2baa458668233c86d2f738efd4c1",
+      "barbell-hip-thrust-1.jpg": "de1a6390ff4b2720750ed3380c3c9b0c4c1fb5ae811810291b62d8a1fd726ad6"
+    }
+  },
+  "seated-calf-raise": {
+    "nameEn": "Seated calf raise",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "seated-calf-raise-0.jpg",
+      "seated-calf-raise-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Seated_Calf_Raise",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "seated-calf-raise-0.jpg": "6f1e5d06681b9d7050531622e065391fd3adb8d18e41a23fb80c62cf99c88d63",
+      "seated-calf-raise-1.jpg": "c397665d9d93377db1a579a6c7a3ab4b2b92428706df545fffcc7cb35e7ec738"
+    }
+  },
+  "crunch": {
+    "nameEn": "Crunch",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "crunch-0.jpg",
+      "crunch-1.jpg"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": false,
+    "credit": "free-exercise-db · yuhonas và cộng tác viên",
+    "license": "Unlicense / Public Domain",
+    "licenseUrl": "https://unlicense.org/",
+    "sourceUrl": "https://github.com/yuhonas/free-exercise-db/tree/f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises/Crunches",
+    "sourceCommit": "f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": null,
+    "sha256": {
+      "crunch-0.jpg": "8b424d42b3196b9b6fdd70c86db60ba6fdae7a337710e8c01c278a6ea5c4220a",
+      "crunch-1.jpg": "84df8957fcc20c051475a2d28fedb0c1a3b3e63b00913ae4acec1ed0dc150d22"
+    }
+  },
+  "dead-bug": {
+    "nameEn": "Dead bug",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "dead-bug-0.png",
+      "dead-bug-1.png",
+      "dead-bug-2.png"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": true,
+    "credit": "Bryl Lim / Everkinetic",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "sourceUrl": "https://github.com/bryllim/workout-guide/tree/aac599224bb9780305239607ef98540b7e0ce389/packages/workout-guide/assets/dead-bug",
+    "sourceCommit": "aac599224bb9780305239607ef98540b7e0ce389",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": [
+      {
+        "index": 1,
+        "path": "assets/dead-bug/frame-1.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      },
+      {
+        "index": 2,
+        "path": "assets/dead-bug/frame-2.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      },
+      {
+        "index": 3,
+        "path": "assets/dead-bug/frame-3.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      }
+    ],
+    "sha256": {
+      "dead-bug-0.png": "e96abfed2b700496c7f452cbf17f646d0d620fa01970ad7f680bbdff65249703",
+      "dead-bug-1.png": "931eee4775bb7a8305a04642a081506f03f999423f87ba033b2625c75f1e58cd",
+      "dead-bug-2.png": "cdbf2452c8b7fa7f07aead3088a64953f3836492f6638fdbe91c7e824dea0974"
+    }
+  },
+  "standing-calf-raise": {
+    "nameEn": "Standing calf raise",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "standing-calf-raise-0.png",
+      "standing-calf-raise-1.png",
+      "standing-calf-raise-2.png"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": true,
+    "credit": "Bryl Lim / Everkinetic",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "sourceUrl": "https://github.com/bryllim/workout-guide/tree/aac599224bb9780305239607ef98540b7e0ce389/packages/workout-guide/assets/calf-raise",
+    "sourceCommit": "aac599224bb9780305239607ef98540b7e0ce389",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": [
+      {
+        "index": 1,
+        "path": "assets/calf-raise/frame-1.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      },
+      {
+        "index": 2,
+        "path": "assets/calf-raise/frame-2.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      },
+      {
+        "index": 3,
+        "path": "assets/calf-raise/frame-3.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      }
+    ],
+    "sha256": {
+      "standing-calf-raise-0.png": "fccd41d7262633b7e021e0103d1331159be2182b8f88824bdba2bbc19055ade7",
+      "standing-calf-raise-1.png": "b9132c8377dfb67777ea8d9f1c6b2d9c3dd9a2a603108e3bdfde279596d84806",
+      "standing-calf-raise-2.png": "a44a17a79ae429dfbc4a66219477d5d4f10e936d3c0b8f8e9663780d5ad6ee5a"
+    },
+    "note": "Minh họa dùng tay vịn thay tường để giữ thăng bằng; không thêm tạ."
+  },
+  "dumbbell-rdl": {
+    "nameEn": "Dumbbell Romanian deadlift",
+    "catalogVersion": 1,
+    "frameFiles": [
+      "dumbbell-rdl-0.png",
+      "dumbbell-rdl-1.png",
+      "dumbbell-rdl-2.png"
+    ],
+    "intervalMs": 1000,
+    "darkBackground": true,
+    "credit": "Bryl Lim / Everkinetic",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "sourceUrl": "https://github.com/bryllim/workout-guide/tree/aac599224bb9780305239607ef98540b7e0ce389/packages/workout-guide/assets/dumbbell-romanian-deadlift",
+    "sourceCommit": "aac599224bb9780305239607ef98540b7e0ce389",
+    "reviewedAt": "2026-10-30",
+    "sourceAttribution": [
+      {
+        "index": 1,
+        "path": "assets/dumbbell-romanian-deadlift/frame-1.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      },
+      {
+        "index": 2,
+        "path": "assets/dumbbell-romanian-deadlift/frame-2.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      },
+      {
+        "index": 3,
+        "path": "assets/dumbbell-romanian-deadlift/frame-3.svg",
+        "width": 512,
+        "height": 512,
+        "format": "svg",
+        "attribution": {
+          "creator": "Bryl Lim",
+          "creatorUrl": "https://bryllim.com",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+        }
+      }
+    ],
+    "sha256": {
+      "dumbbell-rdl-0.png": "a38ea2db48b6d5f10d8f1b9177d65a1b028a7df84cf1d8b275ba62abeade1663",
+      "dumbbell-rdl-1.png": "2ff5a87aeda3503139628aabba11f07a00393a21757e61b4ded9933349863f10",
+      "dumbbell-rdl-2.png": "0c3e0195d4cd9b0daa9017c78870c2dc865b39bdd9e73ad427b7926a76be5835"
+    }
+  }
+}

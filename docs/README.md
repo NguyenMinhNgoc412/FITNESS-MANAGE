@@ -96,15 +96,24 @@ Codex **không được tự bổ sung feature, role, workflow hoặc provider**
 | `18-tech-local-ai-privacy-sot.md` | Local video, MediaPipe, SQLite, File System, JSON-only cloud |
 | `19-Agent-task-splitting-sot.md` | Thứ tự và cách chia task Codex |
 | `20-testing-acceptance-sot.md` | Test matrix và release gate |
+| [21-business-member-workout-sot.md](21-business-member-workout-sot.md) | Nhật ký, tiến bộ, số đo cơ thể và thư viện bài Member |
 | `CHANGELOG.md` | Lịch sử thay đổi SOT |
 
 ---
+
+Cấu trúc service và component/hook dùng chung của hoạt động tập luyện sau review nằm tại [SOT 03](03-technical-architecture-sot.md); nghiệp vụ vẫn theo SOT 21.
+
+## Proposal lịch sử — không thay thế SOT canonical
+
+Hướng dẫn kiểm thử: [30 Member và lịch sử hoạt động nhiều ngày](testing-activity-scenario.md), dùng MongoDB test riêng và giữ dataset/báo cáo để kiểm tra lại; không thay thế nghiệp vụ SOT 21.
+
+- [Proposal hoạt động tập luyện](proposals/member-workout-journal-progress.md): lịch sử thảo luận trước triển khai. Owner đã yêu cầu thực hiện ngày 2026-10-28; dùng [SOT 21](21-business-member-workout-sot.md) làm nguồn hiện hành.
 
 ## 4. Quy tắc ưu tiên khi mâu thuẫn
 
 1. `01` quyết định **sản phẩm tồn tại để làm gì và boundary**.
 2. `02` quyết định **feature/behavior nào thuộc scope**.
-3. Các file business `06`–`14` quyết định **nghiệp vụ chi tiết**.
+3. Các file business `06`–`14` và `21` quyết định **nghiệp vụ chi tiết**.
 4. `03` quyết định **kiến trúc cấp hệ thống**.
 5. `04` quyết định **tech stack/provider**.
 6. Các file technical `15`–`18` quyết định **implementation contract kỹ thuật**.
@@ -173,3 +182,6 @@ Nếu hai file cùng cấp mâu thuẫn, **dừng implement và báo rõ hai đo
 - Thay đổi UI/UX: sửa `05`.
 - Thêm/xóa/đổi tên file: cập nhật `README` và `CHANGELOG`.
 - Không duplicate đặc tả chi tiết vào file tổng quát.
+
+
+Minh họa 20 bài Member theo yêu cầu 2026-10-30: quyết định tại SOT 21/SOT 05; nguồn, giấy phép và hash từng ảnh tại [exercise-demos/README](../apps/app/assets/exercise-demos/README.md) và provenance.json cùng thư mục. Kiểm tra assets bằng `node scripts/verify-exercise-demos.cjs`; kết quả thực tế ở SOT 20.

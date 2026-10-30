@@ -1,25 +1,57 @@
-import { useState } from 'react';
-import { Card, Choices, Label, LoadState, Page, Pager, RecordPicker, Badge } from '../ui';
+import { useRef, useState } from 'react';
+import { Pressable, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Badge, Button, Choices, Label, LoadState, styles } from '../ui';
 import { Form } from '../components/form';
+import { DetailModal } from '../components/detail-modal';
+import { PeopleDetail } from '../components/people-detail';
 import { mutation } from '../lib/http';
 import { useLoad } from '../hooks/use-load';
 import { Person } from '../models';
-import { MemberPackageSummary } from './packages';
+import { colors, controlSize, spacing } from '../design-system/theme';
+
 export default function People() {
-  const [role, setRole] = useState('PT'), [page, setPage] = useState(1), [selected, setSelected] = useState('');
-  const [ptPage, setPtPage] = useState(1);
-  const state = useLoad<Person[]>('/people?role=' + role + '&page=' + page), pts = useLoad<Person[]>('/people?role=PT&page=' + ptPage);
-  const history = useLoad<{ id: string; ptId: string; status: string; reason: string }[]>(selected && role === 'MEMBER' ? '/members/' + selected + '/pt-assignment/history' : null);
-  return <Page title="PT & Member" subtitle="Owner quản lý hồ sơ, gói tập và PT chính của Member.">
-    {role === 'MEMBER' && <Card title="Trang PT để chọn assignment"><Pager page={ptPage} setPage={setPtPage} more={pts.data?.length === 30} /></Card>}
-    <Choices value={role} onChange={v => { setRole(v); setPage(1); setSelected(''); }} options={[{ value: 'PT', label: 'Huấn luyện viên' }, { value: 'MEMBER', label: 'Hội viên' }]} />
-    <Card title={role === 'PT' ? 'Tạo PT nội bộ' : 'Tạo Member mới'}><Form key={role} fields={[{ name: 'fullName', label: 'Họ tên' }, { name: 'phone', label: 'SĐT', numeric: true }, { name: 'cccd', label: 'CCCD', numeric: true }, { name: 'password', label: 'Mật khẩu (ít nhất 10 ký tự)', secret: true }]} submit={(v, k) => mutation('/people', { ...v, role }, k)} onSuccess={() => void state.reload()} /></Card>
-    <LoadState state={state} empty={!state.data?.length} emptyText={role === 'PT' ? 'Chưa có PT nội bộ.' : 'Chưa có Member chính thức.'} /><RecordPicker label={role === 'PT' ? 'Danh sách PT' : 'Danh sách Member'} value={selected} onChange={setSelected} options={(state.data ?? []).map(p => ({ value: p.id, label: p.profile.fullName, meta: p.phone }))} /><Pager page={page} setPage={setPage} more={state.data?.length === 30} />
-    {selected ? <>{role === 'MEMBER' ? <MemberPackageSummary key={selected + ':packages'} memberId={selected} /> : null}<Card title="Cập nhật hồ sơ"><Form key={selected} fields={[{ name: 'fullName', label: 'Họ tên mới (để trống nếu giữ nguyên)' }, { name: 'cccd', label: 'CCCD mới (để trống nếu giữ nguyên)', numeric: true }, { name: 'status', label: 'Trạng thái', options: [{ value: 'ACTIVE', label: 'Hoạt động' }, { value: 'INACTIVE', label: 'Ngừng hoạt động' }, { value: 'LOCKED', label: 'Khóa' }] }, { name: 'reason', label: 'Lý do thay đổi' }]} submit={(v, k) => mutation('/people/' + selected, Object.fromEntries(Object.entries(v).filter(([, value]) => value !== '')), k, 'patch')} onSuccess={() => void state.reload()} /></Card>
-      {role === 'MEMBER' && <><Card title="Gán / đổi PT chính"><LoadState state={pts} /><Form key={selected + ':pt'} fields={[{ name: 'ptId', label: 'PT nội bộ', picker: true, options: (pts.data ?? []).filter(p => p.status === 'ACTIVE').map(p => ({ value: p.id, label: p.profile.fullName })) }, { name: 'reason', label: 'Lý do' }]} submit={(v, k) => mutation('/members/' + selected + '/pt-assignment', v, k)} onSuccess={() => void history.reload()} /></Card>
-        <Card title="Hủy assignment"><Form danger fields={[{ name: 'reason', label: 'Lý do hủy' }]} label="Xác nhận hủy PT" submit={(v, k) => mutation('/members/' + selected + '/pt-assignment', v, k, 'delete')} onSuccess={() => void history.reload()} /></Card>
-        <Card title="Lịch sử assignment"><LoadState state={history} empty={!history.data?.length} />{history.data?.map(item => <Card key={item.id}><Badge value={item.status} /><Label>{pts.data?.find(p => p.id === item.ptId)?.profile.fullName ?? 'PT nội bộ'}</Label><Label muted>{item.reason}</Label></Card>)}</Card>
-      </>}
-    </> : null}
-  </Page>;
+  const { width } = useWindowDimensions();
+  const [role, setRole] = useState('PT'), [serverPage, setServerPage] = useState(1), [part, setPart] = useState(0);
+  const [selected, setSelected] = useState<Person | null>(null), [creating, setCreating] = useState(false), [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState(''), [capacity, setCapacity] = useState(3);
+  const lock = useRef(false);
+  const state = useLoad<Person[]>('/people?role=' + role + '&page=' + serverPage);
+  const filtered = (state.data ?? []).filter(p => (p.profile.fullName + ' ' + p.phone).toLocaleLowerCase('vi').includes(query.trim().toLocaleLowerCase('vi')));
+  const lastPart = Math.max(0, Math.ceil(filtered.length / capacity) - 1), currentPart = Math.min(part, lastPart);
+  const shown = filtered.slice(currentPart * capacity, (currentPart + 1) * capacity);
+  const run = async (action: () => Promise<unknown>) => {
+    if (lock.current) throw new Error('Đang lưu thay đổi.');
+    lock.current = true; setBusy(true);
+    try { return await action(); } finally { lock.current = false; setBusy(false); }
+  };
+  const close = () => { if (!lock.current) { setSelected(null); setCreating(false); } };
+  const person = state.data?.find(p => p.id === selected?.id) ?? selected;
+  return <View style={{ flex: 1, minHeight: 0, backgroundColor: colors.background, padding: width < 600 ? spacing.lg : spacing.xl, gap: spacing.md }}>
+    <View style={styles.row}><Text style={[width < 400 ? styles.heading : styles.title, { flex: 1 }]}>PT & Member</Text><Button label={role === 'PT' ? 'Thêm PT' : 'Thêm Member'} onPress={() => setCreating(true)} /></View>
+    <Choices value={role} onChange={v => { setRole(v); setServerPage(1); setPart(0); setQuery(''); }} options={[{ value: 'PT', label: 'Huấn luyện viên' }, { value: 'MEMBER', label: 'Hội viên' }]} />
+    <View style={{ gap: spacing.xs }}><Label muted>Lọc nhóm hiện tại · tên hoặc SĐT</Label><TextInput accessibilityLabel="Lọc nhóm hiện tại theo tên hoặc SĐT" placeholder="Lọc nhóm hiện tại: tên hoặc SĐT" placeholderTextColor={colors.textMuted} style={styles.input} value={query} onChangeText={v => { setQuery(v); setPart(0); }} /></View>
+    <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }} onLayout={event => {
+      const count = Math.max(1, Math.min(10, Math.floor(event.nativeEvent.layout.height / 80)));
+      const next = [1, 2, 3, 5, 6, 10].filter(n => n <= count).pop() ?? 1;
+      if (next !== capacity) { setCapacity(next); setPart(0); }
+    }}>
+      <LoadState state={state} empty={!filtered.length} emptyText={query ? 'Không có kết quả trong nhóm hiện tại. Xóa bộ lọc hoặc chuyển nhóm tiếp theo.' : role === 'PT' ? 'Chưa có PT nội bộ.' : 'Chưa có Member chính thức.'} />
+      {!state.loading && !state.error && shown.map(p => <PersonRow key={p.id} person={p} onPress={() => setSelected(p)} />)}
+    </View>
+    <View style={[styles.row, { justifyContent: 'space-between', gap: spacing.xs }]}>
+      <Button secondary label="Trang trước" disabled={state.loading || (serverPage === 1 && currentPart === 0)} onPress={() => { if (currentPart > 0) setPart(currentPart - 1); else { setServerPage(serverPage - 1); setPart(Math.ceil(30 / capacity) - 1); setQuery(''); } }} />
+      <Label>Trang {(serverPage - 1) * (30 / capacity) + currentPart + 1}</Label>
+      <Button secondary label="Trang sau" disabled={state.loading || !!state.error || (currentPart === lastPart && state.data?.length !== 30)} onPress={() => { if (currentPart < lastPart) setPart(currentPart + 1); else { setServerPage(serverPage + 1); setPart(0); setQuery(''); } }} />
+    </View>
+    {(creating || person) && <DetailModal title={creating ? (role === 'PT' ? 'Tạo PT nội bộ' : 'Tạo Member mới') : person!.profile.fullName} busy={busy} onClose={close}>
+      {creating ? <Form fields={[{ name: 'fullName', label: 'Họ tên' }, { name: 'phone', label: 'SĐT', numeric: true }, { name: 'cccd', label: 'CCCD', numeric: true }, { name: 'password', label: 'Mật khẩu (ít nhất 10 ký tự)', secret: true }]} label="Tạo hồ sơ" submit={(v, k) => run(() => mutation('/people', { ...v, role }, k))} onSuccess={() => { close(); setServerPage(1); setPart(0); setQuery(''); void state.reload(); }} /> : <PeopleDetail key={person!.id} person={person!} busy={busy} run={run} onUpdated={() => void state.reload()} />}
+    </DetailModal>}
+  </View>;
+}
+
+function PersonRow({ person, onPress }: { person: Person; onPress: () => void }) {
+  const [focused, setFocused] = useState(false), [hovered, setHovered] = useState(false);
+  return <Pressable testID="person-row" accessibilityRole="button" accessibilityLabel={'Xem chi tiết ' + person.profile.fullName} onPress={onPress} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} onHoverIn={() => setHovered(true)} onHoverOut={() => setHovered(false)} style={({ pressed }) => ({ minHeight: controlSize.touch, height: 80, paddingVertical: spacing.sm, paddingHorizontal: spacing.xs, borderWidth: 1, borderColor: focused ? colors.focus : colors.transparent, borderBottomColor: focused ? colors.focus : colors.border, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: pressed || hovered ? colors.surfaceMuted : colors.transparent })}>
+    <View style={{ flex: 1, minWidth: 0 }}><Text numberOfLines={1} style={styles.text}>{person.profile.fullName}</Text><Text style={styles.muted}>{person.phone}</Text></View><Badge value={person.status} /><Text style={styles.muted}>›</Text>
+  </Pressable>;
 }

@@ -41,7 +41,8 @@ async function main() {
     await page.route('**/api/**', async route => {
       const req=route.request(), url=new URL(req.url()); let data=[];
       const fulfill=(value,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(value)});
-      if(url.pathname.endsWith('/auth/login')) data={accessToken:'synthetic-access',refreshToken:'synthetic-refresh',user:{id:'222222222222222222222222',role}};
+      if(url.pathname==='/api/members/me/workouts') data={items:[],total:0,page:1,pageSize:20};
+      else if(url.pathname.endsWith('/auth/login')) data={accessToken:'synthetic-access',refreshToken:'synthetic-refresh',user:{id:'222222222222222222222222',role}};
       else if(url.pathname.endsWith('/auth/me')) data={id:'222222222222222222222222',role,profile:{fullName:'Synthetic PT'}};
       else if(url.pathname.endsWith('/me/qr')) {qrReads++; data={token,expiresIn:120};}
       else if(url.pathname.endsWith('/dashboard')) data={checkins:0,trials:0,alerts:0,trialFinal:0,membershipExpiring:0,bookingsToday:0,ptsToday:0,bookings:[]};

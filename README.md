@@ -10,7 +10,7 @@ Repository đang phát triển theo phạm vi MVP. Hướng dẫn dưới đây 
 |---|---|
 | Owner | Tiếp nhận Trial 3 buổi, chuyển Trial thành Member, quản lý gói tập, PT, booking từng buổi, check-in, External PT Pass và cảnh báo chăm sóc khách hàng. |
 | PT | Xem lịch và Member được phân công; ghi nhận PT check-in độc lập. |
-| Member | Xem gói tập, lịch, mã QR check-in, xác nhận yêu cầu dùng PT ngoài và kiểm tra form bài tập bằng AI. |
+| Member | Xem gói tập, lịch, QR check-in, xác nhận PT ngoài, nhật ký/tiến bộ, cân nặng/chiều cao, bài tập mẫu và AI kiểm tra form. |
 
 ### Quy tắc nghiệp vụ chính
 
@@ -20,6 +20,12 @@ Repository đang phát triển theo phạm vi MVP. Hướng dẫn dưới đây 
 - Chỉ Owner tạo, sửa hoặc hủy booking; lịch phải chống trùng cho cả PT và Member.
 - Member/Trial có một lượt vào tập mỗi ngày UTC+7. PT attendance là log độc lập, không tự ghép với Member check-in để kết luận attendance của booking.
 - Owner có báo cáo người đăng ký gói và lượt check-in theo tháng; số liệu này không phải báo cáo doanh thu.
+
+### Hoạt động tập luyện Member
+
+Hoạt động tập luyện mở từ **Trang chủ Member → Hoạt động tập luyện**, gồm nhật ký bài/hiệp/lần/tạ, biểu đồ, số đo cơ thể và 20 bài mẫu thuộc 10 nhóm cơ. Dữ liệu tự ghi chỉ Member sở hữu xem, độc lập check-in/quota. Chi tiết [SOT 21](docs/21-business-member-workout-sot.md).
+
+Khi rollout phiên bản này, dừng API/seed cũ, chạy lần lượt `pnpm --filter @fitness/api prisma:generate`, `prisma:validate`, `db:push`, `db:indexes`, `db:seed-exercises` (cùng prefix `pnpm --filter @fitness/api` cho từng lệnh), rồi khởi động API mới. Seed thư viện không tạo Member hoặc sửa dữ liệu cá nhân; chạy lại không reset nội dung/trạng thái catalog cũ. Không dùng Prisma migrate với MongoDB. Task chỉ chạy schema/index/seed trên database test riêng; môi trường nghiệp vụ cần được cập nhật khi triển khai.
 
 ### AI kiểm tra form và quyền riêng tư
 
@@ -178,6 +184,8 @@ Integration test cần MongoDB replica set và database test **riêng**; runner 
 $env:TEST_DATABASE_URL='mongodb://127.0.0.1:27027/fitness_test_sot_rebuild?replicaSet=rs0&directConnection=true'
 pnpm --filter @fitness/api test:integration
 ```
+
+Để tạo **30 Member với gói, điểm danh, nhật ký và số đo nhiều ngày**, đồng thời giữ dữ liệu sau test, dùng runner riêng `pnpm --filter @fitness/api test:activity-scenario`. Bật `SCENARIO_BROWSER=1` để kiểm tra web với API/MongoDB thật. Xem [hướng dẫn scenario và báo cáo](docs/testing-activity-scenario.md); runner này chỉ chấp nhận database local rỗng `fitness_test_activity_*`, không reset/drop dataset.
 
 ## File được lưu trên GitHub
 
