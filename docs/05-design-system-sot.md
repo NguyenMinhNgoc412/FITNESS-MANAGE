@@ -394,3 +394,7 @@ Loading khóa playback; lỗi ảnh giữ hướng dẫn văn bản/nút chọn 
 - Lỗi ảnh minh họa dùng trạng thái gọn: bỏ khung ảnh trống và control playback bị khóa, chỉ giữ thông báo/tải lại/nguồn và hướng dẫn. Retry dựng lại khung khi người dùng chủ động chọn, không giữ khoảng trắng cho media không tải được.
 - Combo box native Nhóm cơ/Dụng cụ dùng một trạng thái mở ở parent, mở ô này đóng ô kia. Chọn giá trị, tìm bài, mở detail hoặc thu/mở bộ lọc đều đóng danh sách; Android Back đóng dropdown trước khi rời màn. Giữ giá trị lọc và query/page hiện hành. Web tiếp tục native select của browser.
 - Popup chi tiết bài có CTA Chọn bài vào buổi nháp ở footer cố định, ngoài ScrollView, chỉ hiện khi detail tải thành công. Header/footer không co lại; nội dung giữa cuộn riêng. Chiều cao modal trừ cả safe-area top/bottom để CTA/close nằm trong viewport cả mobile ngang. Popup khác không có footer giữ flow hiện hành. Không đổi quyền, dữ liệu hoặc cách chọn bài vào nhật ký.
+
+## Công tắc thông báo — 2026-10-31
+
+Mục Thông báo trong Tài khoản dùng Switch bật/tắt thay nút gửi form, có nhãn trạng thái chữ, loading/pending và lỗi. Mobile bật đăng ký device token, tắt hủy đăng ký bằng API hiện có; lựa chọn lưu riêng theo tài khoản trên thiết bị trong SecureStore. Trạng thái đối chiếu quyền hệ điều hành khi mở màn hoặc trở lại foreground; lần đầu chưa có lựa chọn dùng quyền hệ điều hành để tương thích bản cũ. Web khóa công tắc và giải thích push chỉ khả dụng trên điện thoại. Không đổi quyền role, provider hoặc nghiệp vụ notification/fallback.

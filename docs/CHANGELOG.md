@@ -298,3 +298,8 @@ Mọi thay đổi quyết định sản phẩm/nghiệp vụ/architecture/stack/
 - Native MediaPipe trả landmarks tối thiểu qua bridge local v2; JS/web dùng chung phép đo góc, chọn gối đủ rõ và thuật toán so sánh. Không gửi face landmarks/frame/video và không lưu raw landmarks trong kết quả.
 - Guard binary native cũ/Expo Go, validate frame bridge và bỏ kết quả tới muộn sau cancel. Giao diện cùng report/input tham chiếu trên mobile/web; dữ liệu cũ không tự bịa góc.
 - Cần rebuild/cài lại app native; SQLite/API/cloud contract không đổi, không thêm dependency/provider.
+
+## 2026-10-31 — Công tắc cài đặt thông báo
+
+- Thay nút Cho phép thông báo bằng Switch trong Tài khoản dùng chung; có Bật/Tắt, pending/error và giải thích web không hỗ trợ push.
+- Dùng POST/DELETE device-token hiện có, lưu lựa chọn theo tài khoản trên thiết bị bằng SecureStore; không đổi API/database/dependency. Cập nhật SOT 05.
