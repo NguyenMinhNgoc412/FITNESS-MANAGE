@@ -1,5 +1,19 @@
 # FITNESS-MANAGE SOT 20 — Testing & Acceptance
 
+## ExerciseLibrary text node web — 2026-11-03
+
+- FR-WORKOUT-009: điều kiện mở detail dùng boolean thay chuỗi selected để trạng thái chưa chọn/đóng popup không trả chuỗi rỗng trực tiếp dưới View. Không đổi UX, API hoặc dữ liệu.
+- `pnpm --filter @fitness/app lint`: PASS. `pnpm --filter @fitness/app exec expo export --platform web --dev --output-dir dist-sot-web`: PASS, log `.local/exercise-text-node-export.log`.
+- `pnpm --package=@playwright/test dlx -c "node scripts/workouts-regression.cjs"`: PASS trên bundle development, full flow và kiểm tra console không có Unexpected text node; bổ sung listener vì production export tắt cảnh báo View này. API mock; chưa chạy native thật.
+
+## Sửa review design system lịch/check-in — 2026-11-03
+
+- Cover FR-UI-001/004 và SOT 05: Member/PT xem lịch sử qua phân trang API 30 dòng, pager khóa khi tải; hàng lịch ba role và lịch hôm nay có cả bắt đầu–kết thúc. Không thay API, quyền, schema hoặc dữ liệu nghiệp vụ.
+- `pnpm --filter @fitness/app lint`: PASS. `pnpm test:app`: PASS 14 suites/65 tests.
+- `pnpm --filter @fitness/app exec expo export --platform web --output-dir dist-sot-web`: PASS; log `.local/design-review-export.log`.
+- `pnpm --package=@playwright/test dlx -c "node scripts/design-system-regression.cjs"`: PASS Owner/PT/Member với API mock; lịch sử 31 bản ghi chuyển trang 1 → 2 → 1, trang cuối khóa tiếp; hàng lịch PT/Member hiển thị cả 07:00 và 08:00. Giữ các assertions pending/destructive/menu/check-in và lịch read-only hiện có.
+- `git diff --check`: PASS (Git có cảnh báo chuẩn hóa LF/CRLF). Chưa xác minh native device hoặc API/MongoDB thật; không thực hiện mutation dữ liệu nghiệp vụ.
+
 ## Demo 30 trong app localhost:8081 — đối chiếu 2026-10-29
 
 - Theo yêu cầu Owner, xác định đúng app `http://localhost:8081/` → API `http://localhost:3000/api` → database `fitness_manage` theo apps/api/.env. Đã nhập bổ sung từ scenario real API/MongoDB PASS `fitness_test_activity_20261028122824429`, không đổi database app hoặc reset bản ghi cũ. Scenario chạy lại đạt 8.168 assertions / 1.777 HTTP requests, browser 20 bài/10 nhóm/Member/Owner PASS. Lượt đầu browser còn dùng câu chữ empty state cũ, đã cập nhật locator trong activity-scenario-browser.cjs rồi chạy full scenario lại PASS.

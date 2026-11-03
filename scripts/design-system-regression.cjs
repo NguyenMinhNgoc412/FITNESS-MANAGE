@@ -63,6 +63,11 @@ async function main() {
         else if (url.pathname === '/api/auth/me') body = { ...person, role };
         else if (url.pathname === '/api/dashboard') body = { checkins: 3, trials: 1, alerts: 2, trialFinal: 1, membershipExpiring: 1, bookingsToday: 1, ptsToday: 1, bookings: [booking] };
         else if (url.pathname === '/api/pt/me/qr') body = { token: 'synthetic-pt-qr-for-layout-only', expiresIn: 120 };
+        else if (url.pathname === '/api/members/me/qr') body = { token: 'synthetic-member-qr-for-layout-only', expiresIn: 120 };
+        else if (['/api/pt/me/attendance', '/api/members/me/checkins'].includes(url.pathname)) {
+          const second = url.searchParams.get('page') === '2';
+          body = Array.from({ length: second ? 1 : 30 }, (_, index) => ({ id: 'history-' + (second ? 30 : index), checkedInAt: second ? '2026-09-01T00:00:00.000Z' : '2026-10-20T00:00:00.000Z', context: 'SELF_TRAINING' }));
+        }
         else if (url.pathname === '/api/people') body = [url.searchParams.get('role') === 'PT' ? { ...person, id: ptId, role: 'PT', profile: { fullName: 'PT kiểm thử' } } : person];
         else if (url.pathname === '/api/customers/search') body = [{ id: '555555555555555555555555', memberUserId: memberId, fullName: person.profile.fullName, phone: person.phone, status: 'MEMBER' }];
         else if (url.pathname === '/api/bookings') {
@@ -184,9 +189,22 @@ async function main() {
       await expect(checkin).toBeEnabled();
       await page.screenshot({ path: path.join(output, 'counter-recovered.png'), fullPage: true });
     } else {
+      stage = role + ' check-in history pagination';
+      if (role === 'MEMBER') await page.getByRole('link', { name: 'Check-in', exact: true }).click();
+      const next = page.getByRole('button', { name: 'Trang sau', exact: true });
+      const previous = page.getByRole('button', { name: 'Trang trước', exact: true });
+      await expect(previous).toBeDisabled();
+      await expect(next).toBeEnabled();
+      await next.click();
+      await expect(page.getByRole('button', { name: /Xem chi tiết.*1\/9\/2026/ })).toHaveCount(1);
+      await expect(next).toBeDisabled();
+      await previous.click();
+      await expect(page.getByRole('button', { name: /Xem chi tiết.*20\/10\/2026/ })).toHaveCount(30);
       stage = role + ' retains read-only schedule';
       await page.getByRole('link', { name: 'Lịch', exact: true }).click();
       await page.getByText('Lịch do chủ phòng tập quản lý. Liên hệ chủ phòng tập khi cần thay đổi.', { exact: true }).waitFor();
+      await expect(page.getByTestId('booking-row')).toContainText('7:00:00');
+      await expect(page.getByTestId('booking-row')).toContainText('8:00:00');
       await page.getByTestId('booking-row').click();
       assert.equal(await page.getByRole('button', { name: 'Sửa lịch', exact: true }).count(), 0);
       assert.equal(await page.getByRole('button', { name: 'Tạo booking', exact: true }).count(), 0);

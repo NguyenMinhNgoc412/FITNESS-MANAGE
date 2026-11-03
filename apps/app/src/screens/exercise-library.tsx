@@ -59,7 +59,7 @@ export function ExerciseLibrary({ onSelect }: { onSelect?: (item: CatalogDetail)
       <View accessibilityLiveRegion="polite"><Label muted>{state.loading ? 'Đang tìm bài tập…' : state.error ? 'Chưa tải được kết quả.' : (state.data?.total ?? 0) + ' bài phù hợp' + (query ? ' với “' + query + '”' : '')}</Label></View>
       <LoadState state={state} empty={state.data?.total === 0} emptyText="Không có bài phù hợp. Thử đổi nhóm cơ, dụng cụ hoặc từ khóa." />
       <View>{!state.loading && !state.error && state.data?.items.map(item => <RecordRow key={item.id} title={item.nameVi} description={item.muscleGroups.map(g => muscleLabels[g]).join(', ') + ' · ' + item.equipmentCodes.map(e => equipmentLabels[e]).join(', ')} label={'Xem ' + item.nameVi} onPress={() => { setOpenFilter(null); setSelected(item.id); }} />)}</View>
-    {selected && <ExerciseDetail key={selected} id={selected} onClose={() => setSelected('')} onSelect={onSelect ? item => { setSelected(''); onSelect(item); } : undefined} />}
+    {!!selected && <ExerciseDetail key={selected} id={selected} onClose={() => setSelected('')} onSelect={onSelect ? item => { setSelected(''); onSelect(item); } : undefined} />}
     <Pager page={page} setPage={setPage} disabled={state.loading} more={page * 20 < (state.data?.total ?? 0)} /></View>
   </>;
 }

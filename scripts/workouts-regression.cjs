@@ -25,6 +25,10 @@ async function main() {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'Asia/Bangkok' });
   page = await context.newPage();
   const pageErrors = []; page.on('pageerror', e => pageErrors.push(e.message));
+  const textNodeErrors = [];
+  page.on('console', message => {
+    if (message.type() === 'error' && message.text().includes('Unexpected text node:')) textNodeErrors.push(message.text());
+  });
   let acceptDialog = true, dialogs = 0;
   page.on('dialog', dialog => { dialogs++; void (acceptDialog ? dialog.accept() : dialog.dismiss()); });
   const memberId = 'a'.repeat(24), workoutId = 'b'.repeat(24), measurementId = 'c'.repeat(24), catalogId = 'd'.repeat(24);
@@ -299,6 +303,7 @@ async function main() {
   await page.getByText('Lịch do chủ phòng tập quản lý. Liên hệ chủ phòng tập khi cần thay đổi.', { exact: true }).waitFor();
   assert.deepEqual(navigationDocuments, [], 'Guarded navigation reloaded the document');
   assert.deepEqual(forbiddenWrites, []); assert.deepEqual(pageErrors, []);
+  assert.deepEqual(textNodeErrors, [], 'React Native Web rendered text directly inside View');
   console.log('PASS: UX save-in-place/version/reload-failure, filter persistence, inline-error focus, responsive sets, summary-first and expandable tables; Member journal pending/retry/conflict/revisions, measurements, progress, catalog; design-system labels/selected state/semantic feedback/Vietnamese statuses/exercise search, 320/390/768/1280px. API mocked.');
 }
 main().catch(async e => { console.error('Workout browser regression failed at ' + stage + ': ' + e.message); if (page && !page.isClosed()) await page.screenshot({ path: path.join(out, 'failure.png'), fullPage: true }).catch(() => {}); process.exitCode = 1; }).finally(async () => { if (browser) await browser.close(); server.close(); });

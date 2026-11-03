@@ -38,7 +38,7 @@ export default function Bookings() {
     <LoadState state={state} empty={!state.data?.length} emptyText={owner ? 'Chưa có lịch. Chọn Tạo lịch tập để thêm buổi mới.' : 'Bạn chưa có lịch tập.'} />
     {Object.entries(grouped).map(([day, items]) => <View key={day} style={{ gap: spacing.sm }}>
       <Text style={styles.heading}>{new Date(day + 'T00:00:00').toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })} · {items.length} buổi</Text>
-      <View>{items.map(item => <PopupRow key={item.id} testID="booking-row" title={dateTime(item.startAt)} description={(item.memberName ?? 'Member') + ' · ' + (item.ptName ?? 'PT')} trailing={<Badge value={item.status} />} busy={busy}>
+      <View>{items.map(item => <PopupRow key={item.id} testID="booking-row" title={dateTime(item.startAt) + ' – ' + dateTime(item.endAt)} description={(item.memberName ?? 'Member') + ' · ' + (item.ptName ?? 'PT')} trailing={<Badge value={item.status} />} busy={busy}>
         <Label>{dateTime(item.startAt)} – {dateTime(item.endAt)}</Label><Label>{item.memberName ?? 'Member'} · {item.ptName ?? 'PT'}</Label><Badge value={item.status} />
         {!!item.cancelReason && <Label muted>Lý do: {item.cancelReason}</Label>}
         {owner && item.status !== 'CANCELLED' && <View style={styles.row}><Button secondary label="Sửa lịch" disabled={busy} onPress={() => { setEditing(item); setFormOpen(true); setCancelling(''); }} /><Button danger label="Hủy lịch" disabled={busy} onPress={() => setCancelling(item.id)} /></View>}

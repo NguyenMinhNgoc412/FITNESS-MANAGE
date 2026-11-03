@@ -1,5 +1,10 @@
 # FITNESS-MANAGE SOT — CHANGELOG
 
+## 2026-11-03 — Hoàn thiện design system lịch/check-in
+
+- Bổ sung phân trang lịch sử check-in Member/PT, khóa pager khi tải; hiển thị đủ khoảng giờ trên hàng lịch ba role và lịch hôm nay.
+- Giữ API, RBAC và business data; bổ sung browser regression chuyển trang lịch sử và khoảng giờ. Chi tiết UI tại SOT 05, kết quả kiểm tra tại SOT 20.
+
 ## 2026-10-30 — Sửa review design system thư viện Member
 
 - Thu gọn trạng thái ảnh lỗi; dropdown native chỉ mở một ô, đóng khi chọn/tìm/thu bộ lọc và xử lý Android Back.

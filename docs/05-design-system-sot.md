@@ -1,5 +1,10 @@
 # FITNESS-MANAGE SOT 05 — Design System & Role UI
 
+## Hoàn thiện lịch và lịch sử check-in — 2026-11-03
+
+- Lịch sử vào tập Member và attendance PT dùng Pager 30 dòng/trang theo API hiện hành; khóa chuyển trang khi đang tải, giữ loading/error/retry và empty state.
+- Hàng lịch ở màn Lịch ba role và khối lịch hôm nay Owner/PT hiển thị đủ thời điểm bắt đầu–kết thúc trước khi mở popup. Không thay quyền hoặc nghiệp vụ booking/check-in.
+
 ## Danh sách và thống kê dùng list → popup — 2026-10-29
 
 - Theo yêu cầu Owner, danh sách bản ghi dùng hàng có tên/thời gian, mô tả ngắn, trạng thái chữ và dấu mở chi tiết; bỏ card lặp lại theo từng bản ghi. Các hàng nằm trong một list container không có gap giữa record, padding dọc 8px và vùng chạm ít nhất 56px; tránh giữ lại khoảng cách vốn dành cho các card. Bấm hàng mở popup. Áp dụng khách hàng CRM, gói đã cấp/Pass, lịch ba role, Sales/Logs, thống kê gói/tháng, lịch sử PT/check-in, Member phụ trách, nhật ký/số đo/bài mẫu/revisions/biểu đồ và phiên AI/chi tiết từng lần. Control chọn hồ sơ trong form vẫn là selection list/radio, không biến thành thao tác mở detail.

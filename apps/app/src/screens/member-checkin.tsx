@@ -1,7 +1,7 @@
 import { PopupRow } from '../components/record-row';
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View, useWindowDimensions } from 'react-native';
-import { Button, Card, Label, LoadState, Page } from '../ui';
+import { Button, Card, Label, LoadState, Page, Pager } from '../ui';
 import { dateTime } from '../lib/date-time';
 import { useLoad } from '../hooks/use-load';
 import { qrMatrix } from '../qr';
@@ -18,9 +18,10 @@ export function CheckinQr({ endpoint }: { endpoint: string }) {
       <Text style={{ textAlign: 'center' }}>Còn {remaining} giây</Text><Button label="Làm mới QR" pending={state.loading} onPress={() => void state.reload()} /></Card>;
 }
 export default function MemberCheckin() {
-  const logs = useLoad<Checkin[]>('/members/me/checkins');
+  const [page, setPage] = useState(1);
+  const logs = useLoad<Checkin[]>('/members/me/checkins?page=' + page);
   return <Page title="Mã check-in" subtitle="Đưa QR cho chủ phòng tập. Quyền vào tập được kiểm tra tại quầy.">
     <CheckinQr endpoint="/members/me/qr" />
-    <Card title="Lịch sử vào tập"><LoadState state={logs} empty={!logs.data?.length} /><View>{logs.data?.map(log => <PopupRow key={log.id} title={dateTime(log.checkedInAt)} description={log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : 'PT ngoài'}><Label>{dateTime(log.checkedInAt)}</Label><Label>{log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : 'PT ngoài'}</Label></PopupRow>)}</View></Card>
+    <Card title="Lịch sử vào tập"><LoadState state={logs} empty={!logs.data?.length} /><View>{logs.data?.map(log => <PopupRow key={log.id} title={dateTime(log.checkedInAt)} description={log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : 'PT ngoài'}><Label>{dateTime(log.checkedInAt)}</Label><Label>{log.context === 'SELF_TRAINING' ? 'Tự tập' : log.context === 'WITH_INTERNAL_PT' ? 'PT nội bộ' : 'PT ngoài'}</Label></PopupRow>)}</View><Pager page={page} setPage={setPage} more={logs.data?.length === 30} disabled={logs.loading} /></Card>
   </Page>;
 }
